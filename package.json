@@ -1,0 +1,29 @@
+{
+  "name": "m8-js",
+  "version": "0.0.0",
+  "description": "Library for loading and interacting with Dirtywave M8 instrument/song files.",
+  "author": "Jeremy Whitlock <jwhitlock@apache.org>",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "keywords": [
+    "dirtywave",
+    "m8"
+  ],
+  "scripts": {
+    "test": "eslint bin/m8 index.js lib/*.js"
+  },
+  "bin":{
+    "m8": "./bin/m8"
+  },
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.0",
+    "eslint-plugin-promise": "^6.0.0"
+  },
+  "dependencies": {
+    "cli-color": "^2.0.2",
+    "commander": "^9.3.0"
+  }
+}

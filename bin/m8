@@ -1,0 +1,1044 @@
+#!/usr/bin/env node
+
+/* Copyright 2022 Jeremy Whitlock
+ *
+ * Licensed under the Apache License, Version 2.0 (the 'License');
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an 'AS IS' BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+const clc = require('cli-color')
+const commander = require('commander')
+const { loadM8File } = require('..')
+const pkg = require('../package.json')
+const { destToStr, fxCmdToStr, getNote, toM8HexStr, toM8Bool, toM8Num } = require('../lib/helpers')
+const { VERSION_1_4_0 } = require('../lib/types')
+
+const program = new commander.Command()
+// TODO: Allow for using an M8 Theme file
+const m8Text = {
+  default: clc.xterm(60),
+  empty: clc.xterm(240),
+  info: clc.xterm(103),
+  title: clc.xterm(14),
+  value: clc.xterm(15)
+}
+const tracksLabel = '1   2   3   4   5   6   7   8'
+
+function getStartingRow (startingRow, maxValue) {
+  // Starting row must is 1-based but traversal is 0-based, and with the
+  // number of rows being displayed will be 17, we offset the maximum by
+  // 17.
+  const maxStartingRow = maxValue - 17
+
+  if (startingRow < 1 || startingRow > maxValue) {
+    throw new commander.InvalidArgumentError("option '-s, --starting-row <number>' must be between " +
+      `1 and ${maxStartingRow}`)
+  }
+
+  // User inputs will be 1+ but array traversal will be 0 based
+  startingRow -= 1
+
+  // If the user specifies a starting row within the last page, set the
+  // starting row to the first item of the last page
+  if (startingRow > maxStartingRow) {
+    startingRow = maxStartingRow
+  }
+
+  return startingRow
+}
+
+function parseCLIHexInt (value) {
+  const parsedValue = parseInt(value, 16)
+
+  if (isNaN(parsedValue)) {
+    throw new commander.InvalidArgumentError('Not a hex number.')
+  }
+
+  return parsedValue
+}
+
+function parseCLIInt (value) {
+  const parsedValue = parseInt(value, 10)
+
+  if (isNaN(parsedValue)) {
+    throw new commander.InvalidArgumentError('Not a number.')
+  }
+
+  return parsedValue
+}
+
+function printTable (name, table, instrument) {
+  let tableData = ''
+
+  for (let i = 0; i < table.steps.length; i++) {
+    const step = table.steps[i]
+
+    if (i % 4 === 0) {
+      tableData += m8Text.info(toM8HexStr(i, 0))
+    } else {
+      tableData += m8Text.default(toM8HexStr(i, 0))
+    }
+
+    tableData += ` ${m8Text.value(toM8HexStr(step.transpose))}`
+
+    if (step.volume === 0xFF) {
+      tableData += ` ${m8Text.empty('--')}`
+    } else {
+      tableData += ` ${m8Text.value(toM8HexStr(step.volume))}`
+    }
+
+    [step.fx1, step.fx2, step.fx3].forEach((fx) => {
+      const fxCmd = fxCmdToStr(fx, instrument)
+      const fxVal = toM8HexStr(fx.value)
+
+      if (fxCmd === '---') {
+        tableData += ` ${m8Text.empty(fxCmd)}${m8Text.default(fxVal)}`
+      } else {
+        tableData += ` ${m8Text.value(fxCmd)}${m8Text.value(fxVal)}`
+      }
+    })
+
+    if (i < 15) {
+      tableData += '\n'
+    }
+  }
+
+  console.log(`${m8Text.title('TABLE ' + toM8HexStr(name))}
+
+${m8Text.info('  N   V  FX1   FX2   FX3')}
+${tableData}
+`)
+}
+
+// TODO: Refactor commands have have common inputs/validations/outputs
+// TODO: Refactor error values to use hex
+// TODO: Research a UX similar to M8 where percentage bars are used
+
+// Configure the CLI details
+program
+  .name('m8')
+  .description('Various utilities for interacting with M8 files')
+  .version(pkg.version)
+
+// Create commands
+const instrumentCommand = program
+  .command('instrument')
+  .description('instrument specific commands')
+
+const projectCmd = program
+  .command('project')
+  .description('project specific commands')
+
+const songCommand = program
+  .command('song')
+  .description('song specific commands')
+
+// Instrument commands
+
+// TODO: Update all Instrument commands to work with instrument files
+
+instrumentCommand
+  .command('envelope')
+  .description('print the m8 instrument envelope')
+  .argument('<m8-file>', 'the m8file')
+  .requiredOption('-i, --instrument <number>', 'the instrument whose envelope to display', parseCLIHexInt)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.instrument < 0 || options.instrument > 127) {
+      throw new commander.InvalidArgumentError("option '-i, --instrument <number>' must be between 0 and 127")
+    }
+
+    const instrument = song.instruments[options.instrument]
+
+    if (instrument.kindToStr() === 'MIDI OUT') {
+      console.log(`Instrument ${toM8HexStr(options.instrument)} is a MIDIOUT instrument and has no envelope`)
+      return
+    }
+
+    let envelopeData = ''
+    const leftColumn = []
+    const rightColumn = []
+
+    for (let i = 0; i < instrument.env.length; i++) {
+      const env = instrument.env[i]
+      const lfo = instrument.lfo[i]
+
+      leftColumn.push(['ENV' + (i + 1) + ' TO', env.dest, destToStr(env.dest, instrument)])
+      rightColumn.push(['LFO', lfo.dest, destToStr(lfo.dest, instrument)])
+
+      leftColumn.push(['AMOUNT', env.amount])
+      rightColumn.push(['AMT', lfo.amount])
+
+      leftColumn.push(['ATTACK', env.attack])
+      rightColumn.push(['OSC', lfo.shape, lfo.getShapeStr()])
+
+      leftColumn.push(['HOLD', env.hold])
+      rightColumn.push(['TRG', lfo.triggerMode, lfo.getTriggerModeStr()])
+
+      leftColumn.push(['DECAY', env.decay])
+      rightColumn.push(['AMT', lfo.freq])
+    }
+
+    // As of right now, left column will ALWAYS have more items than right
+    for (let i = 0; i < leftColumn.length; i++) {
+      const leftCol = leftColumn[i]
+      const leftLabel = leftCol[0]
+      const leftValue = leftCol[1]
+      const leftExtra = leftCol[2]
+      const rightCol = rightColumn[i] || []
+      const rightLabel = rightCol[0]
+      const rightValue = rightCol[1]
+      const rightExtra = rightCol[2]
+
+      envelopeData += m8Text.info(leftLabel) + ' '.repeat(8 - leftLabel.length)
+      envelopeData += m8Text.value(toM8HexStr(leftValue))
+
+      if (typeof leftExtra !== 'undefined') {
+        envelopeData += m8Text.title(leftExtra)
+      }
+
+      envelopeData += ' '.repeat(8 - (typeof leftExtra === 'undefined' ? 0 : leftExtra.length))
+
+      if (typeof rightLabel !== 'undefined') {
+        envelopeData += m8Text.info(rightLabel)
+        envelopeData += ' '
+        envelopeData += m8Text.value(toM8HexStr(rightValue))
+
+        if (typeof rightExtra !== 'undefined') {
+          envelopeData += m8Text.title(rightExtra)
+        }
+      }
+
+      // Add the end of line character for each row
+      if (i < leftColumn.length - 1) {
+        envelopeData += '\n'
+      }
+
+      // Add extra new line in between each envelope
+      if ((i + 1) % (leftColumn.length / instrument.env.length) === 0 && i !== leftColumn.length - 1) {
+        envelopeData += '\n'
+      }
+    }
+
+    console.log(`${m8Text.title('INST. ' + toM8HexStr(options.instrument))}
+
+${m8Text.info('TYPE')}    ${m8Text.value(instrument.kindToStr())}
+${m8Text.info('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
+${m8Text.info('TRANSP.')} ${m8Text.value(instrument.transpose ? 'ON' : 'OFF')}       ${m8Text.info('TABLE TIC')} ${m8Text.value(toM8HexStr(instrument.tableTick))}
+
+${envelopeData}
+`)
+  })
+
+instrumentCommand
+  .command('table')
+  .description('print the m8 instrument table')
+  .argument('<m8-file>', 'the m8file')
+  .requiredOption('-i, --instrument <number>', 'the instrument to display', parseCLIHexInt)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.instrument < 0 || options.instrument > 127) {
+      throw new commander.InvalidArgumentError("option '-i, --instrument <number>' must be between 0 and 127")
+    }
+
+    printTable(options.instrument, song.tables[options.instrument], song.instruments[options.instrument])
+  })
+
+instrumentCommand
+  .command('view')
+  .description('print the m8 instrument view')
+  .argument('<m8-file>', 'the m8file')
+  .requiredOption('-i, --instrument <number>', 'the instrument to display', parseCLIHexInt)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.instrument < 0 || options.instrument > 127) {
+      throw new commander.InvalidArgumentError("option '-i, --instrument <number>' must be between 0 and 127")
+    }
+
+    const instrument = song.instruments[options.instrument]
+    const ampParams = instrument.ampParams
+    const filterParams = instrument.filterParams
+    const instrParams = instrument.instrParams
+    const kindStr = instrument.kindToStr()
+    const mixerParams = instrument.mixerParams
+    let instrumentData = ''
+
+    if (kindStr === 'MIDI OUT') {
+      instrumentData = `
+${m8Text.info('PORT')}        ${m8Text.value(toM8HexStr(instrParams.port))}${m8Text.title(instrParams.portToStr())}
+${m8Text.info('CHANNEL')}     ${m8Text.value(toM8Num(instrParams.channel, 3))}
+${m8Text.info('BANK:PG')}     ${m8Text.value(toM8Num(instrParams.bankSelect, 3) + ':' + toM8Num(instrParams.programChange, 3))}
+`
+
+      for (let i = 0; i < instrument.instrParams.customCC.length; i++) {
+        const customCC = instrParams.customCC[i]
+
+        // 97 is the char code for 'a'
+        instrumentData += `${m8Text.info('CC' + String.fromCharCode(97 + i).toUpperCase() + ' CC:VAL')}  `
+
+        if (customCC[0] === 0xFF) {
+          instrumentData += m8Text.empty(toM8Num('---'))
+        } else {
+          instrumentData += m8Text.value(toM8Num(customCC[0], 3))
+        }
+
+        instrumentData += m8Text.default(':')
+
+        if (customCC[1] === 0xFF) {
+          instrumentData += m8Text.empty('--')
+        } else {
+          instrumentData += m8Text.value(toM8HexStr(customCC[1]))
+        }
+
+        if (i < 9) {
+          instrumentData += '\n'
+        }
+      }
+    } else if (kindStr !== 'NONE') {
+      const leftColumn = []
+      const rightColumn = []
+      let levFbData = ''
+      let modAData = ''
+      let modBData = ''
+      let ratioData = ''
+      let samplePathParts
+      let sanitizedSamplePath
+
+      switch (kindStr) {
+        case 'FMSYNTH':
+          instrumentData = `
+${m8Text.info('ALGO')}    ${m8Text.value(toM8HexStr(instrParams.algo))}${m8Text.title(instrParams.getAlgoStr())}
+`
+
+          if (song.version.compare(VERSION_1_4_0) >= 0) {
+            instrumentData += '        '
+
+            for (let i = 0; i < instrParams.shape.length; i++) {
+              instrumentData += `${m8Text.info(String.fromCharCode(97 + i).toUpperCase())} ${m8Text.value(instrParams.getWaveStr(instrParams.shape[i]))}`
+
+              if (i < instrParams.shape.length - 1) {
+                instrumentData += ' '
+              }
+            }
+          }
+
+          for (let i = 0; i < instrParams.ratio.length; i++) {
+            ratioData += m8Text.value(toM8HexStr(instrParams.ratio[i]) + '.' + toM8HexStr(instrParams.ratioFine[i]))
+
+            if (i < instrParams.ratio.length - 1) {
+              ratioData += ' '
+            }
+          }
+
+          for (let i = 0; i < instrParams.level.length; i++) {
+            levFbData += m8Text.value(toM8HexStr(instrParams.level[i])) + m8Text.default('/') + m8Text.value(toM8HexStr(instrParams.fb[i]))
+
+            if (i < instrParams.level.length - 1) {
+              levFbData += ' '
+            }
+          }
+
+          for (let i = 0; i < instrParams.modA.length; i++) {
+            const modAStr = instrParams.getModStr(instrParams.modA[i])
+            const modBStr = instrParams.getModStr(instrParams.modB[i])
+
+            if (modAStr === '-----') {
+              modAData += m8Text.empty(modAStr)
+            } else {
+              modAData += m8Text.value(modAStr.substring(0, 2)) + m8Text.title(modAStr.substring(2))
+            }
+
+            if (modBStr === '-----') {
+              modBData += m8Text.empty(modBStr)
+            } else {
+              modBData += m8Text.value(modBStr.substring(0, 2)) + m8Text.title(modBStr.substring(2))
+            }
+
+            if (i < instrParams.modA.length - 1) {
+              modAData += ' '
+              modBData += ' '
+            }
+          }
+
+          instrumentData += `
+${m8Text.info('RATIO')}   ${ratioData}
+${m8Text.info('LEV/FB')}  ${levFbData}
+${m8Text.info('MOD')}     ${modAData}
+        ${modBData}
+
+`
+
+          for (let i = 0; i < instrParams.operators.length; i++) {
+            leftColumn.push(['MOD' + (i + 1), instrParams.operators[i]])
+          }
+
+          break
+
+        case 'WAVSYNTH':
+          instrumentData = `
+${m8Text.info('SHAPE')}   ${m8Text.value(toM8HexStr(instrParams.shape))}${m8Text.title(instrParams.getShapeStr())}
+
+`
+
+          leftColumn.push(['SIZE', instrParams.size])
+          leftColumn.push(['MULT', instrParams.mult])
+          leftColumn.push(['WARP', instrParams.warp])
+          leftColumn.push(['MIRROR', instrParams.mirror])
+
+          break
+
+        case 'MACROSYN':
+          instrumentData = `
+${m8Text.info('SHAPE')}   ${m8Text.value(toM8HexStr(instrParams.shape))}${m8Text.title(instrParams.getShapeStr())}
+
+`
+
+          leftColumn.push(['TIMBRE', instrParams.timbre])
+          leftColumn.push(['COLOR', instrParams.color])
+          leftColumn.push(['DEGRADE', instrParams.degrade])
+          leftColumn.push(['REDUX', instrParams.redux])
+
+          break
+
+        case 'SAMPLE':
+          samplePathParts = instrParams.samplePath.split('/')
+
+          // Remove any folder hierarchy
+          sanitizedSamplePath = samplePathParts[samplePathParts.length - 1]
+          // Remove the file extension
+          sanitizedSamplePath = sanitizedSamplePath.split('.').slice(0, -1).join('.')
+
+          if (sanitizedSamplePath.length > 16) {
+            // Trim to 16 characters (first 8, _, last 7)
+            sanitizedSamplePath = sanitizedSamplePath.slice(0, 8) + '_' + sanitizedSamplePath.slice(sanitizedSamplePath.length - 7)
+          }
+
+          // Uppercase
+          sanitizedSamplePath = sanitizedSamplePath.toUpperCase()
+
+          instrumentData = `
+${m8Text.info('SAMPLE')}  ${m8Text.title(sanitizedSamplePath)}
+
+`
+
+          leftColumn.push(['SLICE', instrParams.slice, instrParams.slice === 0x00 ? 'OFF' : toM8Num(instrParams.slice, 3)])
+          leftColumn.push(['PLAY', instrParams.playMode, instrParams.getPlayModeStr()])
+          leftColumn.push(['START', instrParams.start])
+          leftColumn.push(['LOOP ST', instrParams.loopStart])
+          leftColumn.push(['LENGTH', instrParams.length])
+          leftColumn.push(['DETUNE', instrument.fineTune])
+          leftColumn.push(['DEGRADE', instrParams.degrade])
+
+          break
+      }
+
+      // Filter Parameters
+      leftColumn.push(['FILTER', filterParams.type, instrument.filterTypeToStr()])
+      leftColumn.push(['CUTOFF', filterParams.cutoff])
+      leftColumn.push(['RES', filterParams.res])
+
+      // Amplifier Parameters
+      rightColumn.push(['AMP', ampParams.amp])
+      rightColumn.push(['LIM', ampParams.lim, ampParams.getLimitStr()])
+
+      // Mixer Parameters
+      rightColumn.push(['PAN', mixerParams.pan])
+      rightColumn.push(['DRY', mixerParams.dry])
+      rightColumn.push(['CHO', mixerParams.cho])
+      rightColumn.push(['DEL', mixerParams.del])
+      rightColumn.push(['REV', mixerParams.rev])
+
+      // As of right now, left column will ALWAYS have more items than right
+      for (let i = 0; i < leftColumn.length; i++) {
+        const leftCol = leftColumn[i]
+        const leftLabel = leftCol[0]
+        const leftValue = leftCol[1]
+        const leftExtra = leftCol[2]
+        const rightCol = rightColumn[i] || []
+        const rightLabel = rightCol[0]
+        const rightValue = rightCol[1]
+        const rightExtra = rightCol[2]
+
+        instrumentData += m8Text.info(leftLabel) + ' '.repeat(8 - leftLabel.length)
+        instrumentData += m8Text.value(toM8HexStr(leftValue))
+
+        if (typeof leftExtra !== 'undefined') {
+          instrumentData += m8Text.title(leftExtra)
+        }
+
+        instrumentData += ' '.repeat(8 - (typeof leftExtra === 'undefined' ? 0 : leftExtra.length))
+
+        if (typeof rightLabel !== 'undefined') {
+          instrumentData += m8Text.info(rightLabel)
+          instrumentData += ' '
+          instrumentData += m8Text.value(toM8HexStr(rightValue))
+
+          if (typeof rightExtra !== 'undefined') {
+            instrumentData += m8Text.title(rightExtra)
+          }
+        }
+
+        if (i < leftColumn.length - 1) {
+          instrumentData += '\n'
+        }
+      }
+    }
+
+    console.log(`${m8Text.title('INST. ' + toM8HexStr(options.instrument))}
+
+${m8Text.info('TYPE')}    ${m8Text.value(instrument.kindToStr())}
+${m8Text.info('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
+${m8Text.info('TRANSP.')} ${m8Text.value(instrument.transpose ? 'ON' : 'OFF')}       ${m8Text.info('TABLE TIC')} ${m8Text.value(toM8HexStr(instrument.tableTick))}
+${instrumentData}
+`)
+  })
+
+// Project commands
+projectCmd
+  .command('details')
+  .description('print the m8 project details')
+  .argument('<m8-file>', 'the m8file')
+  .action((m8FilePath) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    }
+
+    let liveQuantize = m8Text.value(toM8HexStr(song.quantize))
+
+    if (song.quantize === 0x00) {
+      liveQuantize += m8Text.info(' CHAIN LEN')
+    } else {
+      liveQuantize += m8Text.info(' STEPS')
+    }
+
+    console.log(`${m8Text.title('PROJECT')}
+
+${m8Text.info('TRANSPOSE')}     ${m8Text.value(toM8HexStr(song.transpose))}
+${m8Text.info('TEMPO')}         ${m8Text.value(song.tempo.toFixed(2))}
+${m8Text.info('LIVE QUANTIZE')} ${liveQuantize}
+
+${m8Text.info('NAME')}          ${m8Text.value(song.projectName)}
+`)
+  })
+
+projectCmd
+  .command('effects')
+  .description('print the m8 project effects')
+  .argument('<m8-file>', 'the m8file')
+  .action((m8FilePath) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    }
+
+    const effectsSettings = song.effectsSettings
+
+    console.log(`${m8Text.title('CHORUS SETTINGS')}
+${m8Text.info('MOD DEPTH')}   ${m8Text.value(toM8HexStr(effectsSettings.chorusModDepth))}
+${m8Text.info('MOD FREQ.')}   ${m8Text.value(toM8HexStr(effectsSettings.chorusModFreq))}
+${m8Text.info('WIDTH')}       ${m8Text.value(toM8HexStr(effectsSettings.chorusWidth))}
+${m8Text.info('REVERB SEND')} ${m8Text.value(toM8HexStr(effectsSettings.chorusReverbSend))}
+
+${m8Text.title('DELAY SETTINGS')}
+${m8Text.info('FILTER HP:LP')} ${m8Text.value(toM8HexStr(effectsSettings.delayFilter[0]) + ':' + toM8HexStr(effectsSettings.delayFilter[1]))}
+${m8Text.info('TIME L:R')}     ${m8Text.value(toM8HexStr(effectsSettings.delayTime[0]) + ':' + toM8HexStr(effectsSettings.delayTime[1]))}
+${m8Text.info('FEEDBACK')}     ${m8Text.value(toM8HexStr(effectsSettings.delayFeedback))}
+${m8Text.info('WIDTH')}        ${m8Text.value(toM8HexStr(effectsSettings.delayWidth))}
+${m8Text.info('REVERB SEND')}  ${m8Text.value(toM8HexStr(effectsSettings.delayReverbSend))}
+
+${m8Text.title('REVERB SETTINGS')}
+${m8Text.info('FILTER HP:LP')} ${m8Text.value(toM8HexStr(effectsSettings.reverbFilter[0]) + ':' + toM8HexStr(effectsSettings.reverbFilter[1]))}
+${m8Text.info('SIZE')}         ${m8Text.value(toM8HexStr(effectsSettings.reverbSize))}
+${m8Text.info('DAMPING')}      ${m8Text.value(toM8HexStr(effectsSettings.reverbDamping))}
+${m8Text.info('MOD DEPTH')}    ${m8Text.value(toM8HexStr(effectsSettings.reverbModDepth))}
+${m8Text.info('MOD FREQ.')}    ${m8Text.value(toM8HexStr(effectsSettings.reverbModFreq))}
+${m8Text.info('WIDTH')}        ${m8Text.value(toM8HexStr(effectsSettings.reverbWidth))}
+`)
+  })
+
+projectCmd
+  .command('midi-mapping')
+  .description('print the m8 project MIDI mappings')
+  .argument('<m8-file>', 'the m8file')
+  .option('-s, --starting-row <number>', 'the starting row to display', parseCLIInt, 1)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.startingRow < 0 || options.startingRow > 127) {
+      throw new commander.InvalidArgumentError("option '-s, --starting-row <number>' must be between 0 and 128")
+    }
+
+    const startingRow = getStartingRow(options.startingRow, 128)
+    let mappings = ''
+
+    console.log(startingRow)
+
+    for (let i = startingRow; i < startingRow + 16; i++) {
+      const midiMapping = song.midiMappings[i]
+
+      mappings += `${m8Text.value(toM8HexStr(i))} `
+
+      if (midiMapping.empty) {
+        mappings += `${m8Text.empty('--- -- --')}${m8Text.info('\u25B8')}${m8Text.empty('--')}`
+      } else {
+        // TODO: Update to handle special output for touchscreen (T:X, T:Y)
+        mappings += `${m8Text.value(toM8Num(midiMapping.controlNum, 3))} `
+        mappings += `${m8Text.value(toM8HexStr(midiMapping.value))} `
+        mappings += `${m8Text.value(toM8HexStr(midiMapping.minValue))}${m8Text.info('\u25B8')}`
+        mappings += `${m8Text.value(toM8HexStr(midiMapping.maxValue))} `
+        mappings += `${m8Text.title(midiMapping.typeToChar())}${m8Text.value(midiMapping.destToStr())}`
+      }
+
+      if (i < startingRow + 15) {
+        mappings += '\n'
+      }
+    }
+
+    console.log(`${m8Text.title('MIDI MAPPING')}
+
+${m8Text.info('   CTL V  RANGE DEST')}
+${mappings}
+`)
+  })
+
+projectCmd
+  .command('midi-settings')
+  .description('print the m8 project MIDI settings')
+  .argument('<m8-file>', 'the m8file')
+  .action((m8FilePath) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    }
+
+    let channelCols = ''
+    let controlMapChan = ''
+    let instrCols = ''
+
+    for (let i = 0; i < song.midiSettings.trackInputChannel.length; i++) {
+      channelCols += `${toM8Num(song.midiSettings.trackInputChannel[i])}  `
+      instrCols += `${toM8Num(song.midiSettings.trackInputInstrument[i])}  `
+    }
+
+    if (song.midiSettings.controlMapChannel < 17) {
+      controlMapChan = toM8Num(song.midiSettings.controlMapChannel)
+    } else {
+      controlMapChan = 'ALL'
+    }
+
+    console.log(`${m8Text.title('MIDI SETTINGS')}
+
+${m8Text.info('RECEIVE SYNC')}      ${m8Text.value(toM8Bool(song.midiSettings.receiveSync))}
+${m8Text.info('RECEIVE TRANSPORT')} ${m8Text.value(toM8Bool(song.midiSettings.receiveTransport))}
+${m8Text.info('SEND SYNC')}         ${m8Text.value(toM8Bool(song.midiSettings.sendSync))}
+${m8Text.info('SEND TRANSPORT')}    ${m8Text.value(toM8Bool(song.midiSendTransport))}
+${m8Text.info('REC. NOTE CHAN')}    ${m8Text.value(toM8Num(song.midiSettings.recordNoteChannel))}
+${m8Text.info('REC. VELOCITY')}     ${m8Text.value(toM8Bool(song.midiSettings.recordNoteVelocity))}
+${m8Text.info('REC. DELAY/KILL')}   ${m8Text.value(toM8Bool(song.midiSettings.recordNoteDelayKillCommands))}
+${m8Text.info('CONTROL MAP CHAN')}  ${m8Text.value(controlMapChan)}
+${m8Text.info('SONG ROW CUE CHAN')} ${m8Text.value(toM8Num(song.midiSettings.songRowCueChannel))}
+
+${m8Text.title('TRACK MIDI INPUT')}
+${m8Text.empty('       ' + tracksLabel)}
+${m8Text.info('CHAN.')}  ${m8Text.value(channelCols)}
+${m8Text.info('INST#')}  ${m8Text.value(instrCols)}
+${m8Text.info('PG CHANGE')}  ${toM8Bool(song.trackMidiInputProgramChange)}     ${m8Text.info('MODE')} ${m8Text.value(song.midiSettings.trackInputModeToStr())}`)
+  })
+
+projectCmd
+  .command('mixer')
+  .description('print the m8 project mixer settings')
+  .argument('<m8-file>', 'the m8file')
+  .action((m8FilePath) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    }
+
+    const mixerSettings = song.mixerSettings
+
+    let chorusEffects = ''
+    let delayEffects = ''
+    let effectsVolumes = ''
+    let inputVolumes = ''
+    let reverbEffects = ''
+    let trackVolumes = ''
+
+    chorusEffects += `${m8Text.value(toM8HexStr(mixerSettings.analogInputChorus[0]))} `
+    chorusEffects += `${m8Text.value(toM8HexStr(mixerSettings.analogInputVolume[1] === 0xFF ? '  ' : mixerSettings.analogInputChorus[1]))} `
+    chorusEffects += `${m8Text.value(toM8HexStr(mixerSettings.usbInputChorus))}`
+
+    delayEffects += `${m8Text.value(toM8HexStr(mixerSettings.analogInputDelay[0]))} `
+    delayEffects += `${m8Text.value(toM8HexStr(mixerSettings.analogInputVolume[1] === 0xFF ? '  ' : mixerSettings.analogInputDelay[1]))} `
+    delayEffects += `${m8Text.value(toM8HexStr(mixerSettings.usbInputDelay))}`
+
+    effectsVolumes += `${m8Text.value(toM8HexStr(mixerSettings.chorusVolume))}  `
+    effectsVolumes += `${m8Text.value(toM8HexStr(mixerSettings.delayVolume))}  `
+    effectsVolumes += `${m8Text.value(toM8HexStr(mixerSettings.reverbVolume))}`
+
+    inputVolumes += `${m8Text.value(toM8HexStr(mixerSettings.analogInputVolume[0]))} `
+
+    if (mixerSettings.analogInputVolume[1] !== 0xFF) {
+      inputVolumes += `${m8Text.value(toM8HexStr(mixerSettings.analogInputVolume[1]))} `
+    } else {
+      inputVolumes += `${m8Text.empty('--')} `
+    }
+
+    inputVolumes += `${m8Text.value(toM8HexStr(mixerSettings.usbInputVolume))}`
+
+    reverbEffects += `${m8Text.value(toM8HexStr(mixerSettings.analogInputReverb[0]))} `
+    reverbEffects += `${m8Text.value(toM8HexStr(mixerSettings.analogInputVolume[1] === 0xFF ? '  ' : mixerSettings.analogInputReverb[1]))} `
+    reverbEffects += `${m8Text.value(toM8HexStr(mixerSettings.usbInputReverb))}`
+
+    for (let i = 0; i < mixerSettings.trackVolume.length; i++) {
+      trackVolumes += `${m8Text.value(toM8HexStr(mixerSettings.trackVolume[i]))}  `
+    }
+
+    console.log(`${m8Text.title('MIXER')}
+
+${m8Text.info('VOLUME:LIMIT')} ${m8Text.value(toM8HexStr(mixerSettings.masterVolume))}:${m8Text.value(toM8HexStr(mixerSettings.masterLimit))}
+${m8Text.info('DJFILT:PEAK')}  ${m8Text.value(toM8HexStr(mixerSettings.djFilter))}:${m8Text.value(toM8HexStr(mixerSettings.djFilterPeak))}
+
+${m8Text.info(tracksLabel)}
+${m8Text.info(trackVolumes)}
+
+${m8Text.info('CHO DEL REV INPUT USB')}
+${effectsVolumes}  ${inputVolumes}
+
+${m8Text.info('        CHO')} ${chorusEffects}
+${m8Text.info('        DEL')} ${delayEffects}
+${m8Text.info('        REV')} ${reverbEffects}
+`)
+  })
+
+projectCmd
+  .command('version')
+  .description('print the m8 project version')
+  .argument('<m8-file>', 'the m8file')
+  .action((m8FilePath) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    }
+
+    console.log(`${m8Text.title('M8 VERSION')}
+
+${m8Text.value(song.version.majorVersion + '.' + song.version.minorVersion + '.' + song.version.patchVersion)}
+`)
+  })
+
+// Song commands
+
+// TODO: Add command for chain list
+// TODO: Add command for phrase list
+// TODO: Add command for instrument list
+// TODO: Add command for scale list
+
+songCommand
+  .command('chain')
+  .description('print the m8 song chain')
+  .argument('<m8-file>', 'the m8file')
+  .requiredOption('-c, --chain <number>', 'the chain to display', parseCLIHexInt)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.chain < 0 || options.chain > 255) {
+      throw new commander.InvalidArgumentError("option '-c, --chain <number>' must be between 0 and 255")
+    }
+
+    const chain = song.chains[options.chain]
+    let chainData = ''
+
+    for (let i = 0; i < 16; i++) {
+      const row = chain.rows[i]
+
+      chainData += m8Text.info(toM8HexStr(i, 0))
+
+      if (row[0] === 0xFF) {
+        chainData += ` ${m8Text.empty('--')} ${m8Text.info(toM8HexStr(row[1]))}`
+      } else {
+        chainData += ` ${m8Text.value(toM8HexStr(row[0]))} ${m8Text.value(toM8HexStr(row[1]))}`
+      }
+
+      if (i < 15) {
+        chainData += '\n'
+      }
+    }
+
+    console.log(`${m8Text.title('CHAIN ' + toM8HexStr(options.chain))}
+
+${m8Text.info('  PH TSP')}
+${chainData}
+`)
+  })
+
+songCommand
+  .command('groove')
+  .description('print the m8 song groove')
+  .argument('<m8-file>', 'the m8file')
+  .requiredOption('-g, --groove <number>', 'the groove to display', parseCLIHexInt)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.groove < 0 || options.groove > 31) {
+      throw new commander.InvalidArgumentError("option '-g, --groove <number>' must be between 0 and 31")
+    }
+
+    const groove = song.grooves[options.groove]
+    let grooveData = ''
+
+    for (let i = 0; i < 16; i++) {
+      const row = groove.rows[i]
+
+      grooveData += m8Text.info(toM8HexStr(i, 0))
+
+      if (row === 0xFF) {
+        grooveData += ` ${m8Text.empty('--')}`
+      } else {
+        grooveData += ` ${m8Text.value(toM8HexStr(row))}`
+      }
+
+      if (i < 15) {
+        grooveData += '\n'
+      }
+    }
+
+    console.log(`${m8Text.title('GROOVE ' + toM8HexStr(options.groove))}
+
+${grooveData}
+`)
+  })
+
+songCommand
+  .command('phrase')
+  .description('print the m8 song phrase')
+  .argument('<m8-file>', 'the m8file')
+  .requiredOption('-p, --phrase <number>', 'the phrase to display', parseCLIHexInt)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.phrase < 0 || options.phrase > 255) {
+      throw new commander.InvalidArgumentError("option '-p, --phrase <number>' must be between 0 and 255")
+    }
+
+    const phrase = song.phrases[options.phrase]
+    let phraseData = ''
+    let uniqueChains = 0
+
+    // Documentation says that a phrase is used in more than one chain, that the displayed phrase name will have an '*'.
+    for (let i = 0; i < song.chains.length; i++) {
+      const chain = song.chains[i]
+
+      for (let j = 0; j < chain.rows.length; j++) {
+        if (chain.rows[j][0] === options.phrase) {
+          uniqueChains += 1
+
+          break
+        }
+      }
+    }
+
+    for (let i = 0; i < 16; i++) {
+      const step = phrase.steps[i]
+      const instrument = song.instruments[step.instrument]
+      const noteStr = step.noteToStr(i)
+
+      if (i % 4 === 0) {
+        phraseData += m8Text.info(toM8HexStr(i, 0))
+      } else {
+        phraseData += m8Text.default(toM8HexStr(i, 0))
+      }
+
+      if (noteStr === '---') {
+        phraseData += ` ${m8Text.empty(noteStr)} ${m8Text.empty('--')} ${m8Text.empty('--')}`
+      } else {
+        phraseData += ` ${m8Text.value(noteStr)} ${m8Text.value(toM8HexStr(step.volume))} ${m8Text.value(toM8HexStr(step.instrument))}`
+      }
+
+      [step.fx1, step.fx2, step.fx3].forEach((fx) => {
+        const fxCmd = fxCmdToStr(fx, instrument)
+        const fxVal = toM8HexStr(fx.value)
+
+        if (fxCmd === '---') {
+          phraseData += ` ${m8Text.empty(fxCmd)}${m8Text.default(fxVal)}`
+        } else {
+          phraseData += ` ${m8Text.value(fxCmd)}${m8Text.value(fxVal)}`
+        }
+      })
+
+      if (i < 15) {
+        phraseData += '\n'
+      }
+    }
+
+    console.log(`${m8Text.title('PHRASE ' + toM8HexStr(options.phrase) + (uniqueChains > 1 ? '*' : ''))}
+
+${m8Text.info('  N   V  I  FX1   FX2   FX3')}
+${phraseData}
+`)
+  })
+
+songCommand
+  .command('scale')
+  .description('print the m8 song scale')
+  .argument('<m8-file>', 'the m8file')
+  .requiredOption('-s, --scale <number>', 'the scale to display', parseCLIHexInt)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.scale < 0 || options.scale > 15) {
+      throw new commander.InvalidArgumentError("option '-s, --scale <number>' must be between 0 and 15")
+    }
+
+    const scale = song.scales[options.scale]
+    let scaleData = ''
+
+    for (let i = 0; i < 12; i++) {
+      let noteIndex = song.key + i
+
+      if (noteIndex > 11) {
+        noteIndex = noteIndex - 12
+      }
+
+      const note = getNote(noteIndex)
+
+      if (note.indexOf('#') === -1) {
+        scaleData += `${m8Text.info(note)}  `
+      } else {
+        scaleData += `${m8Text.default(note)} `
+      }
+
+      if (scale.notes[i]) {
+        const offsetStr = scale.offsetToStr(i)
+
+        scaleData += `${m8Text.value('ON')}`
+
+        if (offsetStr[0] !== '-') {
+          scaleData += ' '
+        }
+
+        scaleData += m8Text.value(offsetStr)
+      } else {
+        scaleData += `${m8Text.empty('--')} ${m8Text.empty('--')} ${m8Text.empty('--')}`
+      }
+
+      if (i < 11) {
+        scaleData += '\n'
+      }
+    }
+
+    console.log(`${m8Text.title('SCALE ' + toM8HexStr(options.scale))}
+
+${m8Text.info('KEY')}   ${m8Text.value(getNote(song.key))}
+
+${m8Text.info('I  EN OFFSET')}
+${scaleData}
+
+${m8Text.info('NAME')}  ${m8Text.value(scale.name)}${m8Text.empty('-'.repeat(16 - scale.name.length))}
+`)
+  })
+
+songCommand
+  .command('table')
+  .description('print the m8 song table')
+  .argument('<m8-file>', 'the m8file')
+  .requiredOption('-t, --table <number>', 'the table to display', parseCLIHexInt)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    } else if (options.table < 0 || options.table > 255) {
+      throw new commander.InvalidArgumentError("option '-t, --table <number>' must be between 0 and 255")
+    }
+
+    printTable(options.table, song.tables[options.table], song.instruments[options.table])
+  })
+
+songCommand
+  .command('view')
+  .description('print the m8 song view')
+  .argument('<m8-file>', 'the m8file')
+  .option('-s, --starting-row <number>', 'the starting row to display', parseCLIInt, 1)
+  .action((m8FilePath, options) => {
+    const song = loadM8File(m8FilePath)
+
+    if (song.constructor.name !== 'Song') {
+      throw new commander.InvalidArgumentError('m8-file must be a Song file')
+    }
+
+    const startingRow = getStartingRow(options.startingRow, 256)
+    let songData = ''
+
+    for (let i = startingRow; i < startingRow + 16; i++) {
+      const songRow = song.songOrder[i]
+
+      songData += m8Text.info(toM8HexStr(i))
+
+      for (let j = 0; j < songRow.length; j++) {
+        const chain = songRow[j]
+        const chainData = song.chains[chain]
+
+        if (chain === 0xFF) {
+          songData += ` ${m8Text.empty('--')}`
+        } else {
+          if (chainData.empty) {
+            songData += ` ${m8Text.info(toM8HexStr(chain))}`
+          } else {
+            songData += ` ${m8Text.value(toM8HexStr(chain))}`
+          }
+        }
+      }
+
+      if (i < startingRow + 15) {
+        songData += '\n'
+      }
+    }
+
+    console.log(`${m8Text.title('SONG')}
+
+${m8Text.info('   1  2  3  4  5  6  7  8')}
+${songData}
+`)
+  })
+
+// Process the CLI arguments and run
+if (!process.argv.slice(2).length) {
+  program.outputHelp()
+} else {
+  program.parse(process.argv)
+}
