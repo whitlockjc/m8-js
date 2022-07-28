@@ -513,8 +513,8 @@ ${instrumentData}
 
 // Project commands
 projectCmd
-  .command('details')
-  .description('print the m8 project details')
+  .command('view')
+  .description('print the m8 project view')
   .argument('<m8-file>', 'the m8file')
   .action((m8FilePath) => {
     const song = loadM8File(m8FilePath)
