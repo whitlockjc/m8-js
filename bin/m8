@@ -23,7 +23,7 @@ const { destToStr, fxCmdToStr, getNote, toM8HexStr, toM8Bool, toM8Num } = requir
 const { VERSION_1_4_0 } = require('../lib/types')
 
 const program = new commander.Command()
-// TODO: Allow for using an M8 Theme file
+// TODO: Allow for using an M8 Theme file (Use tmux's RGB -> xterm logic: https://github.com/tmux/tmux/blob/dae2868d1227b95fd076fb4a5efa6256c7245943/colour.c#L57)
 const m8Text = {
   default: clc.xterm(60),
   empty: clc.xterm(240),
@@ -141,6 +141,10 @@ const projectCmd = program
 const songCommand = program
   .command('song')
   .description('song specific commands')
+
+const themeCommand = program
+  .command('theme')
+  .description('theme specific commands')
 
 // Instrument commands
 
@@ -1033,6 +1037,37 @@ songCommand
 
 ${m8Text.info('   1  2  3  4  5  6  7  8')}
 ${songData}
+`)
+  })
+
+// Theme commands
+themeCommand
+  .command('view')
+  .description('print the m8 theme view')
+  .argument('<m8-file>', 'the m8file')
+  .action((m8FilePath) => {
+    const theme = loadM8File(m8FilePath)
+
+    if (theme.constructor.name !== 'Theme') {
+      throw new commander.InvalidArgumentError('m8-file must be a Theme file')
+    }
+
+    // TODO: Add a 4th column with an example of the xterm equivalent to the RGB color
+
+    console.log(`${m8Text.title('THEME SETTINGS')}
+
+${m8Text.info('BACKGROUND')}   ${m8Text.value(toM8HexStr(theme.background[0]))} ${m8Text.value(toM8HexStr(theme.background[1]))} ${m8Text.value(toM8HexStr(theme.background[2]))}
+${m8Text.info('TEXT:EMPTY')}   ${m8Text.value(toM8HexStr(theme.textEmpty[0]))} ${m8Text.value(toM8HexStr(theme.textEmpty[1]))} ${m8Text.value(toM8HexStr(theme.textEmpty[2]))}
+${m8Text.info('TEXT:INFO')}    ${m8Text.value(toM8HexStr(theme.textInfo[0]))} ${m8Text.value(toM8HexStr(theme.textInfo[1]))} ${m8Text.value(toM8HexStr(theme.textInfo[2]))}
+${m8Text.info('TEXT:DEFAULT')} ${m8Text.value(toM8HexStr(theme.textDefault[0]))} ${m8Text.value(toM8HexStr(theme.textDefault[1]))} ${m8Text.value(toM8HexStr(theme.textDefault[2]))}
+${m8Text.info('TEXT:TITLES')}  ${m8Text.value(toM8HexStr(theme.textTitle[0]))} ${m8Text.value(toM8HexStr(theme.textTitle[1]))} ${m8Text.value(toM8HexStr(theme.textTitle[2]))}
+${m8Text.info('PLAY MARKERS')} ${m8Text.value(toM8HexStr(theme.playMarker[0]))} ${m8Text.value(toM8HexStr(theme.playMarker[1]))} ${m8Text.value(toM8HexStr(theme.playMarker[2]))}
+${m8Text.info('CURSOR')}       ${m8Text.value(toM8HexStr(theme.cursor[0]))} ${m8Text.value(toM8HexStr(theme.cursor[1]))} ${m8Text.value(toM8HexStr(theme.cursor[2]))}
+${m8Text.info('SELECTION')}    ${m8Text.value(toM8HexStr(theme.selection[0]))} ${m8Text.value(toM8HexStr(theme.selection[1]))} ${m8Text.value(toM8HexStr(theme.selection[2]))}
+${m8Text.info('SCOPE/SLIDER')} ${m8Text.value(toM8HexStr(theme.scopeSlider[0]))} ${m8Text.value(toM8HexStr(theme.scopeSlider[1]))} ${m8Text.value(toM8HexStr(theme.scopeSlider[2]))}
+${m8Text.info('METER LOW')}    ${m8Text.value(toM8HexStr(theme.meterLow[0]))} ${m8Text.value(toM8HexStr(theme.meterLow[1]))} ${m8Text.value(toM8HexStr(theme.meterLow[2]))}
+${m8Text.info('METER MID')}    ${m8Text.value(toM8HexStr(theme.meterMid[0]))} ${m8Text.value(toM8HexStr(theme.meterMid[1]))} ${m8Text.value(toM8HexStr(theme.meterMid[2]))}
+${m8Text.info('METER PEAK')}   ${m8Text.value(toM8HexStr(theme.meterPeak[0]))} ${m8Text.value(toM8HexStr(theme.meterPeak[1]))} ${m8Text.value(toM8HexStr(theme.meterPeak[2]))}
 `)
   })
 
