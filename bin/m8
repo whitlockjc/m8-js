@@ -53,8 +53,14 @@ function getStartingRow (startingRow, maxValue) {
 function loadM8FileAndVerify (path, type) {
   const m8File = loadM8File(path)
 
-  if (m8File.constructor.name !== type) {
-    throw new commander.InvalidArgumentError(`m8-file must be a ${type} file`)
+  if (typeof type === 'string') {
+    if (m8File.constructor.name !== type) {
+      throw new commander.InvalidArgumentError(`m8-file must be a ${type} file`)
+    }
+  } else {
+    if (type.indexOf(m8File.constructor.name) === -1) {
+      throw new commander.InvalidArgumentError(`m8-file must be a ${type.join(' or ')} file`)
+    }
   }
 
   return m8File
@@ -180,23 +186,26 @@ const themeCommand = program
 
 // Instrument commands
 
-// TODO: Update all Instrument commands to work with instrument files
-
 instrumentCommand
   .command('envelope')
   .description('print the m8 instrument envelope')
   .argument('<m8-file>', 'the m8file')
-  .requiredOption('-i, --instrument <number>', 'the instrument whose envelope to display', parseCLIHexInt)
+  .option('-i, --instrument <number>', 'the instrument whose envelope to display (not required for Instrument file)', parseCLIHexInt)
   .option('-T, --theme <path>', 'the path to an M8 theme file to use')
   .action((m8FilePath, options) => {
-    const song = loadM8FileAndVerify(m8FilePath, 'Song')
+    const instrOrSong = loadM8FileAndVerify(m8FilePath, ['Instrument', 'Song'])
+    let instrument
 
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    validateOptionLimits(options.instrument, '-i, --instrument <number>', 0, 127)
+    if (instrOrSong.constructor.name === 'Song') {
+      validateOptionLimits(options.instrument, '-i, --instrument <number>', 0, 127)
 
-    const instrument = song.instruments[options.instrument]
+      instrument = instrOrSong.instruments[options.instrument]
+    } else {
+      instrument = instrOrSong
+    }
 
     if (instrument.kindToStr() === 'MIDI OUT') {
       console.log(`Instrument ${toM8HexStr(options.instrument)} is a MIDIOUT instrument and has no envelope`)
@@ -268,7 +277,7 @@ instrumentCommand
       }
     }
 
-    console.log(`${m8Text.title('INST. ' + toM8HexStr(options.instrument))}
+    console.log(`${m8Text.title(instrOrSong.constructor.name === 'Song' ? 'INST. ' + toM8HexStr(options.instrument) : instrument.name)}
 
 ${m8Text.default('TYPE')}    ${m8Text.value(instrument.kindToStr())}
 ${m8Text.default('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
@@ -282,17 +291,23 @@ instrumentCommand
   .command('view')
   .description('print the m8 instrument view')
   .argument('<m8-file>', 'the m8file')
-  .requiredOption('-i, --instrument <number>', 'the instrument to display', parseCLIHexInt)
+  .option('-i, --instrument <number>', 'the instrument to display', parseCLIHexInt)
   .option('-T, --theme <path>', 'the path to an M8 theme file to use')
   .action((m8FilePath, options) => {
-    const song = loadM8FileAndVerify(m8FilePath, 'Song')
+    const instrOrSong = loadM8FileAndVerify(m8FilePath, ['Instrument', 'Song'])
+    let instrument
 
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    validateOptionLimits(options.instrument, '-i, --instrument <number>', 0, 127)
+    if (instrOrSong.constructor.name === 'Song') {
+      validateOptionLimits(options.instrument, '-i, --instrument <number>', 0, 127)
 
-    const instrument = song.instruments[options.instrument]
+      instrument = instrOrSong.instruments[options.instrument]
+    } else {
+      instrument = instrOrSong
+    }
+
     const ampParams = instrument.ampParams
     const filterParams = instrument.filterParams
     const instrParams = instrument.instrParams
@@ -347,7 +362,7 @@ ${m8Text.default('BANK:PG')}     ${m8Text.value(toM8Num(instrParams.bankSelect, 
 ${m8Text.default('ALGO')}    ${m8Text.value(toM8HexStr(instrParams.algo))}${m8Text.title(instrParams.getAlgoStr())}
 `
 
-          if (song.version.compare(VERSION_1_4_0) >= 0) {
+          if (instrOrSong.version.compare(VERSION_1_4_0) >= 0) {
             instrumentData += '        '
 
             for (let i = 0; i < instrParams.shape.length; i++) {
@@ -521,7 +536,7 @@ ${m8Text.default('SAMPLE')}  ${m8Text.title(sanitizedSamplePath)}
       }
     }
 
-    console.log(`${m8Text.title('INST. ' + toM8HexStr(options.instrument))}
+    console.log(`${m8Text.title(instrOrSong.constructor.name === 'Song' ? 'INST. ' + toM8HexStr(options.instrument) : instrument.name)}
 
 ${m8Text.default('TYPE')}    ${m8Text.value(instrument.kindToStr())}
 ${m8Text.default('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
@@ -773,11 +788,6 @@ ${m8Text.value(song.version.majorVersion + '.' + song.version.minorVersion + '.'
   })
 
 // Song commands
-
-// TODO: Add command for chain list
-// TODO: Add command for phrase list
-// TODO: Add command for instrument list
-// TODO: Add command for scale list
 
 songCommand
   .command('chain')
