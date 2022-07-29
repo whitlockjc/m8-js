@@ -352,7 +352,7 @@ function printScale (scale, key, index) {
   let scaleData = ''
 
   for (let i = 0; i < 12; i++) {
-    let noteIndex = scale.key + i
+    let noteIndex = key + i
 
     if (noteIndex > 11) {
       noteIndex = noteIndex - 12
@@ -839,7 +839,7 @@ projectCmd
 
     console.log(`${m8Text.title('M8 VERSION')}
 
-${m8Text.value(song.version.majorVersion + '.' + song.version.minorVersion + '.' + song.version.patchVersion)}
+${m8Text.value(song.version)}
 `)
   })
 

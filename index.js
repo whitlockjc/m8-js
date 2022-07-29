@@ -22,6 +22,7 @@
  */
 
 const { readFileSync } = require('fs')
+const { toM8HexStr } = require('./lib/helpers')
 const { Instrument, M8Version, Scale, Song, Theme } = require('./lib/types')
 
 /**
@@ -58,7 +59,24 @@ class M8FileReader {
     // Discard the next byte
     this.readUInt8()
 
-    this.fileType = this.readUInt8() >> 4
+    const rawFileType = this.readUInt8() >> 4
+
+    switch (rawFileType) {
+      case 0:
+        this.fileType = 'Song'
+        break
+      case 1:
+        this.fileType = 'Instrument'
+        break
+      case 2:
+        this.fileType = 'Theme'
+        break
+      case 3:
+        this.fileType = 'Scale'
+        break
+      default:
+        this.fileType = `Unknown (${toM8HexStr(rawFileType)})`
+    }
   }
 
   /**
@@ -150,17 +168,13 @@ const loadM8File = (filePath) => {
   const fileReader = new M8FileReader(filePath)
 
   switch (fileReader.fileType) {
-    // Song
-    case 0:
+    case 'Song':
       return new Song(fileReader)
-    // Instrument
-    case 1:
+    case 'Instrument':
       return new Instrument(fileReader)
-    // Theme
-    case 2:
+    case 'Theme':
       return new Theme(fileReader)
-    // Scale
-    case 3:
+    case 'Scale':
       return new Scale(fileReader)
     default:
       throw new TypeError(`Unsupported file type: ${fileReader.fileType}`)
