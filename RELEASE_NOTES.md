@@ -4,7 +4,9 @@
 
 * Added `theme view` to the CLI
 * Added `Theme` support to the API
+* Added `Theme` support to the CLI
 * Renamed `project details` to `project view` in the CLI
+* Removed `instrument table` from the CLI
 
 ## v0.0.0 _(2022-27-07)_
 

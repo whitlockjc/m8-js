@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "cli-color": "^2.0.2",
-    "commander": "^9.3.0"
+    "commander": "^9.3.0",
+    "x256": "^0.0.2"
   }
 }
