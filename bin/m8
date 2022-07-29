@@ -281,7 +281,7 @@ instrumentCommand
 
 ${m8Text.default('TYPE')}    ${m8Text.value(instrument.kindToStr())}
 ${m8Text.default('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
-${m8Text.default('TRANSP.')} ${m8Text.value(instrument.transpose ? 'ON' : 'OFF')}       ${m8Text.default('TABLE TIC')} ${m8Text.value(toM8HexStr(instrument.tableTick))}
+${m8Text.default('TRANSP.')} ${m8Text.value(toM8Bool(instrument.transpose))}       ${m8Text.default('TABLE TIC')} ${m8Text.value(toM8HexStr(instrument.tableTick))}
 
 ${envelopeData}
 `)
@@ -540,7 +540,7 @@ ${m8Text.default('SAMPLE')}  ${m8Text.title(sanitizedSamplePath)}
 
 ${m8Text.default('TYPE')}    ${m8Text.value(instrument.kindToStr())}
 ${m8Text.default('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
-${m8Text.default('TRANSP.')} ${m8Text.value(instrument.transpose ? 'ON' : 'OFF')}       ${m8Text.default('TABLE TIC')} ${m8Text.value(toM8HexStr(instrument.tableTick))}
+${m8Text.default('TRANSP.')} ${m8Text.value(toM8Bool(instrument.transpose))}       ${m8Text.default('TABLE TIC')} ${m8Text.value(toM8HexStr(instrument.tableTick))}
 ${instrumentData}
 `)
   })
