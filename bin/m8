@@ -147,8 +147,12 @@ ${tableData}
 `)
 }
 
-// TODO: Refactor commands have have common inputs/validations/outputs
-// TODO: Refactor error values to use hex
+function validateOptionLimits (val, option, min, max) {
+  if (val < 0 || val > 127) {
+    throw new commander.InvalidArgumentError(`option '${option}' must be between ${toM8HexStr(min)} and ${toM8HexStr(max)}`)
+  }
+}
+
 // TODO: Research a UX similar to M8 where percentage bars are used (https://en.wikipedia.org/wiki/Block_Elements)
 
 // Configure the CLI details
@@ -190,9 +194,7 @@ instrumentCommand
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    if (options.instrument < 0 || options.instrument > 127) {
-      throw new commander.InvalidArgumentError("option '-i, --instrument <number>' must be between 0 and 127")
-    }
+    validateOptionLimits(options.instrument, '-i, --instrument <number>', 0, 127)
 
     const instrument = song.instruments[options.instrument]
 
@@ -288,9 +290,7 @@ instrumentCommand
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    if (options.instrument < 0 || options.instrument > 127) {
-      throw new commander.InvalidArgumentError("option '-i, --instrument <number>' must be between 0 and 127")
-    }
+    validateOptionLimits(options.instrument, '-i, --instrument <number>', 0, 127)
 
     const instrument = song.instruments[options.instrument]
     const ampParams = instrument.ampParams
@@ -608,9 +608,7 @@ projectCmd
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    if (options.startingRow < 0 || options.startingRow > 127) {
-      throw new commander.InvalidArgumentError("option '-s, --starting-row <number>' must be between 0 and 128")
-    }
+    validateOptionLimits(options.startingRow, '-s, --starting-row <number>', 0, 127)
 
     const startingRow = getStartingRow(options.startingRow, 128)
     let mappings = ''
@@ -793,9 +791,7 @@ songCommand
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    if (options.chain < 0 || options.chain > 255) {
-      throw new commander.InvalidArgumentError("option '-c, --chain <number>' must be between 0 and 255")
-    }
+    validateOptionLimits(options.chain, '-c, --chain <number>', 0, 255)
 
     const chain = song.chains[options.chain]
     let chainData = ''
@@ -835,9 +831,7 @@ songCommand
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    if (options.groove < 0 || options.groove > 31) {
-      throw new commander.InvalidArgumentError("option '-g, --groove <number>' must be between 0 and 31")
-    }
+    validateOptionLimits(options.groove, '-g, --groove <number>', 0, 31)
 
     const groove = song.grooves[options.groove]
     let grooveData = ''
@@ -876,9 +870,7 @@ songCommand
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    if (options.phrase < 0 || options.phrase > 255) {
-      throw new commander.InvalidArgumentError("option '-p, --phrase <number>' must be between 0 and 255")
-    }
+    validateOptionLimits(options.phrase, '-p, --phrase <number>', 0, 255)
 
     const phrase = song.phrases[options.phrase]
     let phraseData = ''
@@ -949,9 +941,7 @@ songCommand
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    if (options.scale < 0 || options.scale > 15) {
-      throw new commander.InvalidArgumentError("option '-s, --scale <number>' must be between 0 and 15")
-    }
+    validateOptionLimits(options.scale, '-s, --scale <number>', 0, 15)
 
     const scale = song.scales[options.scale]
     let scaleData = ''
@@ -1013,9 +1003,7 @@ songCommand
     // Load the theme
     loadThemeFromFile(options.theme)
 
-    if (options.table < 0 || options.table > 255) {
-      throw new commander.InvalidArgumentError("option '-t, --table <number>' must be between 0 and 255")
-    }
+    validateOptionLimits(options.table, '-t, --table <number>', 0, 255)
 
     printTable(options.table, song.tables[options.table], song.instruments[options.table])
   })
