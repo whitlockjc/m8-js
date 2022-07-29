@@ -110,6 +110,244 @@ function parseCLIInt (value) {
   return parsedValue
 }
 
+function printInstrument (instrument, index) {
+  const ampParams = instrument.ampParams
+  const filterParams = instrument.filterParams
+  const instrParams = instrument.instrParams
+  const kindStr = instrument.kindToStr()
+  const mixerParams = instrument.mixerParams
+  let instrumentData = ''
+
+  if (kindStr === 'MIDI OUT') {
+    instrumentData = `
+${m8Text.default('PORT')}        ${m8Text.value(toM8HexStr(instrParams.port))}${m8Text.title(instrParams.portToStr())}
+${m8Text.default('CHANNEL')}     ${m8Text.value(toM8Num(instrParams.channel, 3))}
+${m8Text.default('BANK:PG')}     ${m8Text.value(toM8Num(instrParams.bankSelect, 3) + ':' + toM8Num(instrParams.programChange, 3))}
+`
+
+    for (let i = 0; i < instrument.instrParams.customCC.length; i++) {
+      const customCC = instrParams.customCC[i]
+
+      // 97 is the char code for 'a'
+      instrumentData += `${m8Text.default('CC' + String.fromCharCode(97 + i).toUpperCase() + ' CC:VAL')}  `
+
+      if (customCC[0] === 0xFF) {
+        instrumentData += m8Text.empty(toM8Num('---'))
+      } else {
+        instrumentData += m8Text.value(toM8Num(customCC[0], 3))
+      }
+
+      instrumentData += m8Text.info(':')
+
+      if (customCC[1] === 0xFF) {
+        instrumentData += m8Text.empty('--')
+      } else {
+        instrumentData += m8Text.value(toM8HexStr(customCC[1]))
+      }
+
+      if (i < 9) {
+        instrumentData += '\n'
+      }
+    }
+  } else if (kindStr !== 'NONE') {
+    const leftColumn = []
+    const rightColumn = []
+    let levFbData = ''
+    let modAData = ''
+    let modBData = ''
+    let ratioData = ''
+    let samplePathParts
+    let sanitizedSamplePath
+
+    switch (kindStr) {
+      case 'FMSYNTH':
+        instrumentData = `
+${m8Text.default('ALGO')}    ${m8Text.value(toM8HexStr(instrParams.algo))}${m8Text.title(instrParams.getAlgoStr())}
+`
+
+        if (instrument.version.compare(VERSION_1_4_0) >= 0) {
+          instrumentData += '        '
+
+          for (let i = 0; i < instrParams.shape.length; i++) {
+            instrumentData += `${m8Text.default(String.fromCharCode(97 + i).toUpperCase())} ${m8Text.value(instrParams.getWaveStr(instrParams.shape[i]))}`
+
+            if (i < instrParams.shape.length - 1) {
+              instrumentData += ' '
+            }
+          }
+        }
+
+        for (let i = 0; i < instrParams.ratio.length; i++) {
+          ratioData += m8Text.value(toM8HexStr(instrParams.ratio[i]) + '.' + toM8HexStr(instrParams.ratioFine[i]))
+
+          if (i < instrParams.ratio.length - 1) {
+            ratioData += ' '
+          }
+        }
+
+        for (let i = 0; i < instrParams.level.length; i++) {
+          levFbData += m8Text.value(toM8HexStr(instrParams.level[i])) + m8Text.info('/') + m8Text.value(toM8HexStr(instrParams.fb[i]))
+
+          if (i < instrParams.level.length - 1) {
+            levFbData += ' '
+          }
+        }
+
+        for (let i = 0; i < instrParams.modA.length; i++) {
+          const modAStr = instrParams.getModStr(instrParams.modA[i])
+          const modBStr = instrParams.getModStr(instrParams.modB[i])
+
+          if (modAStr === '-----') {
+            modAData += m8Text.empty(modAStr)
+          } else {
+            modAData += m8Text.value(modAStr.substring(0, 2)) + m8Text.title(modAStr.substring(2))
+          }
+
+          if (modBStr === '-----') {
+            modBData += m8Text.empty(modBStr)
+          } else {
+            modBData += m8Text.value(modBStr.substring(0, 2)) + m8Text.title(modBStr.substring(2))
+          }
+
+          if (i < instrParams.modA.length - 1) {
+            modAData += ' '
+            modBData += ' '
+          }
+        }
+
+        instrumentData += `
+${m8Text.default('RATIO')}   ${ratioData}
+${m8Text.default('LEV/FB')}  ${levFbData}
+${m8Text.default('MOD')}     ${modAData}
+        ${modBData}
+
+`
+
+        for (let i = 0; i < instrParams.operators.length; i++) {
+          leftColumn.push(['MOD' + (i + 1), instrParams.operators[i]])
+        }
+
+        break
+
+      case 'WAVSYNTH':
+        instrumentData = `
+${m8Text.default('SHAPE')}   ${m8Text.value(toM8HexStr(instrParams.shape))}${m8Text.title(instrParams.getShapeStr())}
+
+`
+
+        leftColumn.push(['SIZE', instrParams.size])
+        leftColumn.push(['MULT', instrParams.mult])
+        leftColumn.push(['WARP', instrParams.warp])
+        leftColumn.push(['MIRROR', instrParams.mirror])
+
+        break
+
+      case 'MACROSYN':
+        instrumentData = `
+${m8Text.default('SHAPE')}   ${m8Text.value(toM8HexStr(instrParams.shape))}${m8Text.title(instrParams.getShapeStr())}
+
+`
+
+        leftColumn.push(['TIMBRE', instrParams.timbre])
+        leftColumn.push(['COLOR', instrParams.color])
+        leftColumn.push(['DEGRADE', instrParams.degrade])
+        leftColumn.push(['REDUX', instrParams.redux])
+
+        break
+
+      case 'SAMPLE':
+        samplePathParts = instrParams.samplePath.split('/')
+
+        // Remove any folder hierarchy
+        sanitizedSamplePath = samplePathParts[samplePathParts.length - 1]
+        // Remove the file extension
+        sanitizedSamplePath = sanitizedSamplePath.split('.').slice(0, -1).join('.')
+
+        if (sanitizedSamplePath.length > 16) {
+          // Trim to 16 characters (first 8, _, last 7)
+          sanitizedSamplePath = sanitizedSamplePath.slice(0, 8) + '_' + sanitizedSamplePath.slice(sanitizedSamplePath.length - 7)
+        }
+
+        // Uppercase
+        sanitizedSamplePath = sanitizedSamplePath.toUpperCase()
+
+        instrumentData = `
+${m8Text.default('SAMPLE')}  ${m8Text.title(sanitizedSamplePath)}
+
+`
+
+        leftColumn.push(['SLICE', instrParams.slice, instrParams.slice === 0x00 ? 'OFF' : toM8Num(instrParams.slice, 3)])
+        leftColumn.push(['PLAY', instrParams.playMode, instrParams.getPlayModeStr()])
+        leftColumn.push(['START', instrParams.start])
+        leftColumn.push(['LOOP ST', instrParams.loopStart])
+        leftColumn.push(['LENGTH', instrParams.length])
+        leftColumn.push(['DETUNE', instrument.fineTune])
+        leftColumn.push(['DEGRADE', instrParams.degrade])
+
+        break
+    }
+
+    // Filter Parameters
+    leftColumn.push(['FILTER', filterParams.type, instrument.filterTypeToStr()])
+    leftColumn.push(['CUTOFF', filterParams.cutoff])
+    leftColumn.push(['RES', filterParams.res])
+
+    // Amplifier Parameters
+    rightColumn.push(['AMP', ampParams.amp])
+    rightColumn.push(['LIM', ampParams.lim, ampParams.getLimitStr()])
+
+    // Mixer Parameters
+    rightColumn.push(['PAN', mixerParams.pan])
+    rightColumn.push(['DRY', mixerParams.dry])
+    rightColumn.push(['CHO', mixerParams.cho])
+    rightColumn.push(['DEL', mixerParams.del])
+    rightColumn.push(['REV', mixerParams.rev])
+
+    // As of right now, left column will ALWAYS have more items than right
+    for (let i = 0; i < leftColumn.length; i++) {
+      const leftCol = leftColumn[i]
+      const leftLabel = leftCol[0]
+      const leftValue = leftCol[1]
+      const leftExtra = leftCol[2]
+      const rightCol = rightColumn[i] || []
+      const rightLabel = rightCol[0]
+      const rightValue = rightCol[1]
+      const rightExtra = rightCol[2]
+
+      instrumentData += m8Text.default(leftLabel) + ' '.repeat(8 - leftLabel.length)
+      instrumentData += m8Text.value(toM8HexStr(leftValue))
+
+      if (typeof leftExtra !== 'undefined') {
+        instrumentData += m8Text.title(leftExtra)
+      }
+
+      instrumentData += ' '.repeat(8 - (typeof leftExtra === 'undefined' ? 0 : leftExtra.length))
+
+      if (typeof rightLabel !== 'undefined') {
+        instrumentData += m8Text.default(rightLabel)
+        instrumentData += ' '
+        instrumentData += m8Text.value(toM8HexStr(rightValue))
+
+        if (typeof rightExtra !== 'undefined') {
+          instrumentData += m8Text.title(rightExtra)
+        }
+      }
+
+      if (i < leftColumn.length - 1) {
+        instrumentData += '\n'
+      }
+    }
+  }
+
+  console.log(`${m8Text.title('INST. ' + (typeof index === 'undefined' ? '' : toM8HexStr(index)))}
+
+${m8Text.default('TYPE')}    ${m8Text.value(instrument.kindToStr())}
+${m8Text.default('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
+${m8Text.default('TRANSP.')} ${m8Text.value(toM8Bool(instrument.transpose))}       ${m8Text.default('TABLE TIC')} ${m8Text.value(toM8HexStr(instrument.tableTick))}
+${instrumentData}
+`)
+}
+
 function printScale (scale, key, index) {
   let scaleData = ''
 
@@ -360,241 +598,7 @@ instrumentCommand
       instrument = instrOrSong
     }
 
-    const ampParams = instrument.ampParams
-    const filterParams = instrument.filterParams
-    const instrParams = instrument.instrParams
-    const kindStr = instrument.kindToStr()
-    const mixerParams = instrument.mixerParams
-    let instrumentData = ''
-
-    if (kindStr === 'MIDI OUT') {
-      instrumentData = `
-${m8Text.default('PORT')}        ${m8Text.value(toM8HexStr(instrParams.port))}${m8Text.title(instrParams.portToStr())}
-${m8Text.default('CHANNEL')}     ${m8Text.value(toM8Num(instrParams.channel, 3))}
-${m8Text.default('BANK:PG')}     ${m8Text.value(toM8Num(instrParams.bankSelect, 3) + ':' + toM8Num(instrParams.programChange, 3))}
-`
-
-      for (let i = 0; i < instrument.instrParams.customCC.length; i++) {
-        const customCC = instrParams.customCC[i]
-
-        // 97 is the char code for 'a'
-        instrumentData += `${m8Text.default('CC' + String.fromCharCode(97 + i).toUpperCase() + ' CC:VAL')}  `
-
-        if (customCC[0] === 0xFF) {
-          instrumentData += m8Text.empty(toM8Num('---'))
-        } else {
-          instrumentData += m8Text.value(toM8Num(customCC[0], 3))
-        }
-
-        instrumentData += m8Text.info(':')
-
-        if (customCC[1] === 0xFF) {
-          instrumentData += m8Text.empty('--')
-        } else {
-          instrumentData += m8Text.value(toM8HexStr(customCC[1]))
-        }
-
-        if (i < 9) {
-          instrumentData += '\n'
-        }
-      }
-    } else if (kindStr !== 'NONE') {
-      const leftColumn = []
-      const rightColumn = []
-      let levFbData = ''
-      let modAData = ''
-      let modBData = ''
-      let ratioData = ''
-      let samplePathParts
-      let sanitizedSamplePath
-
-      switch (kindStr) {
-        case 'FMSYNTH':
-          instrumentData = `
-${m8Text.default('ALGO')}    ${m8Text.value(toM8HexStr(instrParams.algo))}${m8Text.title(instrParams.getAlgoStr())}
-`
-
-          if (instrOrSong.version.compare(VERSION_1_4_0) >= 0) {
-            instrumentData += '        '
-
-            for (let i = 0; i < instrParams.shape.length; i++) {
-              instrumentData += `${m8Text.default(String.fromCharCode(97 + i).toUpperCase())} ${m8Text.value(instrParams.getWaveStr(instrParams.shape[i]))}`
-
-              if (i < instrParams.shape.length - 1) {
-                instrumentData += ' '
-              }
-            }
-          }
-
-          for (let i = 0; i < instrParams.ratio.length; i++) {
-            ratioData += m8Text.value(toM8HexStr(instrParams.ratio[i]) + '.' + toM8HexStr(instrParams.ratioFine[i]))
-
-            if (i < instrParams.ratio.length - 1) {
-              ratioData += ' '
-            }
-          }
-
-          for (let i = 0; i < instrParams.level.length; i++) {
-            levFbData += m8Text.value(toM8HexStr(instrParams.level[i])) + m8Text.info('/') + m8Text.value(toM8HexStr(instrParams.fb[i]))
-
-            if (i < instrParams.level.length - 1) {
-              levFbData += ' '
-            }
-          }
-
-          for (let i = 0; i < instrParams.modA.length; i++) {
-            const modAStr = instrParams.getModStr(instrParams.modA[i])
-            const modBStr = instrParams.getModStr(instrParams.modB[i])
-
-            if (modAStr === '-----') {
-              modAData += m8Text.empty(modAStr)
-            } else {
-              modAData += m8Text.value(modAStr.substring(0, 2)) + m8Text.title(modAStr.substring(2))
-            }
-
-            if (modBStr === '-----') {
-              modBData += m8Text.empty(modBStr)
-            } else {
-              modBData += m8Text.value(modBStr.substring(0, 2)) + m8Text.title(modBStr.substring(2))
-            }
-
-            if (i < instrParams.modA.length - 1) {
-              modAData += ' '
-              modBData += ' '
-            }
-          }
-
-          instrumentData += `
-${m8Text.default('RATIO')}   ${ratioData}
-${m8Text.default('LEV/FB')}  ${levFbData}
-${m8Text.default('MOD')}     ${modAData}
-        ${modBData}
-
-`
-
-          for (let i = 0; i < instrParams.operators.length; i++) {
-            leftColumn.push(['MOD' + (i + 1), instrParams.operators[i]])
-          }
-
-          break
-
-        case 'WAVSYNTH':
-          instrumentData = `
-${m8Text.default('SHAPE')}   ${m8Text.value(toM8HexStr(instrParams.shape))}${m8Text.title(instrParams.getShapeStr())}
-
-`
-
-          leftColumn.push(['SIZE', instrParams.size])
-          leftColumn.push(['MULT', instrParams.mult])
-          leftColumn.push(['WARP', instrParams.warp])
-          leftColumn.push(['MIRROR', instrParams.mirror])
-
-          break
-
-        case 'MACROSYN':
-          instrumentData = `
-${m8Text.default('SHAPE')}   ${m8Text.value(toM8HexStr(instrParams.shape))}${m8Text.title(instrParams.getShapeStr())}
-
-`
-
-          leftColumn.push(['TIMBRE', instrParams.timbre])
-          leftColumn.push(['COLOR', instrParams.color])
-          leftColumn.push(['DEGRADE', instrParams.degrade])
-          leftColumn.push(['REDUX', instrParams.redux])
-
-          break
-
-        case 'SAMPLE':
-          samplePathParts = instrParams.samplePath.split('/')
-
-          // Remove any folder hierarchy
-          sanitizedSamplePath = samplePathParts[samplePathParts.length - 1]
-          // Remove the file extension
-          sanitizedSamplePath = sanitizedSamplePath.split('.').slice(0, -1).join('.')
-
-          if (sanitizedSamplePath.length > 16) {
-            // Trim to 16 characters (first 8, _, last 7)
-            sanitizedSamplePath = sanitizedSamplePath.slice(0, 8) + '_' + sanitizedSamplePath.slice(sanitizedSamplePath.length - 7)
-          }
-
-          // Uppercase
-          sanitizedSamplePath = sanitizedSamplePath.toUpperCase()
-
-          instrumentData = `
-${m8Text.default('SAMPLE')}  ${m8Text.title(sanitizedSamplePath)}
-
-`
-
-          leftColumn.push(['SLICE', instrParams.slice, instrParams.slice === 0x00 ? 'OFF' : toM8Num(instrParams.slice, 3)])
-          leftColumn.push(['PLAY', instrParams.playMode, instrParams.getPlayModeStr()])
-          leftColumn.push(['START', instrParams.start])
-          leftColumn.push(['LOOP ST', instrParams.loopStart])
-          leftColumn.push(['LENGTH', instrParams.length])
-          leftColumn.push(['DETUNE', instrument.fineTune])
-          leftColumn.push(['DEGRADE', instrParams.degrade])
-
-          break
-      }
-
-      // Filter Parameters
-      leftColumn.push(['FILTER', filterParams.type, instrument.filterTypeToStr()])
-      leftColumn.push(['CUTOFF', filterParams.cutoff])
-      leftColumn.push(['RES', filterParams.res])
-
-      // Amplifier Parameters
-      rightColumn.push(['AMP', ampParams.amp])
-      rightColumn.push(['LIM', ampParams.lim, ampParams.getLimitStr()])
-
-      // Mixer Parameters
-      rightColumn.push(['PAN', mixerParams.pan])
-      rightColumn.push(['DRY', mixerParams.dry])
-      rightColumn.push(['CHO', mixerParams.cho])
-      rightColumn.push(['DEL', mixerParams.del])
-      rightColumn.push(['REV', mixerParams.rev])
-
-      // As of right now, left column will ALWAYS have more items than right
-      for (let i = 0; i < leftColumn.length; i++) {
-        const leftCol = leftColumn[i]
-        const leftLabel = leftCol[0]
-        const leftValue = leftCol[1]
-        const leftExtra = leftCol[2]
-        const rightCol = rightColumn[i] || []
-        const rightLabel = rightCol[0]
-        const rightValue = rightCol[1]
-        const rightExtra = rightCol[2]
-
-        instrumentData += m8Text.default(leftLabel) + ' '.repeat(8 - leftLabel.length)
-        instrumentData += m8Text.value(toM8HexStr(leftValue))
-
-        if (typeof leftExtra !== 'undefined') {
-          instrumentData += m8Text.title(leftExtra)
-        }
-
-        instrumentData += ' '.repeat(8 - (typeof leftExtra === 'undefined' ? 0 : leftExtra.length))
-
-        if (typeof rightLabel !== 'undefined') {
-          instrumentData += m8Text.default(rightLabel)
-          instrumentData += ' '
-          instrumentData += m8Text.value(toM8HexStr(rightValue))
-
-          if (typeof rightExtra !== 'undefined') {
-            instrumentData += m8Text.title(rightExtra)
-          }
-        }
-
-        if (i < leftColumn.length - 1) {
-          instrumentData += '\n'
-        }
-      }
-    }
-
-    console.log(`${m8Text.title('INST. ' + (instrOrSong.constructor.name === 'Song' ? toM8HexStr(options.instrument) : ''))}
-
-${m8Text.default('TYPE')}    ${m8Text.value(instrument.kindToStr())}
-${m8Text.default('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
-${m8Text.default('TRANSP.')} ${m8Text.value(toM8Bool(instrument.transpose))}       ${m8Text.default('TABLE TIC')} ${m8Text.value(toM8HexStr(instrument.tableTick))}
-${instrumentData}
-`)
+    printInstrument(instrument, options.instrument)
   })
 
 // Project commands
@@ -936,6 +940,23 @@ songCommand
 
 ${grooveData}
 `)
+  })
+
+songCommand
+  .command('instrument')
+  .description('print the m8 song instrument view')
+  .argument('<m8-file>', 'the m8file')
+  .option('-i, --instrument <number>', 'the instrument to display', parseCLIHexInt)
+  .option('-T, --theme <path>', 'the path to an M8 theme file to use')
+  .action((m8FilePath, options) => {
+    const song = loadM8FileAndVerify(m8FilePath, 'Song')
+
+    // Load the theme
+    loadThemeFromFile(options.theme)
+
+    validateOptionLimits(options.instrument, '-i, --instrument <number>', 0, 127)
+
+    printInstrument(song.instruments[options.instrument], options.instrument)
   })
 
 songCommand

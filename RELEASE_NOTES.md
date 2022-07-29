@@ -3,6 +3,7 @@
 ## TBD
 
 * Added `scale view` to the CLI
+* Added `song instrument` to the CLI
 * Added `theme view` to the CLI
 * Added `Theme` support to the API
 * Added `Theme` support to the CLI
