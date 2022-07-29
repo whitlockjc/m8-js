@@ -155,7 +155,7 @@ const loadM8File = (filePath) => {
       return new Song(fileReader)
     // Instrument
     case 1:
-      return new Instrument(fileReader.m8Version, fileReader)
+      return new Instrument(fileReader)
     // Theme
     case 2:
       return new Theme(fileReader)

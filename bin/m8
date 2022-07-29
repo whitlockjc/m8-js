@@ -110,6 +110,54 @@ function parseCLIInt (value) {
   return parsedValue
 }
 
+function printScale (scale, key, index) {
+  let scaleData = ''
+
+  for (let i = 0; i < 12; i++) {
+    let noteIndex = scale.key + i
+
+    if (noteIndex > 11) {
+      noteIndex = noteIndex - 12
+    }
+
+    const note = getNote(noteIndex)
+
+    if (note.indexOf('#') === -1) {
+      scaleData += `${m8Text.default(note)}  `
+    } else {
+      scaleData += `${m8Text.info(note)} `
+    }
+
+    if (scale.notes[i]) {
+      const offsetStr = scale.offsetToStr(i)
+
+      scaleData += `${m8Text.value('ON')}`
+
+      if (offsetStr[0] !== '-') {
+        scaleData += ' '
+      }
+
+      scaleData += m8Text.value(offsetStr)
+    } else {
+      scaleData += `${m8Text.empty('--')} ${m8Text.empty('--')} ${m8Text.empty('--')}`
+    }
+
+    if (i < 11) {
+      scaleData += '\n'
+    }
+  }
+
+  console.log(`${m8Text.title('SCALE ' + (typeof index === 'undefined' ? '' : toM8HexStr(index)))}
+
+${m8Text.default('KEY')}   ${m8Text.value(getNote(key))}
+
+${m8Text.default('I  EN OFFSET')}
+${scaleData}
+
+${m8Text.default('NAME')}  ${m8Text.value(scale.name)}${m8Text.empty('-'.repeat(16 - scale.name.length))}
+`)
+}
+
 function printTable (name, table, instrument) {
   let tableData = ''
 
@@ -175,6 +223,10 @@ const instrumentCommand = program
 const projectCmd = program
   .command('project')
   .description('project specific commands')
+
+const scaleCommand = program
+  .command('scale')
+  .description('scale specific commands')
 
 const songCommand = program
   .command('song')
@@ -536,7 +588,7 @@ ${m8Text.default('SAMPLE')}  ${m8Text.title(sanitizedSamplePath)}
       }
     }
 
-    console.log(`${m8Text.title(instrOrSong.constructor.name === 'Song' ? 'INST. ' + toM8HexStr(options.instrument) : instrument.name)}
+    console.log(`${m8Text.title('INST. ' + (instrOrSong.constructor.name === 'Song' ? toM8HexStr(options.instrument) : ''))}
 
 ${m8Text.default('TYPE')}    ${m8Text.value(instrument.kindToStr())}
 ${m8Text.default('NAME')}    ${m8Text.value(instrument.name)}${m8Text.empty('-'.repeat(12 - instrument.name.length))}
@@ -787,6 +839,24 @@ ${m8Text.value(song.version.majorVersion + '.' + song.version.minorVersion + '.'
 `)
   })
 
+// Scale commands
+scaleCommand
+  .command('view')
+  .description('print the m8 scale')
+  .argument('<m8-file>', 'the m8file')
+  .option('-k, --key <number>', 'the root key to use for the scale', parseCLIHexInt, 0x00)
+  .option('-T, --theme <path>', 'the path to an M8 theme file to use')
+  .action((m8FilePath, options) => {
+    const scale = loadM8FileAndVerify(m8FilePath, 'Scale')
+
+    // Load the theme
+    loadThemeFromFile(options.theme)
+
+    validateOptionLimits(options.key, '-k, --key <number>', 0, 11)
+
+    printScale(scale, options.key)
+  })
+
 // Song commands
 
 songCommand
@@ -953,52 +1023,7 @@ songCommand
 
     validateOptionLimits(options.scale, '-s, --scale <number>', 0, 15)
 
-    const scale = song.scales[options.scale]
-    let scaleData = ''
-
-    for (let i = 0; i < 12; i++) {
-      let noteIndex = song.key + i
-
-      if (noteIndex > 11) {
-        noteIndex = noteIndex - 12
-      }
-
-      const note = getNote(noteIndex)
-
-      if (note.indexOf('#') === -1) {
-        scaleData += `${m8Text.default(note)}  `
-      } else {
-        scaleData += `${m8Text.info(note)} `
-      }
-
-      if (scale.notes[i]) {
-        const offsetStr = scale.offsetToStr(i)
-
-        scaleData += `${m8Text.value('ON')}`
-
-        if (offsetStr[0] !== '-') {
-          scaleData += ' '
-        }
-
-        scaleData += m8Text.value(offsetStr)
-      } else {
-        scaleData += `${m8Text.empty('--')} ${m8Text.empty('--')} ${m8Text.empty('--')}`
-      }
-
-      if (i < 11) {
-        scaleData += '\n'
-      }
-    }
-
-    console.log(`${m8Text.title('SCALE ' + toM8HexStr(options.scale))}
-
-${m8Text.default('KEY')}   ${m8Text.value(getNote(song.key))}
-
-${m8Text.default('I  EN OFFSET')}
-${scaleData}
-
-${m8Text.default('NAME')}  ${m8Text.value(scale.name)}${m8Text.empty('-'.repeat(16 - scale.name.length))}
-`)
+    printScale(song.scales[options.scale], song.key, options.scale)
   })
 
 songCommand
