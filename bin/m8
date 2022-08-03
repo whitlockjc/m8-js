@@ -169,7 +169,7 @@ ${m8Text.default('ALGO')}    ${m8Text.value(toM8HexStr(instrParams.algo))}${m8Te
           instrumentData += '        '
 
           for (let i = 0; i < instrParams.shape.length; i++) {
-            instrumentData += `${m8Text.default(String.fromCharCode(97 + i).toUpperCase())} ${m8Text.value(instrParams.getWaveStr(instrParams.shape[i]))}`
+            instrumentData += `${m8Text.default(String.fromCharCode(97 + i).toUpperCase())} ${m8Text.value(instrParams.getOscShapeStr(instrParams.shape[i]))}`
 
             if (i < instrParams.shape.length - 1) {
               instrumentData += ' '

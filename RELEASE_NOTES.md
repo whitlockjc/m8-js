@@ -1,5 +1,12 @@
 # Release Notes
 
+## v0.0.3 _(TBD)_
+
+* API
+  * Renamed `getWaveStr` in `FMSynthParameters` to `getOscShapeStr`
+* CLI
+  * Added support for M8 firmwares `2.7.0` through `2.7.6` _(`2.7.6` is the latest releast at this time, newer versions will work assuming no breaking changes)_
+
 ## v0.0.2 _(2022-29-07)_
 
 * Added `scale view` to the CLI
