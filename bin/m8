@@ -445,8 +445,6 @@ function validateOptionLimits (val, option, min, max) {
   }
 }
 
-// TODO: Research a UX similar to M8 where percentage bars are used (https://en.wikipedia.org/wiki/Block_Elements)
-
 // Configure the CLI details
 program
   .name('m8')
@@ -1121,23 +1119,21 @@ themeCommand
 
     loadTheme(theme)
 
-    // TODO: Add a 4th column with an example of the xterm equivalent to the RGB color
-
     console.log(`${m8Text.title('THEME SETTINGS')}
 
-${m8Text.default('BACKGROUND')}   ${m8Text.value(toM8HexStr(theme.background[0]))} ${m8Text.value(toM8HexStr(theme.background[1]))} ${m8Text.value(toM8HexStr(theme.background[2]))}
-${m8Text.default('TEXT:EMPTY')}   ${m8Text.value(toM8HexStr(theme.textEmpty[0]))} ${m8Text.value(toM8HexStr(theme.textEmpty[1]))} ${m8Text.value(toM8HexStr(theme.textEmpty[2]))}
-${m8Text.default('TEXT:INFO')}    ${m8Text.value(toM8HexStr(theme.textInfo[0]))} ${m8Text.value(toM8HexStr(theme.textInfo[1]))} ${m8Text.value(toM8HexStr(theme.textInfo[2]))}
-${m8Text.default('TEXT:DEFAULT')} ${m8Text.value(toM8HexStr(theme.textDefault[0]))} ${m8Text.value(toM8HexStr(theme.textDefault[1]))} ${m8Text.value(toM8HexStr(theme.textDefault[2]))}
-${m8Text.default('TEXT:VALUE')}   ${m8Text.value(toM8HexStr(theme.textValue[0]))} ${m8Text.value(toM8HexStr(theme.textValue[1]))} ${m8Text.value(toM8HexStr(theme.textValue[2]))}
-${m8Text.default('TEXT:TITLES')}  ${m8Text.value(toM8HexStr(theme.textTitle[0]))} ${m8Text.value(toM8HexStr(theme.textTitle[1]))} ${m8Text.value(toM8HexStr(theme.textTitle[2]))}
-${m8Text.default('PLAY MARKERS')} ${m8Text.value(toM8HexStr(theme.playMarker[0]))} ${m8Text.value(toM8HexStr(theme.playMarker[1]))} ${m8Text.value(toM8HexStr(theme.playMarker[2]))}
-${m8Text.default('CURSOR')}       ${m8Text.value(toM8HexStr(theme.cursor[0]))} ${m8Text.value(toM8HexStr(theme.cursor[1]))} ${m8Text.value(toM8HexStr(theme.cursor[2]))}
-${m8Text.default('SELECTION')}    ${m8Text.value(toM8HexStr(theme.selection[0]))} ${m8Text.value(toM8HexStr(theme.selection[1]))} ${m8Text.value(toM8HexStr(theme.selection[2]))}
-${m8Text.default('SCOPE/SLIDER')} ${m8Text.value(toM8HexStr(theme.scopeSlider[0]))} ${m8Text.value(toM8HexStr(theme.scopeSlider[1]))} ${m8Text.value(toM8HexStr(theme.scopeSlider[2]))}
-${m8Text.default('METER LOW')}    ${m8Text.value(toM8HexStr(theme.meterLow[0]))} ${m8Text.value(toM8HexStr(theme.meterLow[1]))} ${m8Text.value(toM8HexStr(theme.meterLow[2]))}
-${m8Text.default('METER MID')}    ${m8Text.value(toM8HexStr(theme.meterMid[0]))} ${m8Text.value(toM8HexStr(theme.meterMid[1]))} ${m8Text.value(toM8HexStr(theme.meterMid[2]))}
-${m8Text.default('METER PEAK')}   ${m8Text.value(toM8HexStr(theme.meterPeak[0]))} ${m8Text.value(toM8HexStr(theme.meterPeak[1]))} ${m8Text.value(toM8HexStr(theme.meterPeak[2]))}
+${m8Text.default('BACKGROUND')}   ${m8Text.value(toM8HexStr(theme.background[0]))} ${m8Text.value(toM8HexStr(theme.background[1]))} ${m8Text.value(toM8HexStr(theme.background[2]))} ${clc.xterm(x256(...theme.background))('\u25A0\u25A0\u25A0')}
+${m8Text.default('TEXT:EMPTY')}   ${m8Text.value(toM8HexStr(theme.textEmpty[0]))} ${m8Text.value(toM8HexStr(theme.textEmpty[1]))} ${m8Text.value(toM8HexStr(theme.textEmpty[2]))} ${clc.xterm(x256(...theme.textEmpty))('\u25A0\u25A0\u25A0')}
+${m8Text.default('TEXT:INFO')}    ${m8Text.value(toM8HexStr(theme.textInfo[0]))} ${m8Text.value(toM8HexStr(theme.textInfo[1]))} ${m8Text.value(toM8HexStr(theme.textInfo[2]))} ${clc.xterm(x256(...theme.textInfo))('\u25A0\u25A0\u25A0')}
+${m8Text.default('TEXT:DEFAULT')} ${m8Text.value(toM8HexStr(theme.textDefault[0]))} ${m8Text.value(toM8HexStr(theme.textDefault[1]))} ${m8Text.value(toM8HexStr(theme.textDefault[2]))} ${clc.xterm(x256(...theme.textDefault))('\u25A0\u25A0\u25A0')}
+${m8Text.default('TEXT:VALUE')}   ${m8Text.value(toM8HexStr(theme.textValue[0]))} ${m8Text.value(toM8HexStr(theme.textValue[1]))} ${m8Text.value(toM8HexStr(theme.textValue[2]))} ${clc.xterm(x256(...theme.textValue))('\u25A0\u25A0\u25A0')}
+${m8Text.default('TEXT:TITLES')}  ${m8Text.value(toM8HexStr(theme.textTitle[0]))} ${m8Text.value(toM8HexStr(theme.textTitle[1]))} ${m8Text.value(toM8HexStr(theme.textTitle[2]))} ${clc.xterm(x256(...theme.textTitle))('\u25A0\u25A0\u25A0')}
+${m8Text.default('PLAY MARKERS')} ${m8Text.value(toM8HexStr(theme.playMarker[0]))} ${m8Text.value(toM8HexStr(theme.playMarker[1]))} ${m8Text.value(toM8HexStr(theme.playMarker[2]))} ${clc.xterm(x256(...theme.playMarker))('\u25A0\u25A0\u25A0')}
+${m8Text.default('CURSOR')}       ${m8Text.value(toM8HexStr(theme.cursor[0]))} ${m8Text.value(toM8HexStr(theme.cursor[1]))} ${m8Text.value(toM8HexStr(theme.cursor[2]))} ${clc.xterm(x256(...theme.cursor))('\u25A0\u25A0\u25A0')}
+${m8Text.default('SELECTION')}    ${m8Text.value(toM8HexStr(theme.selection[0]))} ${m8Text.value(toM8HexStr(theme.selection[1]))} ${m8Text.value(toM8HexStr(theme.selection[2]))} ${clc.xterm(x256(...theme.selection))('\u25A0\u25A0\u25A0')}
+${m8Text.default('SCOPE/SLIDER')} ${m8Text.value(toM8HexStr(theme.scopeSlider[0]))} ${m8Text.value(toM8HexStr(theme.scopeSlider[1]))} ${m8Text.value(toM8HexStr(theme.scopeSlider[2]))} ${clc.xterm(x256(...theme.scopeSlider))('\u25A0\u25A0\u25A0')}
+${m8Text.default('METER LOW')}    ${m8Text.value(toM8HexStr(theme.meterLow[0]))} ${m8Text.value(toM8HexStr(theme.meterLow[1]))} ${m8Text.value(toM8HexStr(theme.meterLow[2]))} ${clc.xterm(x256(...theme.meterLow))('\u25A0\u25A0\u25A0')}
+${m8Text.default('METER MID')}    ${m8Text.value(toM8HexStr(theme.meterMid[0]))} ${m8Text.value(toM8HexStr(theme.meterMid[1]))} ${m8Text.value(toM8HexStr(theme.meterMid[2]))} ${clc.xterm(x256(...theme.meterMid))('\u25A0\u25A0\u25A0')}
+${m8Text.default('METER PEAK')}   ${m8Text.value(toM8HexStr(theme.meterPeak[0]))} ${m8Text.value(toM8HexStr(theme.meterPeak[1]))} ${m8Text.value(toM8HexStr(theme.meterPeak[2]))} ${clc.xterm(x256(...theme.meterPeak))('\u25A0\u25A0\u25A0')}
 `)
   })
 
