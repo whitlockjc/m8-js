@@ -1,6 +1,6 @@
 # Release Notes
 
-## v0.0.3 _(TBD)_
+## v0.0.3 _(2022-08-03)_
 
 * API
   * Renamed `getWaveStr` in `FMSynthParameters` to `getOscShapeStr`
