@@ -15,12 +15,14 @@
  * limitations under the License.
  */
 
+const { readFileSync } = require('fs')
+
 const clc = require('cli-color')
 const commander = require('commander')
 const x256 = require('x256')
-const { loadM8File } = require('..')
 const pkg = require('../package.json')
 const { destToStr, fxCmdToStr, getNote, toM8HexStr, toM8Bool, toM8Num } = require('../lib/helpers')
+const { loadM8File } = require('..')
 const { DefaultTheme, VERSION_1_4_0 } = require('../lib/types')
 
 const m8Text = {}
@@ -50,8 +52,12 @@ function getStartingRow (startingRow, maxValue) {
   return startingRow
 }
 
+function loadM8FileFromPath (filePath) {
+  return loadM8File(readFileSync(filePath))
+}
+
 function loadM8FileAndVerify (path, type) {
-  const m8File = loadM8File(path)
+  const m8File = loadM8FileFromPath(path)
 
   if (typeof type === 'string') {
     if (m8File.constructor.name !== type) {
@@ -80,7 +86,7 @@ function loadThemeFromFile (path) {
   if (typeof path === 'undefined') {
     theme = DefaultTheme
   } else {
-    theme = loadM8File(path)
+    theme = loadM8FileFromPath(path)
 
     if (theme.constructor.name !== 'Theme') {
       throw new commander.InvalidArgumentError("option '-T, --theme <path>' must be to an M8 Theme file")
@@ -1115,7 +1121,7 @@ themeCommand
   .description('print the m8 theme view')
   .argument('<m8-file>', 'the m8file')
   .action((m8FilePath) => {
-    const theme = loadM8File(m8FilePath, 'Theme')
+    const theme = loadM8FileFromPath(m8FilePath, 'Theme')
 
     loadTheme(theme)
 

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+const { Instrument, M8FileReader, Scale, Song, Theme } = require('./lib/types')
+
 /**
  * Module for loading/interacting with {@link https://dirtywave.com/|Dirtywave} M8 instrument/song files.
  *
@@ -21,151 +23,15 @@
  * @module m8-js
  */
 
-const { readFileSync } = require('fs')
-const { toM8HexStr } = require('./lib/helpers')
-const { Instrument, M8Version, Scale, Song, Theme } = require('./lib/types')
-
-/**
- * M8 file reader.
- *
- * @class
- */
-class M8FileReader {
-  /** @member {Buffer} */
-  buffer
-  /** @member {Number} */
-  cursor
-  /** @member {String} */
-  filePath
-  /** @member {String} */
-  fileType
-  /** @member {M8Version} */
-  m8Version
-
-  constructor (filePath) {
-    this.cursor = 0
-    this.filePath = filePath
-    this.buffer = readFileSync(filePath)
-
-    // Read and discard the first 9 bytes (M8VERSION)
-    this.readStr(9)
-
-    // Discard the next byte
-    this.readUInt8()
-
-    // Read the M8 file version details
-    this.m8Version = this.readM8Version()
-
-    // Discard the next byte
-    this.readUInt8()
-
-    const rawFileType = this.readUInt8() >> 4
-
-    switch (rawFileType) {
-      case 0:
-        this.fileType = 'Song'
-        break
-      case 1:
-        this.fileType = 'Instrument'
-        break
-      case 2:
-        this.fileType = 'Theme'
-        break
-      case 3:
-        this.fileType = 'Scale'
-        break
-      default:
-        this.fileType = `Unknown (${toM8HexStr(rawFileType)})`
-    }
-  }
-
-  /**
-   * Returns an array of bytes at the current cursor position.
-   *
-   * @param {Number} len
-   *
-   * @returns {Array<Number>}
-   */
-  read (len) {
-    const data = []
-
-    for (let i = 0; i < len; i++) {
-      data.push(this.buffer[this.cursor])
-
-      this.cursor += 1
-    }
-
-    return data
-  }
-
-  /**
-   * Reads an M8 version at the current cursor position.
-   *
-   * @returns {M8Version}
-   */
-  readM8Version () {
-    // Read the M8 file version details
-    const rawData = Buffer.from([this.readUInt8(), this.readUInt8()]).readUInt16LE(0)
-
-    const patchVersion = rawData & 0x0F
-    const minorVersion = (rawData >> 4) & 0x0F
-    const majorVersion = (rawData >> 8) & 0x0F
-
-    return new M8Version(majorVersion, minorVersion, patchVersion)
-  }
-
-  /**
-   * Reads a number of bytes and returns its string representation.
-   *
-   * @param {Number} len
-   *
-   * @returns {String}
-   */
-  readStr (len) {
-    const chars = []
-    let i = 0
-    let char
-
-    for (i; i < len; i++) {
-      char = this.readUInt8()
-
-      if (char === 0 || char === 0xff) {
-        break
-      }
-
-      chars.push(char)
-    }
-
-    // Increment the len cursor to avoid processing twice
-    i++
-
-    for (i; i < len; i++) {
-      // Discard remaining
-      this.readUInt8()
-    }
-
-    return String.fromCharCode(...chars)
-  }
-
-  /**
-   * Reads a number at the current position.
-   *
-   * @returns {Number}
-   */
-  readUInt8 () {
-    return this.read(1)[0]
-  }
-}
-
 /**
  * Reads an M8 file from disk.
  *
- * @param {String} filePath - The path of the file to read
+ * @param {Buffer} buffer - The M8 file content as a Buffer.
  *
  * @returns {Instrument|Scale|Song|Theme} the M8 file
  */
-const loadM8File = (filePath) => {
-  const fileReader = new M8FileReader(filePath)
+const loadM8File = (buffer) => {
+  const fileReader = new M8FileReader(buffer)
 
   switch (fileReader.fileType) {
     case 'Song':
@@ -181,6 +47,7 @@ const loadM8File = (filePath) => {
   }
 }
 
+// Exports
 module.exports = {
   loadM8File
 }

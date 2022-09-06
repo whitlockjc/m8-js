@@ -1,5 +1,12 @@
 # Release Notes
 
+## TBD
+
+* API
+  * Moved `M8FileReader` from `index.js` to `lib/types.js`
+  * Updated `loadM8File` to use `Buffer` instead of a file path
+  * Updated the `M8FileReader` constructor to use a `Buffer` instead of a file path
+
 ## v0.0.3 _(2022-08-03)_
 
 * API
