@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /* Copyright 2022 Jeremy Whitlock
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -15,12 +13,13 @@
  * limitations under the License.
  */
 
-const { createProgram } = require('../lib/cli')
-const program = createProgram()
+const { DefaultTheme } = require('../lib/constants')
+const Theme = require('../lib/types/Theme')
 
-// Process the CLI arguments and run
-if (!process.argv.slice(2).length) {
-  program.outputHelp()
-} else {
-  program.parse(process.argv)
-}
+describe('Theme tests', () => {
+  test('constructor', () => {
+    const theme = new Theme()
+
+    expect(theme).toEqual(DefaultTheme)
+  })
+})

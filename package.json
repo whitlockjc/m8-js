@@ -10,7 +10,8 @@
     "m8"
   ],
   "scripts": {
-    "test": "eslint bin/m8 index.js lib/*.js"
+    "docs": "jsdoc2md index.js lib/*.js lib/types/*.js > docs/API.md",
+    "test": "eslint bin/m8 index.js lib/*.js && jest"
   },
   "bin": {
     "m8": "./bin/m8"
@@ -19,12 +20,28 @@
     "eslint": "^8.15.0",
     "eslint-config-standard": "^17.0.0",
     "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-jest": "^27.0.1",
     "eslint-plugin-n": "^15.2.0",
-    "eslint-plugin-promise": "^6.0.0"
+    "eslint-plugin-promise": "^6.0.0",
+    "jest": "^29.0.2",
+    "jsdoc-to-markdown": "^7.1.1"
   },
   "dependencies": {
     "cli-color": "^2.0.2",
     "commander": "^9.3.0",
     "x256": "^0.0.2"
+  },
+  "files": [
+    "bin",
+    "docs",
+    "index.js",
+    "lib"
+  ],
+  "jest": {
+    "collectCoverage": true,
+    "coverageReporters": [
+      "text",
+      "text-summary"
+    ]
   }
 }

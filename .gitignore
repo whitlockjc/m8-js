@@ -6,4 +6,4 @@
 .vscode/
 coverage/
 nim/
-samples/
+test/files/m8

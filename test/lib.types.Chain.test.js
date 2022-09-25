@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /* Copyright 2022 Jeremy Whitlock
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -15,12 +13,19 @@
  * limitations under the License.
  */
 
-const { createProgram } = require('../lib/cli')
-const program = createProgram()
+const Chain = require('../lib/types/Chain')
 
-// Process the CLI arguments and run
-if (!process.argv.slice(2).length) {
-  program.outputHelp()
-} else {
-  program.parse(process.argv)
-}
+describe('Chain tests', () => {
+  test('constructor', () => {
+    const emptyChain = new Chain()
+
+    expect(emptyChain.steps.length).toEqual(16)
+
+    for (let i = 0; i < emptyChain.steps.length; i++) {
+      const step = emptyChain.steps[i]
+
+      expect(step.phrase).toEqual(0xFF)
+      expect(step.transpose).toEqual(0x00)
+    }
+  })
+})

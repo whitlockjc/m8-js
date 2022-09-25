@@ -1,11 +1,54 @@
 # Release Notes
 
-## TBD
+## v1.0.0 _(TBD)_
 
 * API
-  * Moved `M8FileReader` from `index.js` to `lib/types.js`
-  * Updated `loadM8File` to use `Buffer` instead of a file path
+  * Added helper methods to `index.js` for reading M8 files/types
+    * `loadInstrument`
+    * `loadScale`
+    * `loadSong`
+    * `loadTable`
+    * `loadTheme`
+  * Added support for reading table data from an `Instrument` file
+  * Moved `M8FileReader` from `index.js` to `lib/types/`
+  * Moved all classes from `lib/types.js` to `lib/types/` into their own files
+    * `lib/types/Chain.js`
+    * `lib/types/FX.js`
+    * `lib/types/Groove.js`
+    * `lib/types/Instrument.js`
+    * `lib/types/M8FileReader.js`
+    * `lib/types/M8Version.js`
+    * `lib/types/Phrase.js`
+    * `lib/types/Scale.js`
+    * `lib/types/Song.js`
+    * `lib/types/Table.js`
+    * `lib/types/Theme.js`
+  * Updated `lib/types/Instrument.js` to exports instrument-specific types
+    * `FMSynth`
+    * `Macrosynth`
+    * `MIDIOut`
+    * `None`
+    * `Sampler`
+    * `Wavsynth`
+  * Updated `loadM8File` to use `M8FileReader` instead of a file path
+  * Updated all class constructors to initialize themselves using the default values M8 would use
+  * Updated `Song` to default to the appropriate `Scale` objects
   * Updated the `M8FileReader` constructor to use a `Buffer` instead of a file path
+  * Various refactorings that are too numerous to mention
+* CLI
+  * Added `instrument table` command
+  * Added `instrument version` command
+  * Added `scale version` command
+  * Added `song phrase-at` command _(same as `song phrase` but it finds the phrase based on track/chain location so that it can resolve the "previous instrument" for commands)_
+  * Added `theme version` command
+  * Fixed column alignment for `instrument view` and `song instrument` commands for empty `FMSYNTH` operators
+  * Fixed column alignment for `project effects` command
+  * Fixed column alignment for `song table` command
+  * Fixed issue where booleans were being used for transports in `project midi-settings`
+  * Fixed issue where columns were missing for `song groove`
+  * Fixed issue where printing a `MIDI OUT` instrument would print `BANK:PG` empty values
+  * Fixed issue where printing FX commands fails when relying on knowing the last instrument
+  * Fixed issue where the `--starting-row` option was printed by mistake for `project midi-mapping`
 
 ## v0.0.3 _(2022-08-03)_
 

@@ -1,4 +1,8 @@
+env:
+  jest/globals: true
 extends: standard
+plugins:
+- jest
 rules:
   indent:
   - error

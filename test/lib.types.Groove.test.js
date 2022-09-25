@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /* Copyright 2022 Jeremy Whitlock
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -15,12 +13,20 @@
  * limitations under the License.
  */
 
-const { createProgram } = require('../lib/cli')
-const program = createProgram()
+const Groove = require('../lib/types/Groove')
 
-// Process the CLI arguments and run
-if (!process.argv.slice(2).length) {
-  program.outputHelp()
-} else {
-  program.parse(process.argv)
-}
+describe('Groove tests', () => {
+  test('constructor', () => {
+    const defaultGroove = new Groove()
+
+    for (let i = 0; i < defaultGroove.steps; i++) {
+      let expectedValue = 0xFF
+
+      if (i < 2) {
+        expectedValue = 0x06
+      }
+
+      expectedValue(defaultGroove.steps[i]).toEqual(expectedValue)
+    }
+  })
+})

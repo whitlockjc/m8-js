@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /* Copyright 2022 Jeremy Whitlock
  *
  * Licensed under the Apache License, Version 2.0 (the 'License');
@@ -15,12 +13,26 @@
  * limitations under the License.
  */
 
-const { createProgram } = require('../lib/cli')
-const program = createProgram()
+const Table = require('../lib/types/Table')
 
-// Process the CLI arguments and run
-if (!process.argv.slice(2).length) {
-  program.outputHelp()
-} else {
-  program.parse(process.argv)
-}
+describe('Table tests', () => {
+  test('constructor', () => {
+    const emptyTable = new Table()
+
+    expect(emptyTable.steps.length).toEqual(16)
+
+    for (let i = 0; i < emptyTable.steps.length; i++) {
+      const step = emptyTable.steps[i]
+
+      expect(step.transpose).toEqual(0x00)
+      expect(step.volume).toEqual(0xFF)
+
+      for (let j = 0; j < 3; j++) {
+        const fx = step['fx' + (j + 1)]
+
+        expect(fx.command).toEqual(0xFF)
+        expect(fx.value).toEqual(0x00)
+      }
+    }
+  })
+})
