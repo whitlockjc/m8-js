@@ -18,7 +18,7 @@ const Song = require('./lib/types/Song')
 const Table = require('./lib/types/Table')
 const Theme = require('./lib/types/Theme')
 const { FMSynth, Macrosynth, MIDIOut, None, Sampler, Wavsynth } = require('./lib/types/Instrument')
-const { VERSION_1_4_0, VERSION_2_5_0 } = require('./lib/constants')
+const { LATEST_M8_VERSION, VERSION_1_4_0, VERSION_2_5_0 } = require('./lib/constants')
 const { toM8HexStr } = require('./lib/helpers')
 
 // TODO: Add debug support
@@ -41,6 +41,69 @@ const { toM8HexStr } = require('./lib/helpers')
  * @see {@link https://nodejs.org/api/buffer.html|Node.js}
  * @see {@link https://github.com/feross/buffer|Non-Node.js}
  */
+
+/**
+ * Dumps an M8Version file to bytes.
+ *
+ * @param {module:m8-js/lib/types.M8Version} m8Version - The M8 version
+ *
+ * @returns {Array<Number>}
+ */
+const dumpM8Version = (m8Version) => {
+  // Start with 'M8VERSION' bytes
+  const bytes = [0x4D, 0x38, 0x56, 0x45, 0x52, 0x53, 0x49, 0x4F, 0x4E]
+
+  bytes.push(0x00)
+
+  const majorBits = m8Version.majorVersion === 0
+    ? '0000'
+    : m8Version.majorVersion.toString(2)
+  const minorBits = m8Version.minorVersion === 0
+    ? '0000'
+    : m8Version.minorVersion.toString(2).padStart(4, '0')
+  const patchBits = m8Version.patchVersion === 0
+    ? '0000'
+    : m8Version.patchVersion.toString(2).padStart(4, '0')
+  const rawM8Version = parseInt(majorBits + minorBits + patchBits, 2)
+
+  bytes.push(rawM8Version & 0xFF)
+  bytes.push((rawM8Version >> 8) & 0xFF)
+
+  bytes.push(0x00)
+
+  return bytes
+}
+
+/**
+ * Dumps an M8 Theme file to bytes.
+ *
+ * @param {module:m8-js/lib/types.Theme} theme - The M8 theme file
+ * @param {module:m8-js/lib/types.M8Version} [m8Version] - The optional M8 version _(defaults to the latest version)_
+ *
+ * @returns {module:m8-js.Buffer}
+ */
+const dumpTheme = (theme, m8Version) => {
+  const bytes = dumpM8Version(m8Version || LATEST_M8_VERSION)
+
+  // File type
+  bytes.push(2 << 4)
+
+  bytes.push(...theme.background)
+  bytes.push(...theme.textEmpty)
+  bytes.push(...theme.textInfo)
+  bytes.push(...theme.textDefault)
+  bytes.push(...theme.textValue)
+  bytes.push(...theme.textTitle)
+  bytes.push(...theme.playMarker)
+  bytes.push(...theme.cursor)
+  bytes.push(...theme.selection)
+  bytes.push(...theme.scopeSlider)
+  bytes.push(...theme.meterLow)
+  bytes.push(...theme.meterMid)
+  bytes.push(...theme.meterPeak)
+
+  return bytes
+}
 
 /**
  * Reads an M8 Instrument file.
@@ -246,7 +309,7 @@ const loadInstrument = (fileReader) => {
   }
 
   // Read table data whenever the Instrument is read from an Instrument file versus being read from a Song file
-  if (fileReader.fileType === 'Instrument') {
+  if (fileReader.fileTypeToStr() === 'Instrument') {
     instr.tableData = loadTable(fileReader)
   }
 
@@ -549,7 +612,7 @@ const loadTheme = (fileReader) => {
  * @returns {module:m8-js/lib/types.Instrument|module:m8-js/lib/types.Scale|module:m8-js/lib/types.Song|module:m8-js/lib/types.Theme}}
  */
 const loadM8File = (fileReader) => {
-  switch (fileReader.fileType) {
+  switch (fileReader.fileTypeToStr()) {
     case 'Song':
       return loadSong(fileReader)
     case 'Instrument':
@@ -559,12 +622,13 @@ const loadM8File = (fileReader) => {
     case 'Scale':
       return loadScale(fileReader)
     default:
-      throw new TypeError(`Unsupported file type: ${fileReader.fileType}`)
+      throw new TypeError(`Unsupported file type: ${fileReader.fileTypeToStr()}`)
   }
 }
 
 // Exports
 module.exports = {
+  dumpTheme,
   loadInstrument,
   loadM8File,
   loadScale,

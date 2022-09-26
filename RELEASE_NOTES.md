@@ -9,6 +9,8 @@
     * `loadSong`
     * `loadTable`
     * `loadTheme`
+  * Added helper methods to `index.js` for writing M8 files/types
+    * `dumpTheme`
   * Added support for reading table data from an `Instrument` file
   * Moved `M8FileReader` from `index.js` to `lib/types/`
   * Moved all classes from `lib/types.js` to `lib/types/` into their own files

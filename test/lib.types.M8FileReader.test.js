@@ -40,7 +40,7 @@ describe('M8FileReader tests', () => {
     expect(m8fr.buffer).toEqual(testBuffer)
     expect(m8fr.cursor).toEqual(14) // Read the first 14 bytes so the current position is 14
     expect(m8fr.skipped).toEqual([9, 12]) // Skipped bytes 9 and 12
-    expect(m8fr.fileType).toEqual('Song')
+    expect(m8fr.fileTypeToStr()).toEqual('Song')
 
     const fileTypes = [0x00, 0x10, 0x20, 0x30, 0xFF]
 
@@ -71,10 +71,10 @@ describe('M8FileReader tests', () => {
           break
 
         default:
-          fileType = `Unknown (${toM8HexStr(rawFileType >> 4)})`
+          fileType = `Unknown (${toM8HexStr(rawFileType)})`
       }
 
-      expect(m8fr.fileType).toEqual(fileType)
+      expect(m8fr.fileTypeToStr()).toEqual(fileType)
     })
   })
 

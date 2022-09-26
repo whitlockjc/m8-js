@@ -15,7 +15,7 @@
 
 const { readFileSync } = require('fs')
 const path = require('path')
-const { VERSION_2_7_0 } = require('../lib/constants')
+const { VERSION_2_7_0, LATEST_M8_VERSION } = require('../lib/constants')
 const { FMSynth, Macrosynth, MIDIOut, Sampler, Wavsynth } = require('../lib/types/Instrument')
 
 const M8 = require('..')
@@ -68,6 +68,42 @@ beforeAll(() => {
 })
 
 describe('index tests', () => {
+  test('#dumpTheme', () => {
+    const filePath = path.join(__dirname, 'files/1.0.x/Themes/DEFAULT.m8t')
+    const bufferFromDisk = readFileSync(filePath)
+    const diskFileReader = new M8FileReader(bufferFromDisk)
+    const themeFromDisk = M8.loadTheme(diskFileReader)
+
+    // Ensure the raw bytes read from disk match the dumped bytes
+    expect(bufferFromDisk).toEqual(Buffer.from(M8.dumpTheme(themeFromDisk, diskFileReader.m8Version)))
+
+    let bytesFileReader = new M8FileReader(Buffer.from(M8.dumpTheme(themeFromDisk)))
+    let alteredTheme = M8.loadTheme(bytesFileReader)
+
+    // Change the theme
+    alteredTheme.selection = [0x0F, 0x1F, 0x2F]
+
+    // Dump altered theme (with latest version number due to not providing one)
+    bytesFileReader = new M8FileReader(M8.dumpTheme(alteredTheme))
+    alteredTheme = M8.loadTheme(bytesFileReader)
+
+    // Ensure the files are the same
+    expect(alteredTheme.background).toEqual(themeFromDisk.background)
+    expect(alteredTheme.textEmpty).toEqual(themeFromDisk.textEmpty)
+    expect(alteredTheme.textInfo).toEqual(themeFromDisk.textInfo)
+    expect(alteredTheme.textDefault).toEqual(themeFromDisk.textDefault)
+    expect(alteredTheme.textValue).toEqual(themeFromDisk.textValue)
+    expect(alteredTheme.textTitle).toEqual(themeFromDisk.textTitle)
+    expect(alteredTheme.playMarker).toEqual(themeFromDisk.playMarker)
+    expect(alteredTheme.cursor).toEqual(themeFromDisk.cursor)
+    expect(alteredTheme.selection).toEqual([0x0F, 0x1F, 0x2F])
+    expect(alteredTheme.scopeSlider).toEqual(themeFromDisk.scopeSlider)
+    expect(alteredTheme.meterLow).toEqual(themeFromDisk.meterLow)
+    expect(alteredTheme.meterMid).toEqual(themeFromDisk.meterMid)
+    expect(alteredTheme.meterPeak).toEqual(themeFromDisk.meterPeak)
+    expect(bytesFileReader.m8Version).toEqual(LATEST_M8_VERSION)
+  })
+
   describe('#loadInstrument', () => {
     describe('2.7.x', () => {
       test('DEF_FM.m8i', () => {
@@ -159,7 +195,7 @@ describe('index tests', () => {
 
       expect(() => {
         M8.loadM8File(fileReader)
-      }).toThrow('Unsupported file type: Unknown (0F)')
+      }).toThrow('Unsupported file type: Unknown (FF)')
     })
   })
 
