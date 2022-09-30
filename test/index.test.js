@@ -68,6 +68,57 @@ beforeAll(() => {
 })
 
 describe('index tests', () => {
+  test('#dumpScale', () => {
+    const filePath = path.join(__dirname, 'files/2.5.x/Scales/TESTING.m8n')
+    const bufferFromDisk = readFileSync(filePath)
+    const diskFileReader = new M8FileReader(bufferFromDisk)
+    const scaleFromDisk = M8.loadScale(diskFileReader)
+
+    // Ensure the raw bytes read from disk match the dumped bytes
+    expect(bufferFromDisk).toEqual(M8.dumpScale(scaleFromDisk, diskFileReader.m8Version))
+
+    let bytesFileReader = new M8FileReader(Buffer.from(M8.dumpScale(scaleFromDisk)))
+    let alteredScale = M8.loadScale(bytesFileReader)
+
+    // Change the theme
+    alteredScale.name = 'MY SCALE'
+
+    for (let i = 0; i < alteredScale.intervals.length; i++) {
+      const interval = alteredScale.intervals[i]
+
+      if (i % 2 === 0) {
+        interval.enabled = false
+        interval.offsetA = 0x00
+        interval.offsetB = 0x00
+      } else {
+        interval.enabled = true
+        interval.offsetA = 0x01
+        interval.offsetB = 0x01
+      }
+    }
+
+    // Dump altered theme (with latest version number due to not providing one)
+    bytesFileReader = new M8FileReader(M8.dumpScale(alteredScale))
+    alteredScale = M8.loadScale(bytesFileReader)
+
+    // Ensure the files are the same
+    expect(alteredScale.name).toEqual('MY SCALE')
+
+    for (let i = 0; i < alteredScale.intervals.length; i++) {
+      const interval = alteredScale.intervals[i]
+
+      if (i % 2 === 0) {
+        expect(interval.enabled).toEqual(false)
+        expect(interval.offsetA).toEqual(0x00)
+        expect(interval.offsetB).toEqual(0x00)
+      } else {
+        expect(interval.enabled).toEqual(true)
+        expect(interval.offsetA).toEqual(0x01)
+        expect(interval.offsetB).toEqual(0x01)
+      }
+    }
+  })
+
   test('#dumpTheme', () => {
     const filePath = path.join(__dirname, 'files/1.0.x/Themes/DEFAULT.m8t')
     const bufferFromDisk = readFileSync(filePath)
@@ -75,7 +126,7 @@ describe('index tests', () => {
     const themeFromDisk = M8.loadTheme(diskFileReader)
 
     // Ensure the raw bytes read from disk match the dumped bytes
-    expect(bufferFromDisk).toEqual(Buffer.from(M8.dumpTheme(themeFromDisk, diskFileReader.m8Version)))
+    expect(bufferFromDisk).toEqual(M8.dumpTheme(themeFromDisk, diskFileReader.m8Version))
 
     let bytesFileReader = new M8FileReader(Buffer.from(M8.dumpTheme(themeFromDisk)))
     let alteredTheme = M8.loadTheme(bytesFileReader)

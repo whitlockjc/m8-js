@@ -75,6 +75,51 @@ const dumpM8Version = (m8Version) => {
 }
 
 /**
+ * Dumps an M8 Scale file to bytes.
+ *
+ * @param {module:m8-js/lib/types.Scale} theme - The M8 theme file
+ * @param {module:m8-js/lib/types.M8Version} [m8Version] - The optional M8 version _(defaults to the latest version)_
+ *
+ * @returns {module:m8-js.Buffer}
+ */
+const dumpScale = (scale, m8Version) => {
+  const bytes = dumpM8Version(m8Version || LATEST_M8_VERSION)
+
+  // File type
+  bytes.push(3 << 4)
+
+  let noteBits = ''
+
+  for (let i = 0; i < scale.intervals.length; i++) {
+    noteBits += scale.intervals[i].enabled === true ? '1' : '0'
+  }
+
+  const rawNoteMap = parseInt(noteBits.split('').reverse().join(''), 2)
+
+  bytes.push(rawNoteMap & 0xFF)
+  bytes.push((rawNoteMap >> 8) & 0xFF)
+
+  for (let i = 0; i < scale.intervals.length; i++) {
+    const interval = scale.intervals[i]
+
+    bytes.push(interval.offsetA)
+    bytes.push(interval.offsetB)
+  }
+
+  for (let i = 0; i < 16; i++) {
+    const nameCharCode = scale.name.charCodeAt(i)
+
+    if (isNaN(nameCharCode)) {
+      bytes.push(0x00)
+    } else {
+      bytes.push(nameCharCode)
+    }
+  }
+
+  return Buffer.from(bytes)
+}
+
+/**
  * Dumps an M8 Theme file to bytes.
  *
  * @param {module:m8-js/lib/types.Theme} theme - The M8 theme file
@@ -102,7 +147,7 @@ const dumpTheme = (theme, m8Version) => {
   bytes.push(...theme.meterMid)
   bytes.push(...theme.meterPeak)
 
-  return bytes
+  return Buffer.from(bytes)
 }
 
 /**
@@ -325,7 +370,6 @@ const loadInstrument = (fileReader) => {
  */
 const loadScale = (fileReader) => {
   const scale = new Scale()
-
   const noteMap = Buffer.from([fileReader.readUInt8(), fileReader.readUInt8()]).readUInt16LE(0)
 
   // Read interval enablements
@@ -628,6 +672,7 @@ const loadM8File = (fileReader) => {
 
 // Exports
 module.exports = {
+  dumpScale,
   dumpTheme,
   loadInstrument,
   loadM8File,
