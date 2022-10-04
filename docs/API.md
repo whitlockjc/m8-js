@@ -21,6 +21,7 @@ Module for loading/interacting with [Dirtywave](https://dirtywave.com/) M8 instr
 
 * [m8-js](#module_m8-js)
     * [~dumpM8Version(m8Version)](#module_m8-js..dumpM8Version) ⇒ <code>Array.&lt;Number&gt;</code>
+    * [~dumpScale(theme, [m8Version])](#module_m8-js..dumpScale) ⇒ <code>module:m8-js.Buffer</code>
     * [~dumpTheme(theme, [m8Version])](#module_m8-js..dumpTheme) ⇒ <code>module:m8-js.Buffer</code>
     * [~loadInstrument(fileReader)](#module_m8-js..loadInstrument) ⇒ [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)
     * [~loadScale(fileReader)](#module_m8-js..loadScale) ⇒ [<code>Scale</code>](#module_m8-js/lib/types.Scale)
@@ -40,6 +41,18 @@ Dumps an M8Version file to bytes.
 | Param | Type | Description |
 | --- | --- | --- |
 | m8Version | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version |
+
+<a name="module_m8-js..dumpScale"></a>
+
+### m8-js~dumpScale(theme, [m8Version]) ⇒ <code>module:m8-js.Buffer</code>
+Dumps an M8 Scale file to bytes.
+
+**Kind**: inner method of [<code>m8-js</code>](#module_m8-js)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| theme | [<code>Scale</code>](#module_m8-js/lib/types.Scale) | The M8 theme file |
+| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The optional M8 version _(defaults to the latest version)_ |
 
 <a name="module_m8-js..dumpTheme"></a>
 
@@ -344,9 +357,8 @@ Module for `m8-js` types.
         * [.m8Version](#module_m8-js/lib/types.M8FileReader+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.skipped](#module_m8-js/lib/types.M8FileReader+skipped) : <code>Array.&lt;Number&gt;</code>
         * [.fileTypeToStr()](#module_m8-js/lib/types.M8FileReader+fileTypeToStr) ⇒ <code>String</code>
-        * [.read(len)](#module_m8-js/lib/types.M8FileReader+read) ⇒ <code>Array.&lt;Number&gt;</code>
+        * [.read([len])](#module_m8-js/lib/types.M8FileReader+read) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.readStr(len)](#module_m8-js/lib/types.M8FileReader+readStr) ⇒ <code>String</code>
-        * [.readUInt8()](#module_m8-js/lib/types.M8FileReader+readUInt8) ⇒ <code>Number</code>
         * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip)
         * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo)
     * [.M8Version](#module_m8-js/lib/types.M8Version)
@@ -1405,9 +1417,8 @@ Note: This class is written purely to read an M8 file from start to finish.
     * [.m8Version](#module_m8-js/lib/types.M8FileReader+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
     * [.skipped](#module_m8-js/lib/types.M8FileReader+skipped) : <code>Array.&lt;Number&gt;</code>
     * [.fileTypeToStr()](#module_m8-js/lib/types.M8FileReader+fileTypeToStr) ⇒ <code>String</code>
-    * [.read(len)](#module_m8-js/lib/types.M8FileReader+read) ⇒ <code>Array.&lt;Number&gt;</code>
+    * [.read([len])](#module_m8-js/lib/types.M8FileReader+read) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.readStr(len)](#module_m8-js/lib/types.M8FileReader+readStr) ⇒ <code>String</code>
-    * [.readUInt8()](#module_m8-js/lib/types.M8FileReader+readUInt8) ⇒ <code>Number</code>
     * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip)
     * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo)
 
@@ -1449,14 +1460,14 @@ Returns the file type as string.
 **Kind**: instance method of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
 <a name="module_m8-js/lib/types.M8FileReader+read"></a>
 
-#### m8FileReader.read(len) ⇒ <code>Array.&lt;Number&gt;</code>
+#### m8FileReader.read([len]) ⇒ <code>Array.&lt;Number&gt;</code>
 Returns an array of bytes at the current cursor position.
 
 **Kind**: instance method of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| len | <code>Number</code> | The number of bytes to read |
+| [len] | <code>Number</code> | The number of bytes to read (default: 1) |
 
 <a name="module_m8-js/lib/types.M8FileReader+readStr"></a>
 
@@ -1469,12 +1480,6 @@ Reads a number of bytes and returns its string representation.
 | --- | --- | --- |
 | len | <code>Number</code> | The length of the string to read |
 
-<a name="module_m8-js/lib/types.M8FileReader+readUInt8"></a>
-
-#### m8FileReader.readUInt8() ⇒ <code>Number</code>
-Reads a number at the current position.
-
-**Kind**: instance method of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
 <a name="module_m8-js/lib/types.M8FileReader+skip"></a>
 
 #### m8FileReader.skip(len)

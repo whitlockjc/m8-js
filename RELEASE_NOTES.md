@@ -26,6 +26,7 @@
     * `lib/types/Song.js`
     * `lib/types/Table.js`
     * `lib/types/Theme.js`
+  * Replaced `readUInt8` with `read` for `lib/types/M8FileReader.js`
   * Updated `lib/types/Instrument.js` to exports instrument-specific types
     * `FMSynth`
     * `Macrosynth`
