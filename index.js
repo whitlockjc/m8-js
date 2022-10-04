@@ -24,6 +24,7 @@ const M8FileWriter = require('./lib/types/M8FileWriter')
 
 // TODO: Add debug support
 // TODO: Add error handling
+// TODO: Where possible, handle situation where data generated does not match original values for unknown/unused data
 
 /**
  * Module for loading/interacting with {@link https://dirtywave.com/|Dirtywave} M8 instrument/song files.
@@ -48,10 +49,11 @@ const M8FileWriter = require('./lib/types/M8FileWriter')
  * Dumps an M8 Instrument file to bytes.
  *
  * @param {module:m8-js/lib/types.Instrument} instrument - The M8 Instrument
+ * @param {module:m8-js/lib/types.M8FileReader} [fileReader] - The optional M8 file reader for using skipped bytes
  *
  * @returns {module:m8-js.Buffer}
  */
-const dumpInstrument = (instrument) => {
+const dumpInstrument = (instrument, fileReader) => {
   const fileWriter = new M8FileWriter(M8FileTypes.Instrument, instrument.m8Version)
   const startLen = fileWriter.bytes.length
 
@@ -220,7 +222,12 @@ const dumpInstrument = (instrument) => {
 
   // Fill in the empty values between instrument parameters and the sample path (when present)
   for (let i = fileWriter.bytes.length; i < startLen + 0x57; i++) {
-    fileWriter.write(0xFF)
+    let skippedValue = 0xFF
+
+    if (fileReader?.skipped.indexOf(i) > -1) {
+      skippedValue = fileReader.buffer[i]
+    }
+    fileWriter.write(skippedValue)
   }
 
   fileWriter.writeStr(instrument.kind === 0x02 ? instrument.instrParams.samplePath : '', 128)
@@ -229,18 +236,6 @@ const dumpInstrument = (instrument) => {
   if (fileWriter.fileTypeToStr() === 'Instrument') {
     fileWriter.write(dumpTable(instrument.tableData))
   }
-
-  // When reading an M8 instrument, each instrument has a consistent structure but parts of the file are unknown/unused.
-  // To ensure that files read from disk use the same values for these unused parts of the file, the Instrument class
-  // keeps track of all skipped bytes and each of these values are then used when generating a file's bytes.
-  //
-  // Whenever files are not read from disk and then its bytes are generated, the default values for the unknown/unused
-  // bytes should suffice and were identified by heavy reverse engineering.
-  const unusedBytes = instrument.getUnusedBytes()
-
-  Object.keys(unusedBytes).forEach((offset) => {
-    fileWriter.bytes[offset] = unusedBytes[offset]
-  })
 
   return Buffer.from(fileWriter.bytes)
 }
@@ -524,7 +519,7 @@ const loadInstrument = (fileReader) => {
   }
 
   // Skip to the sample path (when present) and record the unused bytes
-  instr.updateUnusedBytes(fileReader.skipTo(startPos + 0x57)) // Jump amount differs based on instrument type
+  fileReader.skipTo(startPos + 0x57) // Jump amount differs based on instrument type
 
   // Read Sample Path (Unfortunate that it happens here)
   if (instr.kindToStr() === 'SAMPLER') {

@@ -37,7 +37,6 @@
     * `None`
     * `Sampler`
     * `Wavsynth`
-  * Updated `lib/types/M8FileReader.js` to no longer keep track of skipped bytes and instead return the skipped bytes for `#skip` and `#skipTo` so that the caller can use them if neeed be
   * Updated `loadM8File` to use `M8FileReader` instead of a file path
   * Updated all class constructors to initialize themselves using the default values M8 would use
   * Updated `Song` to default to the appropriate `Scale` objects

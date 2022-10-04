@@ -114,13 +114,9 @@ describe('M8FileReader tests', () => {
 
     expect(m8fr.cursor).toEqual(14)
 
-    const skipped = m8fr.skipTo(0x11)
+    m8fr.skipTo(0x11)
 
     expect(m8fr.cursor).toEqual(17)
-    expect(skipped).toEqual({
-      14: 1,
-      15: 2,
-      16: 3
-    })
+    expect(m8fr.skipped).toEqual([9, 12, 14, 15, 16])
   })
 })

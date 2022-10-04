@@ -20,7 +20,7 @@ Module for loading/interacting with [Dirtywave](https://dirtywave.com/) M8 instr
 **See**: [https://gist.github.com/ftsf/223b0fc761339b3c23dda7dd891514d9](https://gist.github.com/ftsf/223b0fc761339b3c23dda7dd891514d9) for original Nim sources.  
 
 * [m8-js](#module_m8-js)
-    * [~dumpInstrument(instrument)](#module_m8-js..dumpInstrument) ⇒ <code>module:m8-js.Buffer</code>
+    * [~dumpInstrument(instrument, [fileReader])](#module_m8-js..dumpInstrument) ⇒ <code>module:m8-js.Buffer</code>
     * [~dumpScale(scale)](#module_m8-js..dumpScale) ⇒ <code>module:m8-js.Buffer</code>
     * [~dumpTable(table)](#module_m8-js..dumpTable) ⇒ <code>Array.&lt;Number&gt;</code>
     * [~dumpTheme(theme)](#module_m8-js..dumpTheme) ⇒ <code>module:m8-js.Buffer</code>
@@ -34,7 +34,7 @@ Module for loading/interacting with [Dirtywave](https://dirtywave.com/) M8 instr
 
 <a name="module_m8-js..dumpInstrument"></a>
 
-### m8-js~dumpInstrument(instrument) ⇒ <code>module:m8-js.Buffer</code>
+### m8-js~dumpInstrument(instrument, [fileReader]) ⇒ <code>module:m8-js.Buffer</code>
 Dumps an M8 Instrument file to bytes.
 
 **Kind**: inner method of [<code>m8-js</code>](#module_m8-js)  
@@ -42,6 +42,7 @@ Dumps an M8 Instrument file to bytes.
 | Param | Type | Description |
 | --- | --- | --- |
 | instrument | [<code>Instrument</code>](#module_m8-js/lib/types.Instrument) | The M8 Instrument |
+| [fileReader] | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) | The optional M8 file reader for using skipped bytes |
 
 <a name="module_m8-js..dumpScale"></a>
 
@@ -348,8 +349,6 @@ Module for `m8-js` types.
         * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
         * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
         * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
-        * [.getUnusedBytes()](#module_m8-js/lib/types.Instrument+getUnusedBytes) ⇒ <code>Object</code>
-        * [.updateUnusedBytes(unusedBytes)](#module_m8-js/lib/types.Instrument+updateUnusedBytes)
     * [.FMSynth](#module_m8-js/lib/types.FMSynth)
         * [new FMSynth(m8Version)](#new_module_m8-js/lib/types.FMSynth_new)
     * [.Macrosynth](#module_m8-js/lib/types.Macrosynth)
@@ -368,11 +367,12 @@ Module for `m8-js` types.
         * [.cursor](#module_m8-js/lib/types.M8FileReader+cursor) : <code>Number</code>
         * [.fileType](#module_m8-js/lib/types.M8FileReader+fileType) : <code>Number</code>
         * [.m8Version](#module_m8-js/lib/types.M8FileReader+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+        * [.skipped](#module_m8-js/lib/types.M8FileReader+skipped) : <code>Array.&lt;Number&gt;</code>
         * [.fileTypeToStr()](#module_m8-js/lib/types.M8FileReader+fileTypeToStr) ⇒ <code>String</code>
         * [.read([len])](#module_m8-js/lib/types.M8FileReader+read) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.readStr(len)](#module_m8-js/lib/types.M8FileReader+readStr) ⇒ <code>String</code>
-        * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip) ⇒ <code>Object</code>
-        * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo) ⇒ <code>Object</code>
+        * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip)
+        * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo)
     * [.M8FileWriter](#module_m8-js/lib/types.M8FileWriter)
         * [new M8FileWriter(fileType, [m8Version])](#new_module_m8-js/lib/types.M8FileWriter_new)
         * [.bytes](#module_m8-js/lib/types.M8FileWriter+bytes) : <code>Array.&lt;Number&gt;</code>
@@ -1233,8 +1233,6 @@ Represents an Instrument.
     * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
     * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
     * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
-    * [.getUnusedBytes()](#module_m8-js/lib/types.Instrument+getUnusedBytes) ⇒ <code>Object</code>
-    * [.updateUnusedBytes(unusedBytes)](#module_m8-js/lib/types.Instrument+updateUnusedBytes)
 
 <a name="new_module_m8-js/lib/types.Instrument_new"></a>
 
@@ -1336,24 +1334,6 @@ Returns a string representation of the Filter type.
 Returns a string representation of the Instrument kind.
 
 **Kind**: instance method of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
-<a name="module_m8-js/lib/types.Instrument+getUnusedBytes"></a>
-
-#### instrument.getUnusedBytes() ⇒ <code>Object</code>
-Returns the unused bytes map.
-
-**Kind**: instance method of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
-**Returns**: <code>Object</code> - the unused bytes map  
-<a name="module_m8-js/lib/types.Instrument+updateUnusedBytes"></a>
-
-#### instrument.updateUnusedBytes(unusedBytes)
-Updates the unused bytes map.
-
-**Kind**: instance method of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
-
-| Param | Type | Description |
-| --- | --- | --- |
-| unusedBytes | <code>Object</code> | The unused bytes map |
-
 <a name="module_m8-js/lib/types.FMSynth"></a>
 
 ### m8-js/lib/types.FMSynth
@@ -1465,11 +1445,12 @@ Note: This class is written purely to read an M8 file from start to finish.
     * [.cursor](#module_m8-js/lib/types.M8FileReader+cursor) : <code>Number</code>
     * [.fileType](#module_m8-js/lib/types.M8FileReader+fileType) : <code>Number</code>
     * [.m8Version](#module_m8-js/lib/types.M8FileReader+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+    * [.skipped](#module_m8-js/lib/types.M8FileReader+skipped) : <code>Array.&lt;Number&gt;</code>
     * [.fileTypeToStr()](#module_m8-js/lib/types.M8FileReader+fileTypeToStr) ⇒ <code>String</code>
     * [.read([len])](#module_m8-js/lib/types.M8FileReader+read) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.readStr(len)](#module_m8-js/lib/types.M8FileReader+readStr) ⇒ <code>String</code>
-    * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip) ⇒ <code>Object</code>
-    * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo) ⇒ <code>Object</code>
+    * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip)
+    * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo)
 
 <a name="new_module_m8-js/lib/types.M8FileReader_new"></a>
 
@@ -1496,6 +1477,10 @@ Creates an M8 File Reader.
 <a name="module_m8-js/lib/types.M8FileReader+m8Version"></a>
 
 #### m8FileReader.m8Version : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+**Kind**: instance property of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
+<a name="module_m8-js/lib/types.M8FileReader+skipped"></a>
+
+#### m8FileReader.skipped : <code>Array.&lt;Number&gt;</code>
 **Kind**: instance property of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
 <a name="module_m8-js/lib/types.M8FileReader+fileTypeToStr"></a>
 
@@ -1527,11 +1512,10 @@ Reads a number of bytes and returns its string representation.
 
 <a name="module_m8-js/lib/types.M8FileReader+skip"></a>
 
-#### m8FileReader.skip(len) ⇒ <code>Object</code>
+#### m8FileReader.skip(len)
 Records the skipped offset to allow for writing files.
 
 **Kind**: instance method of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
-**Returns**: <code>Object</code> - the skipped bytes  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1539,11 +1523,10 @@ Records the skipped offset to allow for writing files.
 
 <a name="module_m8-js/lib/types.M8FileReader+skipTo"></a>
 
-#### m8FileReader.skipTo(offset) ⇒ <code>Object</code>
+#### m8FileReader.skipTo(offset)
 Advances the cursor to the specified offset.
 
 **Kind**: instance method of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
-**Returns**: <code>Object</code> - the skipped bytes  
 
 | Param | Type | Description |
 | --- | --- | --- |
