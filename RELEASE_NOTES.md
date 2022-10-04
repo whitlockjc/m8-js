@@ -10,8 +10,9 @@
     * `loadTable`
     * `loadTheme`
   * Added helper methods to `index.js` for writing M8 files/types
-    * `dumpInstrument`
+    * `dumpInstrument` _(Can be called with the `M8FileReader` used to read the `Instrument` to use the original values for skipped/unused bytes)_
     * `dumpScale`
+    * `dumpSong` _(Can be called with the `M8FileReader` used to read the `Song` to use the original values for skipped/unused bytes)_
     * `dumpTheme`
   * Added support for reading table data from an `Instrument` file
   * Added `M8FileWriter` to `lib/types/`

@@ -24,7 +24,27 @@ const M8FileWriter = require('./lib/types/M8FileWriter')
 
 // TODO: Add debug support
 // TODO: Add error handling
-// TODO: Where possible, handle situation where data generated does not match original values for unknown/unused data
+
+/**
+ * Writes to the M8 File Writer unknown/unused data from the original M8 File Reader when present, or a default value.
+ *
+ * @param {module:m8-js/lib/types.M8FileWriter} fileWriter - The M8 file writer
+ * @param {module:m8-js/lib/types.M8FileReader} fileReader - The M8 file reader
+ * @param {Number} length - The number of bytes to write
+ * @param {Number} defaultValue - The default value when the offest value wasn't skipped or there is no M8 file reader
+ */
+const useSkippedBytes = (fileWriter, fileReader, length, defaultValue) => {
+  for (let i = 0; i < length; i++) {
+    const offset = fileWriter.bytes.length
+    let skippedValue = defaultValue
+
+    if (fileReader?.skipped.indexOf(offset) > -1) {
+      skippedValue = fileReader.buffer[offset]
+    }
+
+    fileWriter.write(skippedValue)
+  }
+}
 
 /**
  * Module for loading/interacting with {@link https://dirtywave.com/|Dirtywave} M8 instrument/song files.
@@ -33,8 +53,6 @@ const M8FileWriter = require('./lib/types/M8FileWriter')
  *
  * @module m8-js
  */
-
-// TODO: Remove use of Buffer
 
 /**
  * A Buffer.
@@ -46,19 +64,42 @@ const M8FileWriter = require('./lib/types/M8FileWriter')
  */
 
 /**
- * Dumps an M8 Instrument file to bytes.
+ * Dumps an M8 Table to bytes.
+ *
+ * @param {module:m8-js/lib/types.Table} table - The M8 Table to generate bytes for
+ * @param {module:m8-js/lib/types.M8FileWriter} fileWriter - The M8 file writer to write to
+ *
+ * @returns {Array<Number>}
+ */
+const writeTableToWriter = (table, fileWriter) => {
+  for (let i = 0; i < table.steps.length; i++) {
+    const step = table.steps[i]
+
+    fileWriter.write(step.transpose)
+    fileWriter.write(step.volume)
+
+    for (let j = 0; j < 3; j++) {
+      const fx = step['fx' + (j + 1)]
+
+      fileWriter.write(fx.command)
+      fileWriter.write(fx.value)
+    }
+  }
+}
+
+/**
+ * Writes an M8 Instrument's bytes to the M8 File Writer.
  *
  * @param {module:m8-js/lib/types.Instrument} instrument - The M8 Instrument
+ * @param {module:m8-js/lib/types.M8FileWriter} fileWriter - The M8 file writer to write to
  * @param {module:m8-js/lib/types.M8FileReader} [fileReader] - The optional M8 file reader for using skipped bytes
- *
- * @returns {module:m8-js.Buffer}
+ * @param {Number} [emptyByte] - The char to use for empty name bytes
  */
-const dumpInstrument = (instrument, fileReader) => {
-  const fileWriter = new M8FileWriter(M8FileTypes.Instrument, instrument.m8Version)
+const writeInstrumentToWriter = (instrument, fileWriter, fileReader, emptyByte) => {
   const startLen = fileWriter.bytes.length
 
   fileWriter.write(instrument.kind)
-  fileWriter.writeStr(instrument.name, 12)
+  fileWriter.writeStr(instrument.name, 12, emptyByte)
   fileWriter.writeBool(instrument.transpose)
   fileWriter.write(instrument.tableTick)
 
@@ -221,35 +262,24 @@ const dumpInstrument = (instrument, fileReader) => {
   }
 
   // Fill in the empty values between instrument parameters and the sample path (when present)
-  for (let i = fileWriter.bytes.length; i < startLen + 0x57; i++) {
-    let skippedValue = 0xFF
-
-    if (fileReader?.skipped.indexOf(i) > -1) {
-      skippedValue = fileReader.buffer[i]
-    }
-    fileWriter.write(skippedValue)
-  }
+  useSkippedBytes(fileWriter, fileReader, (startLen + 0x57) - fileWriter.bytes.length, 0xFF)
 
   fileWriter.writeStr(instrument.kind === 0x02 ? instrument.instrParams.samplePath : '', 128)
 
   // Write table data whenever writing an Instrument file versus being writing a Song file
   if (fileWriter.fileTypeToStr() === 'Instrument') {
-    fileWriter.write(dumpTable(instrument.tableData))
+    writeTableToWriter(instrument.tableData, fileWriter)
   }
-
-  return Buffer.from(fileWriter.bytes)
 }
 
 /**
- * Dumps an M8 Scale file to bytes.
+ * Writes an M8 Scale's bytes to the M8 File Writer.
  *
- * @param {module:m8-js/lib/types.Scale} scale - The M8 Scale to generate bytes for
- *
- * @returns {module:m8-js.Buffer}
+ * @param {module:m8-js/lib/types.Scale} scale - The M8 Scale
+ * @param {module:m8-js/lib/types.M8FileWriter} fileWriter - The M8 file writer to write to
+ * @param {Number} [emptyByte] - The char to use for empty name bytes
  */
-const dumpScale = (scale) => {
-  const fileWriter = new M8FileWriter(M8FileTypes.Scale, scale.m8Version)
-
+const writeScaleToWriter = (scale, fileWriter, emptyByte) => {
   let noteBits = ''
 
   for (let i = 0; i < scale.intervals.length; i++) {
@@ -268,36 +298,249 @@ const dumpScale = (scale) => {
     fileWriter.write(interval.offsetB)
   }
 
-  fileWriter.writeStr(scale.name, 16)
+  fileWriter.writeStr(scale.name, 16, emptyByte)
+}
+
+/**
+ * Dumps an M8 Instrument file to bytes.
+ *
+ * @param {module:m8-js/lib/types.Instrument} instrument - The M8 Instrument
+ * @param {module:m8-js/lib/types.M8FileReader} [fileReader] - The optional M8 file reader for using skipped bytes
+ *
+ * @returns {module:m8-js.Buffer}
+ */
+const dumpInstrument = (instrument, fileReader) => {
+  const fileWriter = new M8FileWriter(M8FileTypes.Instrument, instrument.m8Version)
+
+  writeInstrumentToWriter(instrument, fileWriter, fileReader)
 
   return Buffer.from(fileWriter.bytes)
 }
 
 /**
- * Dumps an M8 Table to bytes.
+ * Dumps an M8 Scale file to bytes.
  *
- * @param {module:m8-js/lib/types.Table} table - The M8 Table to generate bytes for
+ * @param {module:m8-js/lib/types.Scale} scale - The M8 Scale to generate bytes for
  *
- * @returns {Array<Number>}
+ * @returns {module:m8-js.Buffer}
  */
-const dumpTable = (table) => {
-  const bytes = []
+const dumpScale = (scale) => {
+  const fileWriter = new M8FileWriter(M8FileTypes.Scale, scale.m8Version)
 
-  for (let i = 0; i < table.steps.length; i++) {
-    const step = table.steps[i]
+  writeScaleToWriter(scale, fileWriter)
 
-    bytes.push(step.transpose)
-    bytes.push(step.volume)
+  return Buffer.from(fileWriter.bytes)
+}
 
-    for (let j = 0; j < 3; j++) {
-      const fx = step['fx' + (j + 1)]
+/**
+ * Dumps an M8 Song file to bytes.
+ *
+ * @param {module:m8-js/lib/types.Song} song - The M8 Song to generate bytes for
+ * @param {module:m8-js/lib/types.M8FileReader} [fileReader] - The optional M8 file reader for using skipped bytes
+ *
+ * @returns {module:m8-js.Buffer}
+ */
+const dumpSong = (song, fileReader) => {
+  const fileWriter = new M8FileWriter(M8FileTypes.Song, song.m8Version)
+  const startLen = fileWriter.bytes.length
 
-      bytes.push(fx.command)
-      bytes.push(fx.value)
+  fileWriter.writeStr(song.directory, 128)
+
+  // Unlike useSkippedBytes, we need to go and backfill the "garbage" after the directory name.
+  for (let i = startLen + song.directory.length + 1; i < startLen + 128; i++) {
+    let skippedValue = 0x00
+
+    if (fileReader?.skipped.indexOf(i) > -1) {
+      skippedValue = fileReader.buffer[i]
+    }
+
+    fileWriter.bytes[i] = skippedValue
+  }
+
+  fileWriter.write(song.transpose)
+
+  // Convert tempo as float into a 32-bit byte array
+  fileWriter.writeFloat32(song.tempo)
+
+  fileWriter.write(song.quantize)
+  fileWriter.writeStr(song.name, 12)
+
+  // Write MIDI Settings
+  fileWriter.writeBool(song.midiSettings.receiveSync)
+  fileWriter.write(song.midiSettings.receiveTransport)
+  fileWriter.writeBool(song.midiSettings.sendSync)
+  fileWriter.write(song.midiSettings.sendTransport)
+  fileWriter.write(song.midiSettings.recordNoteChannel)
+  fileWriter.writeBool(song.midiSettings.recordNoteVelocity)
+  fileWriter.write(song.midiSettings.recordNoteDelayKillCommands)
+  fileWriter.write(song.midiSettings.controlMapChannel)
+  fileWriter.write(song.midiSettings.songRowCueChannel)
+
+  for (let i = 0; i < 8; i++) {
+    fileWriter.write(song.midiSettings.trackInputChannel[i])
+  }
+
+  for (let i = 0; i < 8; i++) {
+    fileWriter.write(song.midiSettings.trackInputInstrument[i])
+  }
+
+  fileWriter.writeBool(song.midiSettings.trackInputProgramChange)
+  fileWriter.write(song.midiSettings.trackInputMode)
+
+  fileWriter.write(song.key)
+
+  // Write skipped data
+  useSkippedBytes(fileWriter, fileReader, 18, 0x00)
+
+  // Read Mixer Settings
+  fileWriter.write(song.mixerSettings.masterVolume)
+  fileWriter.write(song.mixerSettings.masterLimit)
+
+  for (let i = 0; i < 8; i++) {
+    fileWriter.write(song.mixerSettings.trackVolume[i])
+  }
+
+  fileWriter.write(song.mixerSettings.chorusVolume)
+  fileWriter.write(song.mixerSettings.delayVolume)
+  fileWriter.write(song.mixerSettings.reverbVolume)
+  fileWriter.write(song.mixerSettings.analogInputVolume[0])
+  fileWriter.write(song.mixerSettings.analogInputVolume[1])
+  fileWriter.write(song.mixerSettings.usbInputVolume)
+  fileWriter.write(song.mixerSettings.analogInputChorus[0])
+  fileWriter.write(song.mixerSettings.analogInputDelay[0])
+  fileWriter.write(song.mixerSettings.analogInputReverb[0])
+  fileWriter.write(song.mixerSettings.analogInputChorus[1])
+  fileWriter.write(song.mixerSettings.analogInputDelay[1])
+  fileWriter.write(song.mixerSettings.analogInputReverb[1])
+  fileWriter.write(song.mixerSettings.usbInputChorus)
+  fileWriter.write(song.mixerSettings.usbInputDelay)
+  fileWriter.write(song.mixerSettings.usbInputReverb)
+  fileWriter.write(song.mixerSettings.djFilter)
+  fileWriter.write(song.mixerSettings.djFilterPeak)
+
+  // Write skipped data
+  useSkippedBytes(fileWriter, fileReader, 5, 0x00)
+
+  // Write Grooves
+  for (let i = 0; i < song.grooves.length; i++) {
+    const groove = song.grooves[i]
+
+    for (let j = 0; j < groove.steps.length; j++) {
+      fileWriter.write(groove.steps[j])
     }
   }
 
-  return bytes
+  // Write song steps
+  for (let i = 0; i < 256; i++) {
+    const step = song.steps[i]
+
+    for (let j = 0; j < 8; j++) {
+      fileWriter.write(step['track' + (j + 1)])
+    }
+  }
+
+  // Write Phrases
+  for (let i = 0; i < song.phrases.length; i++) {
+    const phrase = song.phrases[i]
+
+    for (let j = 0; j < phrase.steps.length; j++) {
+      const step = phrase.steps[j]
+
+      fileWriter.write(step.note)
+      fileWriter.write(step.volume)
+      fileWriter.write(step.instrument)
+
+      for (let k = 0; k < 3; k++) {
+        const fx = step['fx' + (k + 1)]
+
+        fileWriter.write(fx.command)
+        fileWriter.write(fx.value)
+      }
+    }
+  }
+
+  // Write Chains
+  for (let i = 0; i < song.chains.length; i++) {
+    const chain = song.chains[i]
+
+    for (let j = 0; j < chain.steps.length; j++) {
+      const step = chain.steps[j]
+
+      fileWriter.write(step.phrase)
+      fileWriter.write(step.transpose)
+    }
+  }
+
+  // Write Tables
+  for (let i = 0; i < song.tables.length; i++) {
+    writeTableToWriter(song.tables[i], fileWriter)
+  }
+
+  // Write Instruments
+  for (let i = 0; i < song.instruments.length; i++) {
+    writeInstrumentToWriter(song.instruments[i], fileWriter, fileReader, 0xFF)
+  }
+
+  // Write skipped data
+  useSkippedBytes(fileWriter, fileReader, 3, 0x00)
+
+  // Write Effects
+  fileWriter.write(song.effectsSettings.chorusModDepth)
+  fileWriter.write(song.effectsSettings.chorusModFreq)
+  fileWriter.write(song.effectsSettings.chorusWidth)
+  fileWriter.write(song.effectsSettings.chorusReverbSend)
+
+  // Write skipped data
+  useSkippedBytes(fileWriter, fileReader, 3, 0x00)
+
+  fileWriter.write(song.effectsSettings.delayFilter[0])
+  fileWriter.write(song.effectsSettings.delayFilter[1])
+  fileWriter.write(song.effectsSettings.delayTime[0])
+  fileWriter.write(song.effectsSettings.delayTime[1])
+  fileWriter.write(song.effectsSettings.delayFeedback)
+  fileWriter.write(song.effectsSettings.delayWidth)
+  fileWriter.write(song.effectsSettings.delayReverbSend)
+
+  // Write skipped data
+  useSkippedBytes(fileWriter, fileReader, 1, 0x00)
+
+  fileWriter.write(song.effectsSettings.reverbFilter[0])
+  fileWriter.write(song.effectsSettings.reverbFilter[1])
+  fileWriter.write(song.effectsSettings.reverbSize)
+  fileWriter.write(song.effectsSettings.reverbDamping)
+  fileWriter.write(song.effectsSettings.reverbModDepth)
+  fileWriter.write(song.effectsSettings.reverbModFreq)
+  fileWriter.write(song.effectsSettings.reverbWidth)
+
+  // Fill in the empty values between instruments and MIDI Mappings (when present)
+  useSkippedBytes(fileWriter, fileReader, 0x1A5FE - fileWriter.bytes.length, 0xFF)
+
+  // Write MIDI Mappings
+  for (let i = 0; i < song.midiMappings.length; i++) {
+    const midiMapping = song.midiMappings[i]
+
+    fileWriter.write(midiMapping.channel)
+    fileWriter.write(midiMapping.controlNum)
+    fileWriter.write(midiMapping.value)
+    fileWriter.write(midiMapping.type)
+    fileWriter.write(midiMapping.paramIndex)
+    fileWriter.write(midiMapping.minValue)
+    fileWriter.write(midiMapping.maxValue)
+  }
+
+  // Write Scales (when supported)
+  if (fileWriter.m8Version.compare(VERSION_2_5_0) >= 0) {
+    // Fill in the empty values between MIDI Mappings and Scales (when present)
+    useSkippedBytes(fileWriter, fileReader, 0x1AA7E - fileWriter.bytes.length, 0xFF)
+
+    for (let i = 0; i < song.scales.length; i++) {
+      writeScaleToWriter(song.scales[i], fileWriter, 0xFF)
+    }
+  } else {
+    useSkippedBytes(fileWriter, fileReader, 256, 0x00)
+  }
+
+  return Buffer.from(fileWriter.bytes)
 }
 
 /**
@@ -584,7 +827,7 @@ const loadSong = (fileReader) => {
 
   song.directory = fileReader.readStr(128)
   song.transpose = fileReader.read()
-  // This is a 32-bit float and has to be read as such
+  // Tempo is stored in 4 bytes as a 32-bit float
   song.tempo = Buffer.from(fileReader.read(4)).readFloatLE(0)
   song.quantize = fileReader.read()
   song.name = fileReader.readStr(12)
@@ -653,7 +896,7 @@ const loadSong = (fileReader) => {
     }
   }
 
-  // Read song data
+  // Read song steps
   for (let i = 0; i < 256; i++) {
     const step = song.steps[i]
 
@@ -708,7 +951,7 @@ const loadSong = (fileReader) => {
   }
 
   // Discard the next 3 bytes (unused data)
-  fileReader.read(3)
+  fileReader.skip(3)
 
   // Read Effects
   song.effectsSettings.chorusModDepth = fileReader.read()
@@ -717,7 +960,7 @@ const loadSong = (fileReader) => {
   song.effectsSettings.chorusReverbSend = fileReader.read()
 
   // Discard the next 3 bytes (unused data)
-  fileReader.read(3)
+  fileReader.skip(3)
 
   song.effectsSettings.delayFilter[0] = fileReader.read()
   song.effectsSettings.delayFilter[1] = fileReader.read()
@@ -728,7 +971,7 @@ const loadSong = (fileReader) => {
   song.effectsSettings.delayReverbSend = fileReader.read()
 
   // Discard the next 1 byte (unused data)
-  fileReader.read(1)
+  fileReader.skip(1)
 
   song.effectsSettings.reverbFilter[0] = fileReader.read()
   song.effectsSettings.reverbFilter[1] = fileReader.read()
@@ -851,6 +1094,7 @@ const loadM8File = (fileReader) => {
 module.exports = {
   dumpInstrument,
   dumpScale,
+  dumpSong,
   dumpTheme,
   loadInstrument,
   loadM8File,

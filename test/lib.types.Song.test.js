@@ -41,7 +41,7 @@ describe('Song tests', () => {
     expect(emptySong.tables.length).toEqual(256)
     expect(emptySong.tempo).toEqual(0x78)
     expect(emptySong.transpose).toEqual(0x00)
-    expect(emptySong.version).toEqual(LATEST_M8_VERSION)
+    expect(emptySong.m8Version).toEqual(LATEST_M8_VERSION)
 
     emptySong.chains.forEach((chain) => {
       expect(chain).toEqual(new Chain())

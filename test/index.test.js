@@ -198,6 +198,33 @@ describe('index tests', () => {
     }
   })
 
+  describe('#dumpSong', () => {
+    test('2.7.x', () => {
+      const filePath = path.join(__dirname, 'files/2.7.x/Songs/DEFAULT.m8s')
+      const bufferFromDisk = readFileSync(filePath)
+      const diskFileReader = new M8FileReader(bufferFromDisk)
+      const songFromDisk = M8.loadSong(diskFileReader)
+
+      // Ensure the raw bytes read from disk match the dumped bytes
+      expect(bufferFromDisk).toEqual(M8.dumpSong(songFromDisk, diskFileReader))
+
+      let bytesFileReader = new M8FileReader(Buffer.from(M8.dumpSong(songFromDisk)))
+      let alteredSong = M8.loadSong(bytesFileReader)
+
+      alteredSong.name = 'TEST'
+      alteredSong.directory = '/A/B/'
+      alteredSong.key = 0x05
+
+      // Omitting the M8FileReader so as to default to empty values for skipped bytes
+      bytesFileReader = new M8FileReader(M8.dumpSong(alteredSong))
+      alteredSong = M8.loadSong(bytesFileReader)
+
+      expect(alteredSong.name).toEqual('TEST')
+      expect(alteredSong.directory).toEqual('/A/B/')
+      expect(alteredSong.key).toEqual(0x05)
+    })
+  })
+
   test('#dumpTheme', () => {
     const filePath = path.join(__dirname, 'files/1.0.x/Themes/DEFAULT.m8t')
     const bufferFromDisk = readFileSync(filePath)

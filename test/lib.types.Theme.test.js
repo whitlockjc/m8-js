@@ -17,8 +17,6 @@ const { DefaultTheme, Theme } = require('../lib/types/Theme')
 
 describe('Theme tests', () => {
   test('constructor', () => {
-    const theme = new Theme()
-
-    expect(theme).toEqual(DefaultTheme)
+    expect(new Theme()).toEqual(DefaultTheme)
   })
 })
