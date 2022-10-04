@@ -20,10 +20,10 @@ Module for loading/interacting with [Dirtywave](https://dirtywave.com/) M8 instr
 **See**: [https://gist.github.com/ftsf/223b0fc761339b3c23dda7dd891514d9](https://gist.github.com/ftsf/223b0fc761339b3c23dda7dd891514d9) for original Nim sources.  
 
 * [m8-js](#module_m8-js)
-    * [~dumpInstrument(instrument, [m8Version])](#module_m8-js..dumpInstrument) ⇒ <code>module:m8-js.Buffer</code>
-    * [~dumpScale(theme, [m8Version])](#module_m8-js..dumpScale) ⇒ <code>module:m8-js.Buffer</code>
+    * [~dumpInstrument(instrument)](#module_m8-js..dumpInstrument) ⇒ <code>module:m8-js.Buffer</code>
+    * [~dumpScale(scale)](#module_m8-js..dumpScale) ⇒ <code>module:m8-js.Buffer</code>
     * [~dumpTable(table)](#module_m8-js..dumpTable) ⇒ <code>Array.&lt;Number&gt;</code>
-    * [~dumpTheme(theme, [m8Version])](#module_m8-js..dumpTheme) ⇒ <code>module:m8-js.Buffer</code>
+    * [~dumpTheme(theme)](#module_m8-js..dumpTheme) ⇒ <code>module:m8-js.Buffer</code>
     * [~loadInstrument(fileReader)](#module_m8-js..loadInstrument) ⇒ [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)
     * [~loadScale(fileReader)](#module_m8-js..loadScale) ⇒ [<code>Scale</code>](#module_m8-js/lib/types.Scale)
     * [~loadSong(fileReader)](#module_m8-js..loadSong) ⇒ [<code>Song</code>](#module_m8-js/lib/types.Song)
@@ -34,27 +34,25 @@ Module for loading/interacting with [Dirtywave](https://dirtywave.com/) M8 instr
 
 <a name="module_m8-js..dumpInstrument"></a>
 
-### m8-js~dumpInstrument(instrument, [m8Version]) ⇒ <code>module:m8-js.Buffer</code>
+### m8-js~dumpInstrument(instrument) ⇒ <code>module:m8-js.Buffer</code>
 Dumps an M8 Instrument file to bytes.
 
 **Kind**: inner method of [<code>m8-js</code>](#module_m8-js)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| instrument | [<code>Instrument</code>](#module_m8-js/lib/types.Instrument) | The M8 Instrument file |
-| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The optional M8 version _(defaults to the latest version)_ |
+| instrument | [<code>Instrument</code>](#module_m8-js/lib/types.Instrument) | The M8 Instrument |
 
 <a name="module_m8-js..dumpScale"></a>
 
-### m8-js~dumpScale(theme, [m8Version]) ⇒ <code>module:m8-js.Buffer</code>
+### m8-js~dumpScale(scale) ⇒ <code>module:m8-js.Buffer</code>
 Dumps an M8 Scale file to bytes.
 
 **Kind**: inner method of [<code>m8-js</code>](#module_m8-js)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| theme | [<code>Scale</code>](#module_m8-js/lib/types.Scale) | The M8 Scale file |
-| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The optional M8 version _(defaults to the latest version)_ |
+| scale | [<code>Scale</code>](#module_m8-js/lib/types.Scale) | The M8 Scale to generate bytes for |
 
 <a name="module_m8-js..dumpTable"></a>
 
@@ -65,19 +63,18 @@ Dumps an M8 Table to bytes.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| table | [<code>Table</code>](#module_m8-js/lib/types.Table) | The M8 Table |
+| table | [<code>Table</code>](#module_m8-js/lib/types.Table) | The M8 Table to generate bytes for |
 
 <a name="module_m8-js..dumpTheme"></a>
 
-### m8-js~dumpTheme(theme, [m8Version]) ⇒ <code>module:m8-js.Buffer</code>
+### m8-js~dumpTheme(theme) ⇒ <code>module:m8-js.Buffer</code>
 Dumps an M8 Theme file to bytes.
 
 **Kind**: inner method of [<code>m8-js</code>](#module_m8-js)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| theme | [<code>Theme</code>](#module_m8-js/lib/types.Theme) | The M8 Theme file |
-| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The optional M8 version _(defaults to the latest version)_ |
+| theme | [<code>Theme</code>](#module_m8-js/lib/types.Theme) | The M8 Theme to generate bytes for |
 
 <a name="module_m8-js..loadInstrument"></a>
 
@@ -341,12 +338,12 @@ Module for `m8-js` types.
         * [.kind](#module_m8-js/lib/types.Instrument+kind) : <code>Number</code>
         * [.lfo](#module_m8-js/lib/types.Instrument+lfo) : [<code>Array.&lt;LFOParameters&gt;</code>](#module_m8-js/lib/types.LFOParameters)
         * [.mixerParams](#module_m8-js/lib/types.Instrument+mixerParams) : [<code>MixerParameters</code>](#module_m8-js/lib/types.MixerParameters)
+        * [.m8Version](#module_m8-js/lib/types.Instrument+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.name](#module_m8-js/lib/types.Instrument+name) : <code>String</code>
         * [.pitch](#module_m8-js/lib/types.Instrument+pitch) : <code>Number</code>
         * [.tableData](#module_m8-js/lib/types.Instrument+tableData) : [<code>Table</code>](#module_m8-js/lib/types.Table)
         * [.tableTick](#module_m8-js/lib/types.Instrument+tableTick) : <code>Number</code>
         * [.transpose](#module_m8-js/lib/types.Instrument+transpose) : <code>Boolean</code>
-        * [.version](#module_m8-js/lib/types.Instrument+version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.volume](#module_m8-js/lib/types.Instrument+volume) : <code>Number</code>
         * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
         * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
@@ -411,7 +408,8 @@ Module for `m8-js` types.
         * [.offsetB](#module_m8-js/lib/types.NoteInterval+offsetB) : <code>Number</code>
         * [.offsetToStr()](#module_m8-js/lib/types.NoteInterval+offsetToStr) ⇒ <code>String</code>
     * [.Scale](#module_m8-js/lib/types.Scale)
-        * [new Scale()](#new_module_m8-js/lib/types.Scale_new)
+        * [new Scale([m8Version])](#new_module_m8-js/lib/types.Scale_new)
+        * [.m8Version](#module_m8-js/lib/types.Scale+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.name](#module_m8-js/lib/types.Scale+name) : <code>String</code>
         * [.intervals](#module_m8-js/lib/types.Scale+intervals) : [<code>Array.&lt;NoteInterval&gt;</code>](#module_m8-js/lib/types.NoteInterval)
     * [.EffectsSettings](#module_m8-js/lib/types.EffectsSettings)
@@ -519,7 +517,7 @@ Module for `m8-js` types.
         * [new Table()](#new_module_m8-js/lib/types.Table_new)
         * [.steps](#module_m8-js/lib/types.Table+steps) : [<code>Array.&lt;TableStep&gt;</code>](#module_m8-js/lib/types.TableStep)
     * [.Theme](#module_m8-js/lib/types.Theme)
-        * [new Theme()](#new_module_m8-js/lib/types.Theme_new)
+        * [new Theme(m8Version)](#new_module_m8-js/lib/types.Theme_new)
         * [.background](#module_m8-js/lib/types.Theme+background) : <code>Array.&lt;Number&gt;</code>
         * [.textEmpty](#module_m8-js/lib/types.Theme+textEmpty) : <code>Array.&lt;Number&gt;</code>
         * [.textInfo](#module_m8-js/lib/types.Theme+textInfo) : <code>Array.&lt;Number&gt;</code>
@@ -533,6 +531,7 @@ Module for `m8-js` types.
         * [.meterLow](#module_m8-js/lib/types.Theme+meterLow) : <code>Array.&lt;Number&gt;</code>
         * [.meterMid](#module_m8-js/lib/types.Theme+meterMid) : <code>Array.&lt;Number&gt;</code>
         * [.meterPeak](#module_m8-js/lib/types.Theme+meterPeak) : <code>Array.&lt;Number&gt;</code>
+        * [.m8Version](#module_m8-js/lib/types.Theme+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
 
 <a name="module_m8-js/lib/types.ChainStep"></a>
 
@@ -1224,12 +1223,12 @@ Represents an Instrument.
     * [.kind](#module_m8-js/lib/types.Instrument+kind) : <code>Number</code>
     * [.lfo](#module_m8-js/lib/types.Instrument+lfo) : [<code>Array.&lt;LFOParameters&gt;</code>](#module_m8-js/lib/types.LFOParameters)
     * [.mixerParams](#module_m8-js/lib/types.Instrument+mixerParams) : [<code>MixerParameters</code>](#module_m8-js/lib/types.MixerParameters)
+    * [.m8Version](#module_m8-js/lib/types.Instrument+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
     * [.name](#module_m8-js/lib/types.Instrument+name) : <code>String</code>
     * [.pitch](#module_m8-js/lib/types.Instrument+pitch) : <code>Number</code>
     * [.tableData](#module_m8-js/lib/types.Instrument+tableData) : [<code>Table</code>](#module_m8-js/lib/types.Table)
     * [.tableTick](#module_m8-js/lib/types.Instrument+tableTick) : <code>Number</code>
     * [.transpose](#module_m8-js/lib/types.Instrument+transpose) : <code>Boolean</code>
-    * [.version](#module_m8-js/lib/types.Instrument+version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
     * [.volume](#module_m8-js/lib/types.Instrument+volume) : <code>Number</code>
     * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
     * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
@@ -1286,6 +1285,10 @@ Create an Instrument.
 
 #### instrument.mixerParams : [<code>MixerParameters</code>](#module_m8-js/lib/types.MixerParameters)
 **Kind**: instance property of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
+<a name="module_m8-js/lib/types.Instrument+m8Version"></a>
+
+#### instrument.m8Version : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+**Kind**: instance property of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
 <a name="module_m8-js/lib/types.Instrument+name"></a>
 
 #### instrument.name : <code>String</code>
@@ -1305,10 +1308,6 @@ Create an Instrument.
 <a name="module_m8-js/lib/types.Instrument+transpose"></a>
 
 #### instrument.transpose : <code>Boolean</code>
-**Kind**: instance property of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
-<a name="module_m8-js/lib/types.Instrument+version"></a>
-
-#### instrument.version : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
 **Kind**: instance property of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
 <a name="module_m8-js/lib/types.Instrument+volume"></a>
 
@@ -1811,15 +1810,25 @@ Represents a Scale.
 **Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
 
 * [.Scale](#module_m8-js/lib/types.Scale)
-    * [new Scale()](#new_module_m8-js/lib/types.Scale_new)
+    * [new Scale([m8Version])](#new_module_m8-js/lib/types.Scale_new)
+    * [.m8Version](#module_m8-js/lib/types.Scale+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
     * [.name](#module_m8-js/lib/types.Scale+name) : <code>String</code>
     * [.intervals](#module_m8-js/lib/types.Scale+intervals) : [<code>Array.&lt;NoteInterval&gt;</code>](#module_m8-js/lib/types.NoteInterval)
 
 <a name="new_module_m8-js/lib/types.Scale_new"></a>
 
-#### new Scale()
+#### new Scale([m8Version])
 Creates a Scale.
 
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the instrument |
+
+<a name="module_m8-js/lib/types.Scale+m8Version"></a>
+
+#### scale.m8Version : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+**Kind**: instance property of [<code>Scale</code>](#module_m8-js/lib/types.Scale)  
 <a name="module_m8-js/lib/types.Scale+name"></a>
 
 #### scale.name : <code>String</code>
@@ -2416,7 +2425,7 @@ Represents a Theme.
 **Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
 
 * [.Theme](#module_m8-js/lib/types.Theme)
-    * [new Theme()](#new_module_m8-js/lib/types.Theme_new)
+    * [new Theme(m8Version)](#new_module_m8-js/lib/types.Theme_new)
     * [.background](#module_m8-js/lib/types.Theme+background) : <code>Array.&lt;Number&gt;</code>
     * [.textEmpty](#module_m8-js/lib/types.Theme+textEmpty) : <code>Array.&lt;Number&gt;</code>
     * [.textInfo](#module_m8-js/lib/types.Theme+textInfo) : <code>Array.&lt;Number&gt;</code>
@@ -2430,11 +2439,17 @@ Represents a Theme.
     * [.meterLow](#module_m8-js/lib/types.Theme+meterLow) : <code>Array.&lt;Number&gt;</code>
     * [.meterMid](#module_m8-js/lib/types.Theme+meterMid) : <code>Array.&lt;Number&gt;</code>
     * [.meterPeak](#module_m8-js/lib/types.Theme+meterPeak) : <code>Array.&lt;Number&gt;</code>
+    * [.m8Version](#module_m8-js/lib/types.Theme+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
 
 <a name="new_module_m8-js/lib/types.Theme_new"></a>
 
-#### new Theme()
+#### new Theme(m8Version)
 Creates a Theme.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| m8Version | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the instrument |
 
 <a name="module_m8-js/lib/types.Theme+background"></a>
 
@@ -2487,4 +2502,8 @@ Creates a Theme.
 <a name="module_m8-js/lib/types.Theme+meterPeak"></a>
 
 #### theme.meterPeak : <code>Array.&lt;Number&gt;</code>
+**Kind**: instance property of [<code>Theme</code>](#module_m8-js/lib/types.Theme)  
+<a name="module_m8-js/lib/types.Theme+m8Version"></a>
+
+#### theme.m8Version : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
 **Kind**: instance property of [<code>Theme</code>](#module_m8-js/lib/types.Theme)  

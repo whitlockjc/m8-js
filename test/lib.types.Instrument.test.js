@@ -373,7 +373,7 @@ describe('Instrument tests', () => {
       expect(emptyInstr.pitch).toEqual(0xFF)
       expect(emptyInstr.tableData).toEqual(new Table())
       expect(emptyInstr.tableTick).toEqual(0x01)
-      expect(emptyInstr.version).toEqual(LATEST_M8_VERSION)
+      expect(emptyInstr.m8Version).toEqual(LATEST_M8_VERSION)
       expect(emptyInstr.volume).toEqual(0xFF)
 
       expect(emptyInstr.lfo.length).toEqual(2)

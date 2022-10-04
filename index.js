@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-const Scale = require('./lib/types/Scale')
+const { Scale } = require('./lib/types/Scale')
 const Song = require('./lib/types/Song')
 const Table = require('./lib/types/Table')
-const Theme = require('./lib/types/Theme')
+const { Theme } = require('./lib/types/Theme')
 const { FMSynth, Macrosynth, MIDIOut, None, Sampler, Wavsynth } = require('./lib/types/Instrument')
 const { VERSION_1_4_0, VERSION_2_5_0, M8FileTypes } = require('./lib/constants')
 const { toM8HexStr } = require('./lib/helpers')
@@ -47,13 +47,12 @@ const M8FileWriter = require('./lib/types/M8FileWriter')
 /**
  * Dumps an M8 Instrument file to bytes.
  *
- * @param {module:m8-js/lib/types.Instrument} instrument - The M8 Instrument file
- * @param {module:m8-js/lib/types.M8Version} [m8Version] - The optional M8 version _(defaults to the latest version)_
+ * @param {module:m8-js/lib/types.Instrument} instrument - The M8 Instrument
  *
  * @returns {module:m8-js.Buffer}
  */
-const dumpInstrument = (instrument, m8Version) => {
-  const fileWriter = new M8FileWriter(M8FileTypes.Instrument, m8Version)
+const dumpInstrument = (instrument) => {
+  const fileWriter = new M8FileWriter(M8FileTypes.Instrument, instrument.m8Version)
   const startLen = fileWriter.bytes.length
 
   fileWriter.write(instrument.kind)
@@ -249,13 +248,12 @@ const dumpInstrument = (instrument, m8Version) => {
 /**
  * Dumps an M8 Scale file to bytes.
  *
- * @param {module:m8-js/lib/types.Scale} theme - The M8 Scale file
- * @param {module:m8-js/lib/types.M8Version} [m8Version] - The optional M8 version _(defaults to the latest version)_
+ * @param {module:m8-js/lib/types.Scale} scale - The M8 Scale to generate bytes for
  *
  * @returns {module:m8-js.Buffer}
  */
-const dumpScale = (scale, m8Version) => {
-  const fileWriter = new M8FileWriter(M8FileTypes.Scale, m8Version)
+const dumpScale = (scale) => {
+  const fileWriter = new M8FileWriter(M8FileTypes.Scale, scale.m8Version)
 
   let noteBits = ''
 
@@ -283,7 +281,7 @@ const dumpScale = (scale, m8Version) => {
 /**
  * Dumps an M8 Table to bytes.
  *
- * @param {module:m8-js/lib/types.Table} table - The M8 Table
+ * @param {module:m8-js/lib/types.Table} table - The M8 Table to generate bytes for
  *
  * @returns {Array<Number>}
  */
@@ -310,13 +308,12 @@ const dumpTable = (table) => {
 /**
  * Dumps an M8 Theme file to bytes.
  *
- * @param {module:m8-js/lib/types.Theme} theme - The M8 Theme file
- * @param {module:m8-js/lib/types.M8Version} [m8Version] - The optional M8 version _(defaults to the latest version)_
+ * @param {module:m8-js/lib/types.Theme} theme - The M8 Theme to generate bytes for
  *
  * @returns {module:m8-js.Buffer}
  */
-const dumpTheme = (theme, m8Version) => {
-  const fileWriter = new M8FileWriter(M8FileTypes.Theme, m8Version)
+const dumpTheme = (theme) => {
+  const fileWriter = new M8FileWriter(M8FileTypes.Theme, theme.m8Version)
 
   fileWriter.write(theme.background)
   fileWriter.write(theme.textEmpty)
@@ -556,7 +553,7 @@ const loadInstrument = (fileReader) => {
  * @returns {module:m8-js/lib/types.Scale}
  */
 const loadScale = (fileReader) => {
-  const scale = new Scale()
+  const scale = new Scale(fileReader.m8Version)
   const noteMap = Buffer.from([fileReader.read(), fileReader.read()]).readUInt16LE(0)
 
   // Read interval enablements
@@ -814,7 +811,7 @@ const loadTable = (fileReader) => {
  * @returns {module:m8-js/lib/types.Theme}
  */
 const loadTheme = (fileReader) => {
-  const theme = new Theme(fileReader)
+  const theme = new Theme(fileReader.m8Version)
 
   theme.background = fileReader.read(3)
   theme.textEmpty = fileReader.read(3)

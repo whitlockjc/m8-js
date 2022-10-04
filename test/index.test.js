@@ -15,14 +15,14 @@
 
 const { readFileSync } = require('fs')
 const path = require('path')
-const { VERSION_2_7_0, LATEST_M8_VERSION } = require('../lib/constants')
+const { VERSION_2_7_0 } = require('../lib/constants')
 const { FMSynth, Macrosynth, MIDIOut, Sampler, Wavsynth } = require('../lib/types/Instrument')
 
 const M8 = require('..')
 const M8FileReader = require('../lib/types/M8FileReader')
-const Scale = require('../lib/types/Scale')
+const { Scale } = require('../lib/types/Scale')
 const Song = require('../lib/types/Song')
-const Theme = require('../lib/types/Theme')
+const { Theme } = require('../lib/types/Theme')
 const M8Version = require('../lib/types/M8Version')
 
 const m8Files = {
@@ -231,7 +231,7 @@ describe('index tests', () => {
     expect(alteredTheme.meterLow).toEqual(themeFromDisk.meterLow)
     expect(alteredTheme.meterMid).toEqual(themeFromDisk.meterMid)
     expect(alteredTheme.meterPeak).toEqual(themeFromDisk.meterPeak)
-    expect(bytesFileReader.m8Version).toEqual(LATEST_M8_VERSION)
+    expect(bytesFileReader.m8Version).toEqual(new M8Version(1, 0, 2))
   })
 
   describe('#loadInstrument', () => {
@@ -332,7 +332,7 @@ describe('index tests', () => {
   describe('#loadScale', () => {
     describe('2.5.x', () => {
       test('TESTING.m8n', () => {
-        const expectedScale = new Scale()
+        const expectedScale = new Scale(new M8Version(2, 5, 0))
         const expectedOffsetStrs = [
           '-24.00',
           '00.00',
@@ -422,7 +422,7 @@ describe('index tests', () => {
   describe('#loadTheme', () => {
     describe('1.0.x', () => {
       test('DEFAULT.m8t', () => {
-        const defaultTheme = new Theme()
+        const defaultTheme = new Theme(new M8Version(1, 0, 2))
 
         expect(m8Files['1.0.x'].themes['DEFAULT.m8t']).toEqual(defaultTheme)
       })

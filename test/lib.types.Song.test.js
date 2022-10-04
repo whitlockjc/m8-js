@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-const { DefaultScales, LATEST_M8_VERSION } = require('../lib/constants')
+const { LATEST_M8_VERSION } = require('../lib/constants')
 const Chain = require('../lib/types/Chain')
+const { DefaultScales } = require('../lib/types/Scale')
 const Groove = require('../lib/types/Groove')
 const { None, FMSynth } = require('../lib/types/Instrument')
 const M8Version = require('../lib/types/M8Version')

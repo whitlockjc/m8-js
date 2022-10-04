@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-const Scale = require('../lib/types/Scale')
+const { Scale } = require('../lib/types/Scale')
 
 describe('NodeInterval tests', () => {
   test('#offsetToStr negative', () => {

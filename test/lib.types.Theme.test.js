@@ -13,8 +13,7 @@
  * limitations under the License.
  */
 
-const { DefaultTheme } = require('../lib/constants')
-const Theme = require('../lib/types/Theme')
+const { DefaultTheme, Theme } = require('../lib/types/Theme')
 
 describe('Theme tests', () => {
   test('constructor', () => {
