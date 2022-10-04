@@ -18,12 +18,12 @@ const Song = require('./lib/types/Song')
 const Table = require('./lib/types/Table')
 const Theme = require('./lib/types/Theme')
 const { FMSynth, Macrosynth, MIDIOut, None, Sampler, Wavsynth } = require('./lib/types/Instrument')
-const { LATEST_M8_VERSION, VERSION_1_4_0, VERSION_2_5_0 } = require('./lib/constants')
+const { VERSION_1_4_0, VERSION_2_5_0, M8FileTypes } = require('./lib/constants')
 const { toM8HexStr } = require('./lib/helpers')
+const M8FileWriter = require('./lib/types/M8FileWriter')
 
 // TODO: Add debug support
 // TODO: Add error handling
-// TODO: Create a Project type?
 
 /**
  * Module for loading/interacting with {@link https://dirtywave.com/|Dirtywave} M8 instrument/song files.
@@ -32,6 +32,8 @@ const { toM8HexStr } = require('./lib/helpers')
  *
  * @module m8-js
  */
+
+// TODO: Remove use of Buffer
 
 /**
  * A Buffer.
@@ -43,50 +45,217 @@ const { toM8HexStr } = require('./lib/helpers')
  */
 
 /**
- * Dumps an M8Version file to bytes.
+ * Dumps an M8 Instrument file to bytes.
  *
- * @param {module:m8-js/lib/types.M8Version} m8Version - The M8 version
+ * @param {module:m8-js/lib/types.Instrument} instrument - The M8 Instrument file
+ * @param {module:m8-js/lib/types.M8Version} [m8Version] - The optional M8 version _(defaults to the latest version)_
  *
- * @returns {Array<Number>}
+ * @returns {module:m8-js.Buffer}
  */
-const dumpM8Version = (m8Version) => {
-  // Start with 'M8VERSION' bytes
-  const bytes = [0x4D, 0x38, 0x56, 0x45, 0x52, 0x53, 0x49, 0x4F, 0x4E]
+const dumpInstrument = (instrument, m8Version) => {
+  const fileWriter = new M8FileWriter(M8FileTypes.Instrument, m8Version)
+  const startLen = fileWriter.bytes.length
 
-  bytes.push(0x00)
+  fileWriter.write(instrument.kind)
+  fileWriter.writeStr(instrument.name, 12)
+  fileWriter.writeBool(instrument.transpose)
+  fileWriter.write(instrument.tableTick)
 
-  const majorBits = m8Version.majorVersion === 0
-    ? '0000'
-    : m8Version.majorVersion.toString(2)
-  const minorBits = m8Version.minorVersion === 0
-    ? '0000'
-    : m8Version.minorVersion.toString(2).padStart(4, '0')
-  const patchBits = m8Version.patchVersion === 0
-    ? '0000'
-    : m8Version.patchVersion.toString(2).padStart(4, '0')
-  const rawM8Version = parseInt(majorBits + minorBits + patchBits, 2)
+  // Do not write these values for 'MIDI OUT', they aren't here when reading
+  if (instrument.kind !== 0x03) {
+    fileWriter.write(instrument.volume)
+    fileWriter.write(instrument.pitch)
+    fileWriter.write(instrument.fineTune)
+  }
 
-  bytes.push(rawM8Version & 0xFF)
-  bytes.push((rawM8Version >> 8) & 0xFF)
+  // Write instrument-specific parameters
+  switch (instrument.kind) {
+    // WAVSYNTH
+    case 0x00:
+      fileWriter.write(instrument.instrParams.shape)
+      fileWriter.write(instrument.instrParams.size)
+      fileWriter.write(instrument.instrParams.mult)
+      fileWriter.write(instrument.instrParams.warp)
+      fileWriter.write(instrument.instrParams.mirror)
 
-  bytes.push(0x00)
+      break
 
-  return bytes
+    // MACROSYNTH
+    case 0x01:
+      fileWriter.write(instrument.instrParams.shape)
+      fileWriter.write(instrument.instrParams.timbre)
+      fileWriter.write(instrument.instrParams.color)
+      fileWriter.write(instrument.instrParams.degrade)
+      fileWriter.write(instrument.instrParams.redux)
+
+      break
+
+    // SAMPLER
+    case 0x02:
+      fileWriter.write(instrument.instrParams.playMode)
+      fileWriter.write(instrument.instrParams.slice)
+      fileWriter.write(instrument.instrParams.start)
+      fileWriter.write(instrument.instrParams.loopStart)
+      fileWriter.write(instrument.instrParams.length)
+      fileWriter.write(instrument.instrParams.degrade)
+
+      break
+
+    // MIDI OUT
+    case 0x03:
+      fileWriter.write(instrument.instrParams.port)
+      fileWriter.write(instrument.instrParams.channel)
+      fileWriter.write(instrument.instrParams.bankSelect)
+      fileWriter.write(instrument.instrParams.programChange)
+
+      // Write 3 empty bytes (unused data)
+      fileWriter.write([0x00, 0x00, 0x00])
+
+      for (let i = 0; i < instrument.instrParams.customCC.length; i++) {
+        const customCC = instrument.instrParams.customCC[i]
+
+        fileWriter.write(customCC.number)
+        fileWriter.write(customCC.defaultValue)
+      }
+
+      break
+
+    // FMSYNTH
+    case 0x04:
+      fileWriter.write(instrument.instrParams.algo)
+
+      // If supported, read the synth shapes
+      if (fileWriter.m8Version.compare(VERSION_1_4_0) >= 0) {
+        for (let i = 0; i < instrument.instrParams.operators.length; i++) {
+          fileWriter.write(instrument.instrParams.operators[i].shape)
+        }
+      }
+
+      // Read the ratios
+      for (let i = 0; i < instrument.instrParams.operators.length; i++) {
+        const operator = instrument.instrParams.operators[i]
+
+        fileWriter.write(operator.ratio)
+        fileWriter.write(operator.ratioFine)
+      }
+
+      // Read the feedback/volume of each operator
+      for (let i = 0; i < instrument.instrParams.operators.length; i++) {
+        const operator = instrument.instrParams.operators[i]
+
+        fileWriter.write(operator.level)
+        fileWriter.write(operator.feedback)
+      }
+
+      // Read first modulator slot controls
+      for (let i = 0; i < instrument.instrParams.operators.length; i++) {
+        const operator = instrument.instrParams.operators[i]
+
+        fileWriter.write(operator.modA)
+      }
+
+      // Read second modulator slot controls
+      for (let i = 0; i < instrument.instrParams.operators.length; i++) {
+        const operator = instrument.instrParams.operators[i]
+
+        fileWriter.write(operator.modB)
+      }
+
+      // Read modulation sources
+      fileWriter.write(instrument.instrParams.mod1)
+      fileWriter.write(instrument.instrParams.mod2)
+      fileWriter.write(instrument.instrParams.mod3)
+      fileWriter.write(instrument.instrParams.mod4)
+
+      break
+
+    // NONE
+    case 0xFF:
+      // Do nothing
+      break
+
+    default:
+      /* istanbul ignore next */
+      throw new TypeError(`Unsupported Instrument type: ${toM8HexStr(instrument.kind)}`)
+  }
+
+  // Write filter parameters
+  fileWriter.write(instrument.filterParams.type)
+  fileWriter.write(instrument.filterParams.cutoff)
+  fileWriter.write(instrument.filterParams.res)
+
+  // Write amplifier parameters
+  fileWriter.write(instrument.ampParams.amp)
+  fileWriter.write(instrument.ampParams.limit)
+
+  // Write mixer parameters
+  fileWriter.write(instrument.mixerParams.pan)
+  fileWriter.write(instrument.mixerParams.dry)
+  fileWriter.write(instrument.mixerParams.cho)
+  fileWriter.write(instrument.mixerParams.del)
+  fileWriter.write(instrument.mixerParams.rev)
+
+  // Read envelope parameters
+  for (let i = 0; i < instrument.env.length; i++) {
+    const env = instrument.env[i]
+
+    fileWriter.write(env.dest)
+    fileWriter.write(env.amount)
+    fileWriter.write(env.attack)
+    fileWriter.write(env.hold)
+    fileWriter.write(env.decay)
+    fileWriter.write(env.retrigger)
+  }
+
+  // Read LFO parameters
+  for (let i = 0; i < instrument.lfo.length; i++) {
+    const lfo = instrument.lfo[i]
+
+    fileWriter.write(lfo.shape)
+    fileWriter.write(lfo.dest)
+    fileWriter.write(lfo.triggerMode)
+    fileWriter.write(lfo.freq)
+    fileWriter.write(lfo.amount)
+    fileWriter.write(lfo.retrigger)
+  }
+
+  // Fill in the empty values between instrument parameters and the sample path (when present)
+  for (let i = fileWriter.bytes.length; i < startLen + 0x57; i++) {
+    fileWriter.write(0xFF)
+  }
+
+  fileWriter.writeStr(instrument.kind === 0x02 ? instrument.instrParams.samplePath : '', 128)
+
+  // Write table data whenever writing an Instrument file versus being writing a Song file
+  if (fileWriter.fileTypeToStr() === 'Instrument') {
+    fileWriter.write(dumpTable(instrument.tableData))
+  }
+
+  // When reading an M8 instrument, each instrument has a consistent structure but parts of the file are unknown/unused.
+  // To ensure that files read from disk use the same values for these unused parts of the file, the Instrument class
+  // keeps track of all skipped bytes and each of these values are then used when generating a file's bytes.
+  //
+  // Whenever files are not read from disk and then its bytes are generated, the default values for the unknown/unused
+  // bytes should suffice and were identified by heavy reverse engineering.
+  const unusedBytes = instrument.getUnusedBytes()
+
+  Object.keys(unusedBytes).forEach((offset) => {
+    fileWriter.bytes[offset] = unusedBytes[offset]
+  })
+
+  return Buffer.from(fileWriter.bytes)
 }
 
 /**
  * Dumps an M8 Scale file to bytes.
  *
- * @param {module:m8-js/lib/types.Scale} theme - The M8 theme file
+ * @param {module:m8-js/lib/types.Scale} theme - The M8 Scale file
  * @param {module:m8-js/lib/types.M8Version} [m8Version] - The optional M8 version _(defaults to the latest version)_
  *
  * @returns {module:m8-js.Buffer}
  */
 const dumpScale = (scale, m8Version) => {
-  const bytes = dumpM8Version(m8Version || LATEST_M8_VERSION)
-
-  // File type
-  bytes.push(3 << 4)
+  const fileWriter = new M8FileWriter(M8FileTypes.Scale, m8Version)
 
   let noteBits = ''
 
@@ -96,58 +265,74 @@ const dumpScale = (scale, m8Version) => {
 
   const rawNoteMap = parseInt(noteBits.split('').reverse().join(''), 2)
 
-  bytes.push(rawNoteMap & 0xFF)
-  bytes.push((rawNoteMap >> 8) & 0xFF)
+  fileWriter.write(rawNoteMap & 0xFF)
+  fileWriter.write((rawNoteMap >> 8) & 0xFF)
 
   for (let i = 0; i < scale.intervals.length; i++) {
     const interval = scale.intervals[i]
 
-    bytes.push(interval.offsetA)
-    bytes.push(interval.offsetB)
+    fileWriter.write(interval.offsetA)
+    fileWriter.write(interval.offsetB)
   }
 
-  for (let i = 0; i < 16; i++) {
-    const nameCharCode = scale.name.charCodeAt(i)
+  fileWriter.writeStr(scale.name, 16)
 
-    if (isNaN(nameCharCode)) {
-      bytes.push(0x00)
-    } else {
-      bytes.push(nameCharCode)
+  return Buffer.from(fileWriter.bytes)
+}
+
+/**
+ * Dumps an M8 Table to bytes.
+ *
+ * @param {module:m8-js/lib/types.Table} table - The M8 Table
+ *
+ * @returns {Array<Number>}
+ */
+const dumpTable = (table) => {
+  const bytes = []
+
+  for (let i = 0; i < table.steps.length; i++) {
+    const step = table.steps[i]
+
+    bytes.push(step.transpose)
+    bytes.push(step.volume)
+
+    for (let j = 0; j < 3; j++) {
+      const fx = step['fx' + (j + 1)]
+
+      bytes.push(fx.command)
+      bytes.push(fx.value)
     }
   }
 
-  return Buffer.from(bytes)
+  return bytes
 }
 
 /**
  * Dumps an M8 Theme file to bytes.
  *
- * @param {module:m8-js/lib/types.Theme} theme - The M8 theme file
+ * @param {module:m8-js/lib/types.Theme} theme - The M8 Theme file
  * @param {module:m8-js/lib/types.M8Version} [m8Version] - The optional M8 version _(defaults to the latest version)_
  *
  * @returns {module:m8-js.Buffer}
  */
 const dumpTheme = (theme, m8Version) => {
-  const bytes = dumpM8Version(m8Version || LATEST_M8_VERSION)
+  const fileWriter = new M8FileWriter(M8FileTypes.Theme, m8Version)
 
-  // File type
-  bytes.push(2 << 4)
+  fileWriter.write(theme.background)
+  fileWriter.write(theme.textEmpty)
+  fileWriter.write(theme.textInfo)
+  fileWriter.write(theme.textDefault)
+  fileWriter.write(theme.textValue)
+  fileWriter.write(theme.textTitle)
+  fileWriter.write(theme.playMarker)
+  fileWriter.write(theme.cursor)
+  fileWriter.write(theme.selection)
+  fileWriter.write(theme.scopeSlider)
+  fileWriter.write(theme.meterLow)
+  fileWriter.write(theme.meterMid)
+  fileWriter.write(theme.meterPeak)
 
-  bytes.push(...theme.background)
-  bytes.push(...theme.textEmpty)
-  bytes.push(...theme.textInfo)
-  bytes.push(...theme.textDefault)
-  bytes.push(...theme.textValue)
-  bytes.push(...theme.textTitle)
-  bytes.push(...theme.playMarker)
-  bytes.push(...theme.cursor)
-  bytes.push(...theme.selection)
-  bytes.push(...theme.scopeSlider)
-  bytes.push(...theme.meterLow)
-  bytes.push(...theme.meterMid)
-  bytes.push(...theme.meterPeak)
-
-  return Buffer.from(bytes)
+  return Buffer.from(fileWriter.bytes)
 }
 
 /**
@@ -170,7 +355,7 @@ const loadInstrument = (fileReader) => {
   let fineTune = 0x80
 
   // It appears that these are not present for 'MIDI OUT'
-  if (kind !== 3) {
+  if (kind !== 0x03) {
     volume = fileReader.read()
     pitch = fileReader.read()
     fineTune = fileReader.read()
@@ -180,7 +365,7 @@ const loadInstrument = (fileReader) => {
 
   // Read instrument-specific parameters
   switch (kind) {
-    case 0:
+    case 0x00:
       instr = new Wavsynth(fileReader.m8Version)
 
       instr.instrParams.shape = fileReader.read()
@@ -190,7 +375,7 @@ const loadInstrument = (fileReader) => {
       instr.instrParams.mirror = fileReader.read()
 
       break
-    case 1:
+    case 0x01:
       instr = new Macrosynth(fileReader.m8Version)
 
       instr.instrParams.shape = fileReader.read()
@@ -200,7 +385,7 @@ const loadInstrument = (fileReader) => {
       instr.instrParams.redux = fileReader.read()
 
       break
-    case 2:
+    case 0x02:
       instr = new Sampler(fileReader.m8Version)
 
       instr.instrParams.playMode = fileReader.read()
@@ -211,7 +396,7 @@ const loadInstrument = (fileReader) => {
       instr.instrParams.degrade = fileReader.read()
 
       break
-    case 3:
+    case 0x03:
       instr = new MIDIOut(fileReader.m8Version)
 
       instr.instrParams.port = fileReader.read()
@@ -230,7 +415,7 @@ const loadInstrument = (fileReader) => {
       }
 
       break
-    case 4:
+    case 0x04:
       instr = new FMSynth(fileReader.m8Version)
 
       instr.instrParams.algo = fileReader.read()
@@ -341,15 +526,17 @@ const loadInstrument = (fileReader) => {
     lfo.retrigger = fileReader.read()
   }
 
-  // Skip to the sample path (when present)
-  fileReader.skipTo(startPos + 0x57) // Jump amount differs based on instrument type
+  // Skip to the sample path (when present) and record the unused bytes
+  instr.updateUnusedBytes(fileReader.skipTo(startPos + 0x57)) // Jump amount differs based on instrument type
 
   // Read Sample Path (Unfortunate that it happens here)
   if (instr.kindToStr() === 'SAMPLER') {
     instr.instrParams.samplePath = fileReader.readStr(127)
 
+    // Discard the next byte
     fileReader.skip(1)
   } else {
+    // Discard the bytes corresponding to the sample path when it's not present
     fileReader.skip(128)
   }
 
@@ -524,8 +711,6 @@ const loadSong = (fileReader) => {
   for (let i = 0; i < song.instruments.length; i++) {
     song.instruments[i] = loadInstrument(fileReader)
 
-    // TODO: Research table data being stored within the instrument
-
     // Update the instrument's table data reference
     song.instruments[i].tableData = song.tables[i]
   }
@@ -604,14 +789,14 @@ const loadSong = (fileReader) => {
 const loadTable = (fileReader) => {
   const table = new Table()
 
-  for (let j = 0; j < table.steps.length; j++) {
-    const step = table.steps[j]
+  for (let i = 0; i < table.steps.length; i++) {
+    const step = table.steps[i]
 
     step.transpose = fileReader.read()
     step.volume = fileReader.read()
 
-    for (let k = 0; k < 3; k++) {
-      const fx = step['fx' + (k + 1)]
+    for (let j = 0; j < 3; j++) {
+      const fx = step['fx' + (j + 1)]
 
       fx.command = fileReader.read()
       fx.value = fileReader.read()
@@ -672,12 +857,12 @@ const loadM8File = (fileReader) => {
 
 // Exports
 module.exports = {
+  dumpInstrument,
   dumpScale,
   dumpTheme,
   loadInstrument,
   loadM8File,
   loadScale,
   loadSong,
-  loadTable,
   loadTheme
 }

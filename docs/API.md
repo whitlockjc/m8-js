@@ -20,8 +20,9 @@ Module for loading/interacting with [Dirtywave](https://dirtywave.com/) M8 instr
 **See**: [https://gist.github.com/ftsf/223b0fc761339b3c23dda7dd891514d9](https://gist.github.com/ftsf/223b0fc761339b3c23dda7dd891514d9) for original Nim sources.  
 
 * [m8-js](#module_m8-js)
-    * [~dumpM8Version(m8Version)](#module_m8-js..dumpM8Version) ⇒ <code>Array.&lt;Number&gt;</code>
+    * [~dumpInstrument(instrument, [m8Version])](#module_m8-js..dumpInstrument) ⇒ <code>module:m8-js.Buffer</code>
     * [~dumpScale(theme, [m8Version])](#module_m8-js..dumpScale) ⇒ <code>module:m8-js.Buffer</code>
+    * [~dumpTable(table)](#module_m8-js..dumpTable) ⇒ <code>Array.&lt;Number&gt;</code>
     * [~dumpTheme(theme, [m8Version])](#module_m8-js..dumpTheme) ⇒ <code>module:m8-js.Buffer</code>
     * [~loadInstrument(fileReader)](#module_m8-js..loadInstrument) ⇒ [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)
     * [~loadScale(fileReader)](#module_m8-js..loadScale) ⇒ [<code>Scale</code>](#module_m8-js/lib/types.Scale)
@@ -31,16 +32,17 @@ Module for loading/interacting with [Dirtywave](https://dirtywave.com/) M8 instr
     * [~loadM8File(fileReader)](#module_m8-js..loadM8File) ⇒ [<code>Instrument</code>](#module_m8-js/lib/types.Instrument) \| [<code>Scale</code>](#module_m8-js/lib/types.Scale) \| [<code>Song</code>](#module_m8-js/lib/types.Song) \| [<code>Theme</code>](#module_m8-js/lib/types.Theme)
     * [~Buffer](#external_Buffer)
 
-<a name="module_m8-js..dumpM8Version"></a>
+<a name="module_m8-js..dumpInstrument"></a>
 
-### m8-js~dumpM8Version(m8Version) ⇒ <code>Array.&lt;Number&gt;</code>
-Dumps an M8Version file to bytes.
+### m8-js~dumpInstrument(instrument, [m8Version]) ⇒ <code>module:m8-js.Buffer</code>
+Dumps an M8 Instrument file to bytes.
 
 **Kind**: inner method of [<code>m8-js</code>](#module_m8-js)  
 
 | Param | Type | Description |
 | --- | --- | --- |
-| m8Version | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version |
+| instrument | [<code>Instrument</code>](#module_m8-js/lib/types.Instrument) | The M8 Instrument file |
+| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The optional M8 version _(defaults to the latest version)_ |
 
 <a name="module_m8-js..dumpScale"></a>
 
@@ -51,8 +53,19 @@ Dumps an M8 Scale file to bytes.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| theme | [<code>Scale</code>](#module_m8-js/lib/types.Scale) | The M8 theme file |
+| theme | [<code>Scale</code>](#module_m8-js/lib/types.Scale) | The M8 Scale file |
 | [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The optional M8 version _(defaults to the latest version)_ |
+
+<a name="module_m8-js..dumpTable"></a>
+
+### m8-js~dumpTable(table) ⇒ <code>Array.&lt;Number&gt;</code>
+Dumps an M8 Table to bytes.
+
+**Kind**: inner method of [<code>m8-js</code>](#module_m8-js)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| table | [<code>Table</code>](#module_m8-js/lib/types.Table) | The M8 Table |
 
 <a name="module_m8-js..dumpTheme"></a>
 
@@ -63,7 +76,7 @@ Dumps an M8 Theme file to bytes.
 
 | Param | Type | Description |
 | --- | --- | --- |
-| theme | [<code>Theme</code>](#module_m8-js/lib/types.Theme) | The M8 theme file |
+| theme | [<code>Theme</code>](#module_m8-js/lib/types.Theme) | The M8 Theme file |
 | [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The optional M8 version _(defaults to the latest version)_ |
 
 <a name="module_m8-js..loadInstrument"></a>
@@ -338,6 +351,8 @@ Module for `m8-js` types.
         * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
         * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
         * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
+        * [.getUnusedBytes()](#module_m8-js/lib/types.Instrument+getUnusedBytes) ⇒ <code>Object</code>
+        * [.updateUnusedBytes(unusedBytes)](#module_m8-js/lib/types.Instrument+updateUnusedBytes)
     * [.FMSynth](#module_m8-js/lib/types.FMSynth)
         * [new FMSynth(m8Version)](#new_module_m8-js/lib/types.FMSynth_new)
     * [.Macrosynth](#module_m8-js/lib/types.Macrosynth)
@@ -356,12 +371,20 @@ Module for `m8-js` types.
         * [.cursor](#module_m8-js/lib/types.M8FileReader+cursor) : <code>Number</code>
         * [.fileType](#module_m8-js/lib/types.M8FileReader+fileType) : <code>Number</code>
         * [.m8Version](#module_m8-js/lib/types.M8FileReader+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-        * [.skipped](#module_m8-js/lib/types.M8FileReader+skipped) : <code>Array.&lt;Number&gt;</code>
         * [.fileTypeToStr()](#module_m8-js/lib/types.M8FileReader+fileTypeToStr) ⇒ <code>String</code>
         * [.read([len])](#module_m8-js/lib/types.M8FileReader+read) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.readStr(len)](#module_m8-js/lib/types.M8FileReader+readStr) ⇒ <code>String</code>
-        * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip)
-        * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo)
+        * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip) ⇒ <code>Object</code>
+        * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo) ⇒ <code>Object</code>
+    * [.M8FileWriter](#module_m8-js/lib/types.M8FileWriter)
+        * [new M8FileWriter(fileType, [m8Version])](#new_module_m8-js/lib/types.M8FileWriter_new)
+        * [.bytes](#module_m8-js/lib/types.M8FileWriter+bytes) : <code>Array.&lt;Number&gt;</code>
+        * [.fileType](#module_m8-js/lib/types.M8FileWriter+fileType) : <code>Number</code>
+        * [.m8Version](#module_m8-js/lib/types.M8FileWriter+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+        * [.fileTypeToStr()](#module_m8-js/lib/types.M8FileWriter+fileTypeToStr) ⇒ <code>String</code>
+        * [.write(byteOrBytes)](#module_m8-js/lib/types.M8FileWriter+write)
+        * [.writeBool(bool)](#module_m8-js/lib/types.M8FileWriter+writeBool)
+        * [.writeStr(theString, padTo)](#module_m8-js/lib/types.M8FileWriter+writeStr)
     * [.M8Version](#module_m8-js/lib/types.M8Version)
         * [new M8Version(majorVersion, minorVersion, patchVersion)](#new_module_m8-js/lib/types.M8Version_new)
         * [.majorVersion](#module_m8-js/lib/types.M8Version+majorVersion) : <code>Number</code>
@@ -1211,6 +1234,8 @@ Represents an Instrument.
     * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
     * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
     * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
+    * [.getUnusedBytes()](#module_m8-js/lib/types.Instrument+getUnusedBytes) ⇒ <code>Object</code>
+    * [.updateUnusedBytes(unusedBytes)](#module_m8-js/lib/types.Instrument+updateUnusedBytes)
 
 <a name="new_module_m8-js/lib/types.Instrument_new"></a>
 
@@ -1312,6 +1337,24 @@ Returns a string representation of the Filter type.
 Returns a string representation of the Instrument kind.
 
 **Kind**: instance method of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
+<a name="module_m8-js/lib/types.Instrument+getUnusedBytes"></a>
+
+#### instrument.getUnusedBytes() ⇒ <code>Object</code>
+Returns the unused bytes map.
+
+**Kind**: instance method of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
+**Returns**: <code>Object</code> - the unused bytes map  
+<a name="module_m8-js/lib/types.Instrument+updateUnusedBytes"></a>
+
+#### instrument.updateUnusedBytes(unusedBytes)
+Updates the unused bytes map.
+
+**Kind**: instance method of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| unusedBytes | <code>Object</code> | The unused bytes map |
+
 <a name="module_m8-js/lib/types.FMSynth"></a>
 
 ### m8-js/lib/types.FMSynth
@@ -1423,12 +1466,11 @@ Note: This class is written purely to read an M8 file from start to finish.
     * [.cursor](#module_m8-js/lib/types.M8FileReader+cursor) : <code>Number</code>
     * [.fileType](#module_m8-js/lib/types.M8FileReader+fileType) : <code>Number</code>
     * [.m8Version](#module_m8-js/lib/types.M8FileReader+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-    * [.skipped](#module_m8-js/lib/types.M8FileReader+skipped) : <code>Array.&lt;Number&gt;</code>
     * [.fileTypeToStr()](#module_m8-js/lib/types.M8FileReader+fileTypeToStr) ⇒ <code>String</code>
     * [.read([len])](#module_m8-js/lib/types.M8FileReader+read) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.readStr(len)](#module_m8-js/lib/types.M8FileReader+readStr) ⇒ <code>String</code>
-    * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip)
-    * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo)
+    * [.skip(len)](#module_m8-js/lib/types.M8FileReader+skip) ⇒ <code>Object</code>
+    * [.skipTo(offset)](#module_m8-js/lib/types.M8FileReader+skipTo) ⇒ <code>Object</code>
 
 <a name="new_module_m8-js/lib/types.M8FileReader_new"></a>
 
@@ -1455,10 +1497,6 @@ Creates an M8 File Reader.
 <a name="module_m8-js/lib/types.M8FileReader+m8Version"></a>
 
 #### m8FileReader.m8Version : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-**Kind**: instance property of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
-<a name="module_m8-js/lib/types.M8FileReader+skipped"></a>
-
-#### m8FileReader.skipped : <code>Array.&lt;Number&gt;</code>
 **Kind**: instance property of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
 <a name="module_m8-js/lib/types.M8FileReader+fileTypeToStr"></a>
 
@@ -1490,10 +1528,11 @@ Reads a number of bytes and returns its string representation.
 
 <a name="module_m8-js/lib/types.M8FileReader+skip"></a>
 
-#### m8FileReader.skip(len)
+#### m8FileReader.skip(len) ⇒ <code>Object</code>
 Records the skipped offset to allow for writing files.
 
 **Kind**: instance method of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
+**Returns**: <code>Object</code> - the skipped bytes  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -1501,14 +1540,97 @@ Records the skipped offset to allow for writing files.
 
 <a name="module_m8-js/lib/types.M8FileReader+skipTo"></a>
 
-#### m8FileReader.skipTo(offset)
+#### m8FileReader.skipTo(offset) ⇒ <code>Object</code>
 Advances the cursor to the specified offset.
 
 **Kind**: instance method of [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader)  
+**Returns**: <code>Object</code> - the skipped bytes  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | offset | <code>Number</code> | The offset to skip to |
+
+<a name="module_m8-js/lib/types.M8FileWriter"></a>
+
+### m8-js/lib/types.M8FileWriter
+M8 File Writer.
+
+Note: This class is written purely to turn an M8 file in API form to bytes.
+
+**Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
+
+* [.M8FileWriter](#module_m8-js/lib/types.M8FileWriter)
+    * [new M8FileWriter(fileType, [m8Version])](#new_module_m8-js/lib/types.M8FileWriter_new)
+    * [.bytes](#module_m8-js/lib/types.M8FileWriter+bytes) : <code>Array.&lt;Number&gt;</code>
+    * [.fileType](#module_m8-js/lib/types.M8FileWriter+fileType) : <code>Number</code>
+    * [.m8Version](#module_m8-js/lib/types.M8FileWriter+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+    * [.fileTypeToStr()](#module_m8-js/lib/types.M8FileWriter+fileTypeToStr) ⇒ <code>String</code>
+    * [.write(byteOrBytes)](#module_m8-js/lib/types.M8FileWriter+write)
+    * [.writeBool(bool)](#module_m8-js/lib/types.M8FileWriter+writeBool)
+    * [.writeStr(theString, padTo)](#module_m8-js/lib/types.M8FileWriter+writeStr)
+
+<a name="new_module_m8-js/lib/types.M8FileWriter_new"></a>
+
+#### new M8FileWriter(fileType, [m8Version])
+Creates an M8 File Writer.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| fileType | <code>Number</code> | The M8 file type |
+| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The optional M8 version _(defaults to the latest version)_ |
+
+<a name="module_m8-js/lib/types.M8FileWriter+bytes"></a>
+
+#### m8FileWriter.bytes : <code>Array.&lt;Number&gt;</code>
+**Kind**: instance property of [<code>M8FileWriter</code>](#module_m8-js/lib/types.M8FileWriter)  
+<a name="module_m8-js/lib/types.M8FileWriter+fileType"></a>
+
+#### m8FileWriter.fileType : <code>Number</code>
+**Kind**: instance property of [<code>M8FileWriter</code>](#module_m8-js/lib/types.M8FileWriter)  
+<a name="module_m8-js/lib/types.M8FileWriter+m8Version"></a>
+
+#### m8FileWriter.m8Version : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+**Kind**: instance property of [<code>M8FileWriter</code>](#module_m8-js/lib/types.M8FileWriter)  
+<a name="module_m8-js/lib/types.M8FileWriter+fileTypeToStr"></a>
+
+#### m8FileWriter.fileTypeToStr() ⇒ <code>String</code>
+Returns the file type as string.
+
+**Kind**: instance method of [<code>M8FileWriter</code>](#module_m8-js/lib/types.M8FileWriter)  
+<a name="module_m8-js/lib/types.M8FileWriter+write"></a>
+
+#### m8FileWriter.write(byteOrBytes)
+Write the byte or bytes to the file's buffer.
+
+**Kind**: instance method of [<code>M8FileWriter</code>](#module_m8-js/lib/types.M8FileWriter)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| byteOrBytes | <code>Number</code> \| <code>Array.&lt;Number&gt;</code> | The byte or bytes to write |
+
+<a name="module_m8-js/lib/types.M8FileWriter+writeBool"></a>
+
+#### m8FileWriter.writeBool(bool)
+Write the boolean to the file's buffer.
+
+**Kind**: instance method of [<code>M8FileWriter</code>](#module_m8-js/lib/types.M8FileWriter)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| bool | <code>Boolean</code> | The boolean to write |
+
+<a name="module_m8-js/lib/types.M8FileWriter+writeStr"></a>
+
+#### m8FileWriter.writeStr(theString, padTo)
+Write the string to the file's buffer and pad the end with empty values when necessar.
+
+**Kind**: instance method of [<code>M8FileWriter</code>](#module_m8-js/lib/types.M8FileWriter)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| theString | <code>String</code> | The string value to write |
+| padTo | <code>Number</code> | The number of bytes in storage to use regardless of string length |
 
 <a name="module_m8-js/lib/types.M8Version"></a>
 

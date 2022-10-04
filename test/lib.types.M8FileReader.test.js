@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+const { M8FileTypes } = require('../lib/constants')
 const { toM8HexStr } = require('../lib/helpers')
 const M8FileReader = require('../lib/types/M8FileReader')
 
@@ -34,47 +35,53 @@ const testBuffer = Buffer.from([
 ])
 
 describe('M8FileReader tests', () => {
-  test('constructor', () => {
-    let m8fr = new M8FileReader(testBuffer)
+  describe('constructor', () => {
+    test('invlalid', () => {
+      expect(() => {
+        // eslint-disable-next-line no-new
+        new M8FileReader()
+      }).toThrow(/buffer is required/)
+    })
 
-    expect(m8fr.buffer).toEqual(testBuffer)
-    expect(m8fr.cursor).toEqual(14) // Read the first 14 bytes so the current position is 14
-    expect(m8fr.skipped).toEqual([9, 12]) // Skipped bytes 9 and 12
-    expect(m8fr.fileTypeToStr()).toEqual('Song')
+    test('valid', () => {
+      let m8fr = new M8FileReader(testBuffer)
 
-    const fileTypes = [0x00, 0x10, 0x20, 0x30, 0xFF]
+      expect(m8fr.buffer).toEqual(testBuffer)
+      expect(m8fr.cursor).toEqual(14) // Read the first 14 bytes so the current position is 14
+      expect(m8fr.fileTypeToStr()).toEqual('Song')
 
-    fileTypes.forEach((rawFileType) => {
-      const bufferClone = [...testBuffer]
+      ;[M8FileTypes.Instrument, M8FileTypes.Scale, M8FileTypes.Song, M8FileTypes.Theme, 0xFF].forEach((rawFileType) => {
+        const bufferClone = [...testBuffer]
 
-      bufferClone[bufferClone.length - 1] = rawFileType
+        bufferClone[bufferClone.length - 1] = rawFileType
 
-      m8fr = new M8FileReader(bufferClone)
+        m8fr = new M8FileReader(bufferClone)
 
-      let fileType
+        let fileType
 
-      switch (rawFileType) {
-        case 0x00:
-          fileType = 'Song'
-          break
+        switch (rawFileType) {
+          case M8FileTypes.Song:
+            fileType = 'Song'
+            break
 
-        case 0x10:
-          fileType = 'Instrument'
-          break
+          case M8FileTypes.Instrument:
+            fileType = 'Instrument'
+            break
 
-        case 0x20:
-          fileType = 'Theme'
-          break
+          case M8FileTypes.Theme:
+            fileType = 'Theme'
+            break
 
-        case 0x30:
-          fileType = 'Scale'
-          break
+          case M8FileTypes.Scale:
+            fileType = 'Scale'
+            break
 
-        default:
-          fileType = `Unknown (${toM8HexStr(rawFileType)})`
-      }
+          default:
+            fileType = `Unknown (${toM8HexStr(rawFileType)})`
+        }
 
-      expect(m8fr.fileTypeToStr()).toEqual(fileType)
+        expect(m8fr.fileTypeToStr()).toEqual(fileType)
+      })
     })
   })
 
@@ -107,9 +114,13 @@ describe('M8FileReader tests', () => {
 
     expect(m8fr.cursor).toEqual(14)
 
-    m8fr.skipTo(0x11)
+    const skipped = m8fr.skipTo(0x11)
 
     expect(m8fr.cursor).toEqual(17)
-    expect(m8fr.skipped).toEqual([9, 12, 14, 15, 16])
+    expect(skipped).toEqual({
+      14: 1,
+      15: 2,
+      16: 3
+    })
   })
 })
