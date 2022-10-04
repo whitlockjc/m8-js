@@ -477,6 +477,14 @@ describe('Instrument tests', () => {
         expect(emptyInstr.instrParams.playModeToStr()).toEqual(str)
       })
     })
+
+    test('#samplePathToStr', () => {
+      const emptyInstr = new Sampler()
+
+      emptyInstr.instrParams.samplePath = __filename
+
+      expect(emptyInstr.instrParams.samplePathToStr()).toEqual('LIB.TYPE_NT.TEST')
+    })
   })
 
   describe('Wavsynth', () => {

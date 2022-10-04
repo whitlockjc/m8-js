@@ -26,6 +26,7 @@
     * `lib/types/Song.js`
     * `lib/types/Table.js`
     * `lib/types/Theme.js`
+  * Moved logic for sanitizing a `Sampler` instrument's path from `lib/cli.js` to `lib/types/Instrument.SamplerParameters#samplePathToStr`
   * Replaced `readUInt8` with `read` for `lib/types/M8FileReader.js`
   * Updated `lib/types/Instrument.js` to exports instrument-specific types
     * `FMSynth`

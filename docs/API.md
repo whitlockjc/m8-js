@@ -308,6 +308,7 @@ Module for `m8-js` types.
         * [.slice](#module_m8-js/lib/types.SamplerParameters+slice) : <code>Number</code>
         * [.start](#module_m8-js/lib/types.SamplerParameters+start) : <code>Number</code>
         * [.playModeToStr()](#module_m8-js/lib/types.SamplerParameters+playModeToStr) ⇒ <code>String</code>
+        * [.samplePathToStr()](#module_m8-js/lib/types.SamplerParameters+samplePathToStr) ⇒ <code>String</code>
     * [.WavsynthParameters](#module_m8-js/lib/types.WavsynthParameters)
         * [new WavsynthParameters()](#new_module_m8-js/lib/types.WavsynthParameters_new)
         * [.mirror](#module_m8-js/lib/types.WavsynthParameters+mirror) : <code>Number</code>
@@ -1088,6 +1089,7 @@ Represents the SAMPLER Instrument Parameters.
     * [.slice](#module_m8-js/lib/types.SamplerParameters+slice) : <code>Number</code>
     * [.start](#module_m8-js/lib/types.SamplerParameters+start) : <code>Number</code>
     * [.playModeToStr()](#module_m8-js/lib/types.SamplerParameters+playModeToStr) ⇒ <code>String</code>
+    * [.samplePathToStr()](#module_m8-js/lib/types.SamplerParameters+samplePathToStr) ⇒ <code>String</code>
 
 <a name="new_module_m8-js/lib/types.SamplerParameters_new"></a>
 
@@ -1126,6 +1128,12 @@ Create the SAMPLER Instrument Parameters.
 
 #### samplerParameters.playModeToStr() ⇒ <code>String</code>
 Returns a string representation of the play mode.
+
+**Kind**: instance method of [<code>SamplerParameters</code>](#module_m8-js/lib/types.SamplerParameters)  
+<a name="module_m8-js/lib/types.SamplerParameters+samplePathToStr"></a>
+
+#### samplerParameters.samplePathToStr() ⇒ <code>String</code>
+Returns a sanitized representation of the sample path.
 
 **Kind**: instance method of [<code>SamplerParameters</code>](#module_m8-js/lib/types.SamplerParameters)  
 <a name="module_m8-js/lib/types.WavsynthParameters"></a>
