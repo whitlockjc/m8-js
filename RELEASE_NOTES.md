@@ -1,6 +1,6 @@
 # Release Notes
 
-## v1.0.0 _(TBD)_
+## v0.1.0 _(2022-10-04)_
 
 * API
   * Added helper methods to `index.js` for reading M8 files/types
