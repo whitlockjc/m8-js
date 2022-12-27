@@ -19,7 +19,7 @@ const Table = require('./lib/types/Table')
 const { Theme } = require('./lib/types/Theme')
 const { FMSynth, Macrosynth, MIDIOut, None, Sampler, Wavsynth } = require('./lib/types/Instrument')
 const { VERSION_1_4_0, VERSION_2_5_0, M8FileTypes } = require('./lib/constants')
-const { toM8HexStr } = require('./lib/helpers')
+const { readFloatLE, readUInt16LE, toM8HexStr } = require('./lib/helpers')
 const M8FileWriter = require('./lib/types/M8FileWriter')
 
 // TODO: Add debug support
@@ -39,7 +39,7 @@ const useSkippedBytes = (fileWriter, fileReader, length, defaultValue) => {
     let skippedValue = defaultValue
 
     if (fileReader?.skipped.indexOf(offset) > -1) {
-      skippedValue = fileReader.buffer[offset]
+      skippedValue = fileReader.bytes[offset]
     }
 
     fileWriter.write(skippedValue)
@@ -52,15 +52,6 @@ const useSkippedBytes = (fileWriter, fileReader, length, defaultValue) => {
  * @see {@link https://gist.github.com/ftsf/223b0fc761339b3c23dda7dd891514d9} for original Nim sources.
  *
  * @module m8-js
- */
-
-/**
- * A Buffer.
- *
- * @external Buffer
- *
- * @see {@link https://nodejs.org/api/buffer.html|Node.js}
- * @see {@link https://github.com/feross/buffer|Non-Node.js}
  */
 
 /**
@@ -307,14 +298,14 @@ const writeScaleToWriter = (scale, fileWriter, emptyByte) => {
  * @param {module:m8-js/lib/types.Instrument} instrument - The M8 Instrument
  * @param {module:m8-js/lib/types.M8FileReader} [fileReader] - The optional M8 file reader for using skipped bytes
  *
- * @returns {module:m8-js.Buffer}
+ * @returns {Array<Number>}
  */
 const dumpInstrument = (instrument, fileReader) => {
   const fileWriter = new M8FileWriter(M8FileTypes.Instrument, instrument.m8Version)
 
   writeInstrumentToWriter(instrument, fileWriter, fileReader)
 
-  return Buffer.from(fileWriter.bytes)
+  return fileWriter.bytes
 }
 
 /**
@@ -322,14 +313,14 @@ const dumpInstrument = (instrument, fileReader) => {
  *
  * @param {module:m8-js/lib/types.Scale} scale - The M8 Scale to generate bytes for
  *
- * @returns {module:m8-js.Buffer}
+ * @returns {Array<Number>}
  */
 const dumpScale = (scale) => {
   const fileWriter = new M8FileWriter(M8FileTypes.Scale, scale.m8Version)
 
   writeScaleToWriter(scale, fileWriter)
 
-  return Buffer.from(fileWriter.bytes)
+  return fileWriter.bytes
 }
 
 /**
@@ -338,7 +329,7 @@ const dumpScale = (scale) => {
  * @param {module:m8-js/lib/types.Song} song - The M8 Song to generate bytes for
  * @param {module:m8-js/lib/types.M8FileReader} [fileReader] - The optional M8 file reader for using skipped bytes
  *
- * @returns {module:m8-js.Buffer}
+ * @returns {Array<Number>}
  */
 const dumpSong = (song, fileReader) => {
   const fileWriter = new M8FileWriter(M8FileTypes.Song, song.m8Version)
@@ -351,7 +342,7 @@ const dumpSong = (song, fileReader) => {
     let skippedValue = 0x00
 
     if (fileReader?.skipped.indexOf(i) > -1) {
-      skippedValue = fileReader.buffer[i]
+      skippedValue = fileReader.bytes[i]
     }
 
     fileWriter.bytes[i] = skippedValue
@@ -540,7 +531,7 @@ const dumpSong = (song, fileReader) => {
     useSkippedBytes(fileWriter, fileReader, 256, 0x00)
   }
 
-  return Buffer.from(fileWriter.bytes)
+  return fileWriter.bytes
 }
 
 /**
@@ -548,7 +539,7 @@ const dumpSong = (song, fileReader) => {
  *
  * @param {module:m8-js/lib/types.Theme} theme - The M8 Theme to generate bytes for
  *
- * @returns {module:m8-js.Buffer}
+ * @returns {Array<Number>}
  */
 const dumpTheme = (theme) => {
   const fileWriter = new M8FileWriter(M8FileTypes.Theme, theme.m8Version)
@@ -567,7 +558,7 @@ const dumpTheme = (theme) => {
   fileWriter.write(theme.meterMid)
   fileWriter.write(theme.meterPeak)
 
-  return Buffer.from(fileWriter.bytes)
+  return fileWriter.bytes
 }
 
 /**
@@ -792,7 +783,7 @@ const loadInstrument = (fileReader) => {
  */
 const loadScale = (fileReader) => {
   const scale = new Scale(fileReader.m8Version)
-  const noteMap = Buffer.from([fileReader.read(), fileReader.read()]).readUInt16LE(0)
+  const noteMap = readUInt16LE(fileReader.read(2))
 
   // Read interval enablements
   for (let i = 0; i < scale.intervals.length; i++) {
@@ -828,7 +819,7 @@ const loadSong = (fileReader) => {
   song.directory = fileReader.readStr(128)
   song.transpose = fileReader.read()
   // Tempo is stored in 4 bytes as a 32-bit float
-  song.tempo = Buffer.from(fileReader.read(4)).readFloatLE(0)
+  song.tempo = readFloatLE(fileReader.read(4))
   song.quantize = fileReader.read()
   song.name = fileReader.readStr(12)
 

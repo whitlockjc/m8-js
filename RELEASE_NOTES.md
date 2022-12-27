@@ -1,5 +1,10 @@
 # Release Notes
 
+## TBD
+
+* API
+  * Removed dependence upon `Buffer` and all APIs taking/returning a `Buffer` now take/return an `Array<Number>`
+
 ## v0.1.0 _(2022-10-04)_
 
 * API

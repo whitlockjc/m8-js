@@ -17,7 +17,7 @@ const { M8FileTypes } = require('../lib/constants')
 const { toM8HexStr } = require('../lib/helpers')
 const M8FileReader = require('../lib/types/M8FileReader')
 
-const testBuffer = Buffer.from([
+const testBytes = [
   0x4D,
   0x38,
   0x56,
@@ -32,7 +32,7 @@ const testBuffer = Buffer.from([
   0x02,
   0x00,
   0x00
-])
+]
 
 describe('M8FileReader tests', () => {
   describe('constructor', () => {
@@ -40,22 +40,22 @@ describe('M8FileReader tests', () => {
       expect(() => {
         // eslint-disable-next-line no-new
         new M8FileReader()
-      }).toThrow(/buffer is required/)
+      }).toThrow(/bytes is required/)
     })
 
     test('valid', () => {
-      let m8fr = new M8FileReader(testBuffer)
+      let m8fr = new M8FileReader(testBytes)
 
-      expect(m8fr.buffer).toEqual(testBuffer)
+      expect(m8fr.bytes).toEqual(testBytes)
       expect(m8fr.cursor).toEqual(14) // Read the first 14 bytes so the current position is 14
       expect(m8fr.fileTypeToStr()).toEqual('Song')
 
       ;[M8FileTypes.Instrument, M8FileTypes.Scale, M8FileTypes.Song, M8FileTypes.Theme, 0xFF].forEach((rawFileType) => {
-        const bufferClone = [...testBuffer]
+        const bytesClone = [...testBytes]
 
-        bufferClone[bufferClone.length - 1] = rawFileType
+        bytesClone[bytesClone.length - 1] = rawFileType
 
-        m8fr = new M8FileReader(bufferClone)
+        m8fr = new M8FileReader(bytesClone)
 
         let fileType
 
@@ -86,31 +86,31 @@ describe('M8FileReader tests', () => {
   })
 
   test('#readStr right padded', () => {
-    const bufferClone = [...testBuffer]
+    const bytesClone = [...testBytes]
     const testString = 'm8-js   '
 
     for (let i = 0; i < testString.length; i++) {
       if (testString[i] === ' ') {
-        bufferClone.push(0xFF)
+        bytesClone.push(0xFF)
       } else {
-        bufferClone.push(testString.charCodeAt(i))
+        bytesClone.push(testString.charCodeAt(i))
       }
     }
 
-    const m8fr = new M8FileReader(bufferClone)
+    const m8fr = new M8FileReader(bytesClone)
 
     expect(m8fr.readStr(9)).toEqual('m8-js')
   })
 
   test('#skipTo', () => {
-    const bufferClone = [...testBuffer]
+    const bytesClone = [...testBytes]
     const extraData = [0x01, 0x02, 0x03, 0x04, 0x05]
 
     for (let i = 0; i < extraData.length; i++) {
-      bufferClone.push(extraData[i])
+      bytesClone.push(extraData[i])
     }
 
-    const m8fr = new M8FileReader(bufferClone)
+    const m8fr = new M8FileReader(bytesClone)
 
     expect(m8fr.cursor).toEqual(14)
 
