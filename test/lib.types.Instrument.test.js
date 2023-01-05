@@ -13,10 +13,31 @@
  * limitations under the License.
  */
 
-const { FMSynth, Macrosynth, MIDIOut, None, Sampler, Wavsynth } = require('../lib/types/Instrument')
-const { VERSION_2_5_0, VERSION_2_6_0, LATEST_M8_VERSION } = require('../lib/constants')
+const { readFileSync } = require('fs')
+const path = require('path')
+
+const { FMSynth, Instrument, Macrosynth, MIDIOut, None, Sampler, Wavsynth } = require('../lib/types/Instrument')
+const { VERSION_2_5_0, VERSION_2_6_0, VERSION_2_7_0, LATEST_M8_VERSION } = require('../lib/constants')
 const Table = require('../lib/types/Table')
+const M8FileReader = require('../lib/types/M8FileReader')
 const M8Version = require('../lib/types/M8Version')
+
+const instrFiles = {
+  'DEF_FM.m8i': undefined,
+  'DEF_MAC.m8i': undefined,
+  'DEF_MID.m8i': undefined,
+  'DEF_SAM.m8i': undefined,
+  'DEF_WAV.m8i': undefined,
+  'FM_W_TABLE.m8i': undefined
+}
+
+beforeEach(() => {
+  Object.keys(instrFiles).forEach((name) => {
+    const filePath = path.join(__dirname, `files/Instruments/${name}`)
+
+    instrFiles[name] = Instrument.fromBytes(Array.from(readFileSync(filePath)))
+  })
+})
 
 describe('Instrument tests', () => {
   describe('AmplifierParameters', () => {
@@ -80,7 +101,7 @@ describe('Instrument tests', () => {
     })
   })
 
-  describe('FMSynthOperator', () => {
+  describe('FMSynthParameters', () => {
     test('#algoToStr', () => {
       const emptyInstr = new FMSynth()
 
@@ -150,14 +171,14 @@ describe('Instrument tests', () => {
 
     describe('< 2.7.0', () => {
       test("#shapeToStr (should return 'UNK')", () => {
-        const emptyInstr = new FMSynth(VERSION_2_6_0)
+        const emptyInstr = new FMSynth()
 
         ;[0x0C, 0x0D, 0x0E, 0x0F].forEach((index) => {
           const operator = emptyInstr.instrParams.operators[0]
 
           operator.shape = index
 
-          expect(operator.shapeToStr()).toEqual('UNK')
+          expect(operator.shapeToStr(VERSION_2_6_0)).toEqual('UNK')
         })
       })
     })
@@ -265,14 +286,14 @@ describe('Instrument tests', () => {
 
     describe('< 2.6.0', () => {
       test("#shapeToStr (should return 'UNKNOWN (hex)'", () => {
-        const emptyInstr = new Macrosynth(VERSION_2_5_0)
+        const emptyInstr = new Macrosynth()
         const instrParams = emptyInstr.instrParams
         const expectedShapeStrs = ['STRUCK BELL', 'UNKNOWN (2E)', 'UNKNOWN (2F)']
 
         expect([0x1F, 0x2E, 0x2F].reduce((actualShapeStrs, index) => {
           instrParams.shape = index
 
-          return actualShapeStrs.concat(instrParams.shapeToStr())
+          return actualShapeStrs.concat(instrParams.shapeToStr(VERSION_2_5_0))
         }, [])).toEqual(expectedShapeStrs)
       })
     })
@@ -323,12 +344,12 @@ describe('Instrument tests', () => {
 
     describe('< 2.7.0', () => {
       test("#portToStr (should return 'UNKNOWN (hex)'", () => {
-        const emptyInstr = new MIDIOut(VERSION_2_6_0)
+        const emptyInstr = new MIDIOut()
         const instrParams = emptyInstr.instrParams
 
         instrParams.port = 0x03
 
-        expect(instrParams.portToStr()).toEqual('UNKNOWN (03)')
+        expect(instrParams.portToStr(VERSION_2_6_0)).toEqual('UNKNOWN (03)')
       })
     })
   })
@@ -373,7 +394,7 @@ describe('Instrument tests', () => {
       expect(emptyInstr.pitch).toEqual(0xFF)
       expect(emptyInstr.tableData).toEqual(new Table())
       expect(emptyInstr.tableTick).toEqual(0x01)
-      expect(emptyInstr.m8Version).toEqual(LATEST_M8_VERSION)
+      expect(emptyInstr.m8FileVersion).toEqual(LATEST_M8_VERSION)
       expect(emptyInstr.volume).toEqual(0xFF)
 
       expect(emptyInstr.lfo.length).toEqual(2)
@@ -433,26 +454,6 @@ describe('Instrument tests', () => {
       expect(instrParams.slice).toEqual(0x00)
       expect(instrParams.start).toEqual(0x00)
       expect(instrParams.playModeToStr()).toEqual('FWD')
-    })
-  })
-
-  test('#destToStr', () => {
-    const emptyInstr = new Sampler()
-
-    ;[
-      'OFF',
-      'VOLUME',
-      'PITCH',
-      'LOOP ST',
-      'LENGTH',
-      'DEGRADE',
-      'CUTOFF',
-      'RES',
-      'AMP',
-      'PAN',
-      'UNKNOWN (0A)'
-    ].forEach((str, i) => {
-      expect(emptyInstr.destToStr(i)).toEqual(str)
     })
   })
 
@@ -572,6 +573,179 @@ describe('Instrument tests', () => {
         emptyInstr.instrParams.shape = i
 
         expect(emptyInstr.instrParams.shapeToStr()).toEqual(str)
+      })
+    })
+  })
+
+  test('#destToStr', () => {
+    const emptyInstr = new Sampler()
+
+    ;[
+      'OFF',
+      'VOLUME',
+      'PITCH',
+      'LOOP ST',
+      'LENGTH',
+      'DEGRADE',
+      'CUTOFF',
+      'RES',
+      'AMP',
+      'PAN',
+      'UNKNOWN (0A)'
+    ].forEach((str, i) => {
+      expect(emptyInstr.destToStr(i)).toEqual(str)
+    })
+  })
+
+  describe('#fromBytes', () => {
+    describe('< 1.4.0', () => {
+      test('DEF_FM.m8i', () => {
+        const expectedInstr = new FMSynth(VERSION_2_7_0)
+
+        expectedInstr.name = 'DEF_FM'
+
+        expect(instrFiles['DEF_FM.m8i']).toEqual(expectedInstr)
+      })
+
+      test('DEF_MAC.m8i', () => {
+        const expectedInstr = new Macrosynth(VERSION_2_7_0)
+
+        expectedInstr.name = 'DEF_MAC'
+
+        expect(instrFiles['DEF_MAC.m8i']).toEqual(expectedInstr)
+      })
+
+      test('DEF_MID.m8i', () => {
+        const expectedInstr = new MIDIOut(VERSION_2_7_0)
+
+        expectedInstr.name = 'DEF_MID'
+
+        expect(instrFiles['DEF_MID.m8i']).toEqual(expectedInstr)
+      })
+
+      test('DEF_SAM.m8i', () => {
+        const expectedInstr = new Sampler(VERSION_2_7_0)
+
+        expectedInstr.name = 'DEF_SAM'
+
+        expect(instrFiles['DEF_SAM.m8i']).toEqual(expectedInstr)
+      })
+
+      test('DEF_WAV.m8i', () => {
+        const expectedInstr = new Wavsynth(VERSION_2_7_0)
+
+        expectedInstr.name = 'DEF_WAV'
+
+        expect(instrFiles['DEF_WAV.m8i']).toEqual(expectedInstr)
+      })
+
+      test('FM_W_TABLE.m8i', () => {
+        // All we really care about validating here is that the table data is loaded
+
+        instrFiles['FM_W_TABLE.m8i'].tableData.steps.forEach((step) => {
+          expect(step.transpose).toEqual(0xF8)
+        })
+      })
+
+      test('invalid instrument type', () => {
+        const filePath = path.join(__dirname, 'files/Instruments/DEF_FM.m8i')
+        const instrBytes = Array.from(readFileSync(filePath))
+
+        // The first byte after the M8 header is the instrument type
+        instrBytes[14] = 0xFE
+
+        expect(() => {
+          Instrument.fromBytes(instrBytes)
+        }).toThrow('Unsupported Instrument type: FE')
+      })
+    })
+
+    test('#getBytes', () => {
+      Object.keys(instrFiles).forEach((fileName) => {
+        const filePath = path.join(__dirname, `files/Instruments/${fileName}`)
+        const bytesFromDisk = Array.from(readFileSync(filePath))
+        const instrFromDisk = Instrument.fromBytes(bytesFromDisk)
+
+        // Since this instrument was read from disk, we should be able to ensure the generated bytes are identical
+        expect(bytesFromDisk).toEqual(instrFromDisk.getBytes())
+
+        let alteredInstr = Instrument.fromBytes(instrFromDisk.getBytes())
+
+        expect(alteredInstr).toEqual(instrFiles[fileName])
+
+        alteredInstr.name = 'TESTING'
+
+        switch (fileName) {
+          case 'DEF_FM.m8i':
+            alteredInstr.instrParams.algo = 0x05
+            break
+
+          case 'DEF_MAC.m8i':
+            alteredInstr.instrParams.shape = 0x05
+            break
+
+          case 'DEF_MID.m8i':
+            alteredInstr.instrParams.port = 0x05
+            break
+
+          case 'DEF_SAM.m8i':
+            alteredInstr.instrParams.playMode = 0x05
+            break
+
+          case 'DEF_WAV.m8i':
+            alteredInstr.instrParams.shape = 0x05
+            break
+
+          case 'FM_W_TABLE.m8i':
+            alteredInstr.tableData.steps[5].transpose = 0x05
+            break
+        }
+
+        // Dump altered instrument (with latest version number due to not providing one)
+        alteredInstr = Instrument.fromBytes(alteredInstr.getBytes())
+
+        expect(alteredInstr.name).toEqual('TESTING')
+
+        switch (fileName) {
+          case 'DEF_FM.m8i':
+            expect(alteredInstr.instrParams.algo).toEqual(0x05)
+            break
+
+          case 'DEF_MAC.m8i':
+            expect(alteredInstr.instrParams.shape).toEqual(0x05)
+            break
+
+          case 'DEF_MID.m8i':
+            expect(alteredInstr.instrParams.port).toEqual(0x05)
+            break
+
+          case 'DEF_SAM.m8i':
+            expect(alteredInstr.instrParams.playMode).toEqual(0x05)
+            break
+
+          case 'DEF_WAV.m8i':
+            expect(alteredInstr.instrParams.shape).toEqual(0x05)
+            break
+
+          case 'FM_W_TABLE.m8i':
+            expect(alteredInstr.tableData.steps[5].transpose).toEqual(0x05)
+            break
+        }
+      })
+    })
+
+    describe('< 1.4.0', () => {
+      test('FMSynth operator shapes should be default', () => {
+        const filePath = path.join(__dirname, 'files/Instruments/FM_W_TABLE.m8i')
+        const fileReader = new M8FileReader(Array.from(readFileSync(filePath)))
+
+        fileReader.m8Version = new M8Version(1, 3, 9)
+
+        const instr = Instrument.fromFileReader(fileReader)
+
+        instr.instrParams.operators.forEach((operator) => {
+          expect(operator.shape).toEqual(0x00)
+        })
       })
     })
   })

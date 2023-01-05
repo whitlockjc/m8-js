@@ -11,7 +11,6 @@ As of version `v0.1.0`, `m8-js` has the ability to read and write all known M8 f
 are pretty solid, complete with unit test over 99% code coverage. The CLI is equally solid, also unit tested with over
 99% code coverage.
 
-
 ## Installation
 
 ### Global

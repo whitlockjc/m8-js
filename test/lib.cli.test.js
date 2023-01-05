@@ -19,9 +19,9 @@ const { createProgram } = require('../lib/cli')
 const { toM8HexStr } = require('../lib/helpers')
 
 // File paths
-const defaultFMSynthPath = path.join(__dirname, 'files/2.7.x/Instruments/DEF_FM.m8i')
-const defaultSongPath = path.join(__dirname, 'files/2.7.x/Songs/DEFAULT.m8s')
-const defaultThemePath = path.join(__dirname, 'files/1.0.x/Themes/DEFAULT.m8t')
+const defaultFMSynthPath = path.join(__dirname, 'files/Instruments/DEF_FM.m8i')
+const defaultSongPath = path.join(__dirname, 'files/Songs/DEFAULT.m8s')
+const defaultThemePath = path.join(__dirname, 'files/Themes/DEFAULT.m8t')
 
 // Help outputs
 const globalHelp = `Usage: m8 [options] [command]
@@ -100,8 +100,8 @@ Commands:
   view [options] <m8-file>        print the m8 song view
   help [command]                  display help for command
 `
-const testingScalePath = path.join(__dirname, 'files/2.5.x/Scales/TESTING.m8n')
-const testingSongPath = path.join(__dirname, 'files/2.7.x/Songs/TESTING.m8s')
+const testingScalePath = path.join(__dirname, 'files/Scales/TESTING.m8n')
+const testingSongPath = path.join(__dirname, 'files/Songs/TESTING.m8s')
 const themeHelp = `Usage: m8 theme [options] [command]
 
 theme specific commands
@@ -584,7 +584,7 @@ describe('m8 tests', () => {
         // Default envelopes
         Object.keys(defaultInstrumentOutputs).forEach((name) => {
           const meta = defaultInstrumentOutputs[name]
-          const instrPath = path.join(__dirname, `files/2.7.x/Instruments/${name}.m8i`)
+          const instrPath = path.join(__dirname, `files/Instruments/${name}.m8i`)
           let instrOutput = name + meta.envelope
           let songOutput = `INST. ${toM8HexStr(meta.instrumentIndex)}` + meta.envelope
 
@@ -649,7 +649,7 @@ describe('m8 tests', () => {
       })
 
       test('with m8-file', () => {
-        const emptyInstrPath = path.join(__dirname, 'files/2.7.x/Instruments/DEF_FM.m8i')
+        const emptyInstrPath = path.join(__dirname, 'files/Instruments/DEF_FM.m8i')
         const emptyTableBody = `
 
   N  V  FX1   FX2   FX3
@@ -670,7 +670,7 @@ D 00 -- ---00 ---00 ---00
 E 00 -- ---00 ---00 ---00
 F 00 -- ---00 ---00 ---00
 `
-        const customInstrPath = path.join(__dirname, 'files/2.7.x/Instruments/FM_W_TABLE.m8i')
+        const customInstrPath = path.join(__dirname, 'files/Instruments/FM_W_TABLE.m8i')
         const customTableBody = `
 
   N  V  FX1   FX2   FX3
@@ -745,7 +745,7 @@ TRANSP. ON       TABLE TIC 01
         // Default instruments
         Object.keys(defaultInstrumentOutputs).forEach((name) => {
           const meta = defaultInstrumentOutputs[name]
-          const instrPath = path.join(__dirname, `files/2.7.x/Instruments/${name}.m8i`)
+          const instrPath = path.join(__dirname, `files/Instruments/${name}.m8i`)
 
           // Instrument file
           runM8(['instrument', 'view', instrPath], 'INST.' + meta.view)
@@ -771,7 +771,7 @@ TRANSP. ON       TABLE TIC 01
       })
 
       test('with m8-file', () => {
-        runM8(['instrument', 'version', path.join(__dirname, 'files/2.7.x/Instruments/DEF_FM.m8i')],
+        runM8(['instrument', 'version', path.join(__dirname, 'files/Instruments/DEF_FM.m8i')],
               `M8 VERSION
 
 2.7.0
@@ -984,7 +984,7 @@ NAME  TESTING---------
 
     describe('version', () => {
       test('missing m8-file', () => {
-        runM8(['theme', 'view'], "error: missing required argument 'm8-file'")
+        runM8(['scale', 'view'], "error: missing required argument 'm8-file'")
       })
 
       test('wrong m8-file', () => {

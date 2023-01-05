@@ -13,7 +13,10 @@
  * limitations under the License.
  */
 
-const { LATEST_M8_VERSION } = require('../lib/constants')
+const { readFileSync } = require('fs')
+const path = require('path')
+
+const { LATEST_M8_VERSION, VERSION_2_7_0 } = require('../lib/constants')
 const Chain = require('../lib/types/Chain')
 const { DefaultScales } = require('../lib/types/Scale')
 const Groove = require('../lib/types/Groove')
@@ -22,6 +25,18 @@ const M8Version = require('../lib/types/M8Version')
 const Phrase = require('../lib/types/Phrase')
 const Song = require('../lib/types/Song')
 const Table = require('../lib/types/Table')
+
+const songFiles = {
+  'DEFAULT.m8s': undefined
+}
+
+beforeAll(() => {
+  Object.keys(songFiles).forEach((name) => {
+    const filePath = path.join(__dirname, `files/Songs/${name}`)
+
+    songFiles[name] = Song.fromBytes(Array.from(readFileSync(filePath)))
+  })
+})
 
 describe('Song tests', () => {
   test('constructor', () => {
@@ -41,7 +56,7 @@ describe('Song tests', () => {
     expect(emptySong.tables.length).toEqual(256)
     expect(emptySong.tempo).toEqual(0x78)
     expect(emptySong.transpose).toEqual(0x00)
-    expect(emptySong.m8Version).toEqual(LATEST_M8_VERSION)
+    expect(emptySong.m8FileVersion).toEqual(LATEST_M8_VERSION)
 
     emptySong.chains.forEach((chain) => {
       expect(chain).toEqual(new Chain())
@@ -218,6 +233,37 @@ describe('Song tests', () => {
 
       expect(emptySong.findPhraseStepInstrument(0x01, 0x0A, 0x00, 0x05)).toEqual(undefined)
     })
+  })
+
+  test('#fromBytes', () => {
+    const expectedSong = new Song(VERSION_2_7_0)
+
+    expectedSong.directory = '/Songs/'
+    expectedSong.name = 'DEFAULT'
+
+    expect(songFiles['DEFAULT.m8s']).toEqual(expectedSong)
+  })
+
+  test('#getBytes and #fromBytes', () => {
+    const filePath = path.join(__dirname, 'files/Songs/DEFAULT.m8s')
+    const bytesFromDisk = Array.from(readFileSync(filePath))
+    const songFromDisk = Song.fromBytes(bytesFromDisk)
+
+    // Ensure the raw bytes read from disk match the dumped bytes
+    expect(bytesFromDisk).toEqual(songFromDisk.getBytes())
+
+    let alteredSong = Song.fromBytes(songFromDisk.getBytes())
+
+    alteredSong.name = 'TEST'
+    alteredSong.directory = '/A/B/'
+    alteredSong.key = 0x05
+
+    // Omitting the M8FileReader so as to default to empty values for skipped bytes
+    alteredSong = Song.fromBytes(alteredSong.getBytes())
+
+    expect(alteredSong.name).toEqual('TEST')
+    expect(alteredSong.directory).toEqual('/A/B/')
+    expect(alteredSong.key).toEqual(0x05)
   })
 
   test('#isChainEmpty', () => {

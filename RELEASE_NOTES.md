@@ -3,7 +3,22 @@
 ## TBD
 
 * API
+  * Converted the RGB values for each `Theme` color to be an actual type _(`RGB`)_
+  * Refactored all `lib/types/*` that corresdpond to an M8 file to extend the new `lib/types/M8File` class
+    * All classes now have their logic for importing/exporting to bytes within their class instead of in `index.js`
   * Removed dependence upon `Buffer` and all APIs taking/returning a `Buffer` now take/return an `Array<Number>`
+  * Removed helper methods from `index.js` for reading M8 types/types
+    * `loadInstrument`
+    * `loadScale`
+    * `loadSong`
+    * `loadTable`
+    * `loadTheme`
+  * Removed helper methods from `index.js` for writing M8 files/types
+    * `dumpInstrument`
+    * `dumpScale`
+    * `dumpSong`
+    * `dumpTheme`
+  * Removed `lib/types/M8FileWriter.js` _(no longer provided value)_
 
 ## v0.1.0 _(2022-10-04)_
 
