@@ -16,7 +16,7 @@
 const { Instrument } = require('./lib/types/Instrument')
 const { Scale } = require('./lib/types/Scale')
 const { Theme } = require('./lib/types/Theme')
-const Song = require('./lib/types/Song')
+const { Song } = require('./lib/types/Song')
 
 // TODO: Add debug support
 // TODO: Add error handling

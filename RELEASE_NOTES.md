@@ -3,6 +3,7 @@
 ## TBD
 
 * API
+  * Added `lib/types/Serializable` for all M8 types that should support importing/exporting to disk _(and other formats)_
   * Converted the RGB values for each `Theme` color to be an actual type _(`RGB`)_
   * Refactored all `lib/types/*` that corresdpond to an M8 file to extend the new `lib/types/M8File` class
     * All classes now have their logic for importing/exporting to bytes within their class instead of in `index.js`
@@ -19,6 +20,8 @@
     * `dumpSong`
     * `dumpTheme`
   * Removed `lib/types/M8FileWriter.js` _(no longer provided value)_
+* CLI
+  * Updated `project midi-mapping` to print the actual `DEST` values
 
 ## v0.1.0 _(2022-10-04)_
 

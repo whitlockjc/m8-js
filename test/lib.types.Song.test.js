@@ -23,7 +23,7 @@ const Groove = require('../lib/types/Groove')
 const { None, FMSynth } = require('../lib/types/Instrument')
 const M8Version = require('../lib/types/M8Version')
 const Phrase = require('../lib/types/Phrase')
-const Song = require('../lib/types/Song')
+const { Song } = require('../lib/types/Song')
 const Table = require('../lib/types/Table')
 
 const songFiles = {
@@ -90,12 +90,11 @@ describe('Song tests', () => {
       expect(midiMapping.channel).toEqual(0x00)
       expect(midiMapping.controlNum).toEqual(0x00)
       expect(midiMapping.empty).toEqual(true)
+      expect(midiMapping.instrIndex).toEqual(0x00)
       expect(midiMapping.maxValue).toEqual(0x00)
       expect(midiMapping.minValue).toEqual(0x00)
       expect(midiMapping.paramIndex).toEqual(0x00)
       expect(midiMapping.type).toEqual(0x00)
-      expect(midiMapping.value).toEqual(0x00)
-      expect(midiMapping.destToStr()).toEqual('00')
     })
 
     expect(emptySong.midiSettings.controlMapChannel).toEqual(0x11)
@@ -311,16 +310,19 @@ describe('Song tests', () => {
     test('#typeToChar', () => {
       const emptySong = new Song()
 
-      ;[
-        'I',
-        'M',
-        'E',
-        'U (03)'
-      ].forEach((str, i) => {
-        emptySong.midiMappings[0].type = i
+      expect(emptySong.midiMappings[0].typeToChar()).toEqual('U (00)')
 
-        expect(emptySong.midiMappings[0].typeToChar()).toEqual(str)
-      })
+      // Mixer
+      emptySong.midiMappings[0].type = 0x0D
+      expect(emptySong.midiMappings[0].typeToChar()).toEqual('M')
+
+      // Effects
+      emptySong.midiMappings[0].type = 0x0B
+      expect(emptySong.midiMappings[0].typeToChar()).toEqual('X')
+
+      // Instrument
+      emptySong.midiMappings[0].type = 0x05
+      expect(emptySong.midiMappings[0].typeToChar()).toEqual('I')
     })
   })
 

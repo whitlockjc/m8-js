@@ -13,10 +13,14 @@
  * limitations under the License.
  */
 
+const fs = require('fs')
+const os = require('os')
 const path = require('path')
 
 const { createProgram } = require('../lib/cli')
 const { toM8HexStr } = require('../lib/helpers')
+const { FMSynth, Macrosynth, MIDIOut, Sampler, Wavsynth } = require('../lib/types/Instrument')
+const { EffectsSettings, MixerSettings, Song } = require('../lib/types/Song')
 
 // File paths
 const defaultFMSynthPath = path.join(__dirname, 'files/Instruments/DEF_FM.m8i')
@@ -827,7 +831,402 @@ WIDTH         12
       })
     })
 
-    // TODO: midi-mapping
+    describe('midi-mapping', () => {
+      test('missing m8-file', () => {
+        runM8(['project', 'midi-mapping'], "error: missing required argument 'm8-file'")
+      })
+
+      test('wrong m8-file', () => {
+        runM8(['project', 'midi-mapping', defaultThemePath], 'm8-file must be a Song file')
+      })
+
+      describe('with m8-file', () => {
+        let tmpFilePath
+
+        function createInstrMIDIMappingsAndSaveM8File (song, instrIndex, midiLabels) {
+          let midiMappingCount = 0
+
+          // eslint-disable-next-line no-unused-vars
+          midiLabels.forEach((label, i) => {
+            if (midiLabels[i] === 'UNUSED') {
+              return
+            }
+
+            const midiMappingIndex = midiMappingCount++
+
+            song.midiMappings[midiMappingIndex].channel = 0x11 - (i % 0x11)
+
+            song.midiMappings[midiMappingIndex].controlNum = i
+            song.midiMappings[midiMappingIndex].type = 0x05
+            song.midiMappings[midiMappingIndex].instrIndex = instrIndex
+            song.midiMappings[midiMappingIndex].paramIndex = i
+            song.midiMappings[midiMappingIndex].minValue = 0x00
+            song.midiMappings[midiMappingIndex].maxValue = 0xFF
+          })
+
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(song.getBytes()))
+        }
+
+        beforeEach(() => {
+          tmpFilePath = path.join(os.tmpdir(), 'TESTING.m8s')
+        })
+
+        afterEach(() => {
+          fs.unlinkSync(tmpFilePath)
+        })
+
+        test('effects mappings', () => {
+          const emptySong = new Song()
+          const midiLabels = EffectsSettings.getMIDIDestLabels()
+
+          // eslint-disable-next-line no-unused-vars
+          midiLabels.forEach((label, i) => {
+            emptySong.midiMappings[i].channel = 0x11 - (i % 0x11)
+            emptySong.midiMappings[i].controlNum = 0x80
+            emptySong.midiMappings[i].type = 0x0B
+            emptySong.midiMappings[i].instrIndex = 0x00
+            emptySong.midiMappings[i].paramIndex = i
+            emptySong.midiMappings[i].minValue = 0x00
+            emptySong.midiMappings[i].maxValue = 0xFF
+          })
+
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(emptySong.getBytes()))
+
+          runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+00 AL T:X -- 00▸FF X00:CH M.DEP
+01 16 T:X -- 00▸FF X01:CH M.FRQ
+02 15 T:X -- 00▸FF X02:CH WIDTH
+03 14 T:X -- 00▸FF X03:CH REVERB
+04 13 T:X -- 00▸FF X04:DEL F.HP
+05 12 T:X -- 00▸FF X05:DEL F.LP
+06 11 T:X -- 00▸FF X06:DEL TIMEL
+07 10 T:X -- 00▸FF X07:DEL TIMER
+08 09 T:X -- 00▸FF X08:DEL FBK
+09 08 T:X -- 00▸FF X09:DEL WIDTH
+0A 07 T:X -- 00▸FF X0A:DEL REVB
+0B 06 T:X -- 00▸FF X0B:REV F.HP
+0C 05 T:X -- 00▸FF X0C:REV L.HP
+0D 04 T:X -- 00▸FF X0D:REV SIZE
+0E 03 T:X -- 00▸FF X0E:REV DECAY
+0F 02 T:X -- 00▸FF X0F:REV M.DEP
+`)
+
+          runM8(['project', 'midi-mapping', tmpFilePath, '-s', '16'], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+10 01 T:X -- 00▸FF X10:REV M.FRQ
+11 AL T:X -- 00▸FF X11:REV WIDTH
+12 -- --- -- --▸--
+13 -- --- -- --▸--
+14 -- --- -- --▸--
+15 -- --- -- --▸--
+16 -- --- -- --▸--
+17 -- --- -- --▸--
+18 -- --- -- --▸--
+19 -- --- -- --▸--
+1A -- --- -- --▸--
+1B -- --- -- --▸--
+1C -- --- -- --▸--
+1D -- --- -- --▸--
+1E -- --- -- --▸--
+1F -- --- -- --▸--
+`)
+        })
+
+        test('mixer mappings', () => {
+          const emptySong = new Song()
+          const midiLabels = MixerSettings.getMIDIDestLabels()
+
+          // eslint-disable-next-line no-unused-vars
+          midiLabels.forEach((label, i) => {
+            emptySong.midiMappings[i].channel = 0x11 - (i % 0x11)
+            emptySong.midiMappings[i].controlNum = 0x80
+            emptySong.midiMappings[i].type = 0x0D
+            emptySong.midiMappings[i].instrIndex = 0x00
+            emptySong.midiMappings[i].paramIndex = i
+            emptySong.midiMappings[i].minValue = 0x00
+            emptySong.midiMappings[i].maxValue = 0xFF
+          })
+
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(emptySong.getBytes()))
+
+          runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+00 AL T:X -- 00▸FF M00:MIX VOL
+01 16 T:X -- 00▸FF M01:LIMIT
+02 15 T:X -- 00▸FF M02:DJ F.CUT
+03 14 T:X -- 00▸FF M03:DJ F.RES
+04 13 T:X -- 00▸FF M04:TRACK 1
+05 12 T:X -- 00▸FF M05:TRACK 2
+06 11 T:X -- 00▸FF M06:TRACK 3
+07 10 T:X -- 00▸FF M07:TRACK 4
+08 09 T:X -- 00▸FF M08:TRACK 5
+09 08 T:X -- 00▸FF M09:TRACK 6
+0A 07 T:X -- 00▸FF M0A:TRACK 7
+0B 06 T:X -- 00▸FF M0B:TRACK 8
+0C 05 T:X -- 00▸FF M0C:CHORUS
+0D 04 T:X -- 00▸FF M0D:DELAY
+0E 03 T:X -- 00▸FF M0E:REVERB
+0F 02 T:X -- 00▸FF M0F:INPUT
+`)
+
+          runM8(['project', 'midi-mapping', tmpFilePath, '-s', '16'], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+10 01 T:X -- 00▸FF M10:INPUT R
+11 AL T:X -- 00▸FF M11:USB
+12 16 T:X -- 00▸FF M12:IN CHO
+13 15 T:X -- 00▸FF M13:IN R CHO
+14 14 T:X -- 00▸FF M14:USB CHO
+15 13 T:X -- 00▸FF M15:IN DEL
+16 12 T:X -- 00▸FF M16:IN R DEL
+17 11 T:X -- 00▸FF M17:USB DEL
+18 10 T:X -- 00▸FF M18:IN REV
+19 09 T:X -- 00▸FF M19:IN R REV
+1A 08 T:X -- 00▸FF M1A:USB REV
+1B -- --- -- --▸--
+1C -- --- -- --▸--
+1D -- --- -- --▸--
+1E -- --- -- --▸--
+1F -- --- -- --▸--
+`)
+        })
+
+        describe('instrument mappings', () => {
+          test('WAVSYNTH', () => {
+            const emptySong = new Song()
+
+            emptySong.instruments[0x00] = new Wavsynth()
+
+            createInstrMIDIMappingsAndSaveM8File(emptySong, 0x00, Wavsynth.getMIDIDestLabels())
+
+            runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+00 13 004 -- 00▸FF I00:SIZE
+01 12 005 -- 00▸FF I00:MULT
+02 11 006 -- 00▸FF I00:WARP
+03 10 007 -- 00▸FF I00:MIRROR
+04 08 009 -- 00▸FF I00:CUTOFF
+05 07 010 -- 00▸FF I00:RES
+06 06 011 -- 00▸FF I00:AMP
+07 04 013 -- 00▸FF I00:PAN
+08 03 014 -- 00▸FF I00:DRY
+09 02 015 -- 00▸FF I00:CHO
+0A 01 016 -- 00▸FF I00:DEL
+0B AL 017 -- 00▸FF I00:REV
+0C 15 019 -- 00▸FF I00:AMOUNT
+0D 14 020 -- 00▸FF I00:ATTACK
+0E 13 021 -- 00▸FF I00:HOLD
+0F 12 022 -- 00▸FF I00:DECAY
+`)
+
+            runM8(['project', 'midi-mapping', tmpFilePath, '-s', '16'], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+10 09 025 -- 00▸FF I00:AMOUNT
+11 08 026 -- 00▸FF I00:ATTACK
+12 07 027 -- 00▸FF I00:HOLD
+13 06 028 -- 00▸FF I00:DECAY
+14 01 033 -- 00▸FF I00:FRQ
+15 AL 034 -- 00▸FF I00:AMT
+16 12 039 -- 00▸FF I00:FRQ
+17 11 040 -- 00▸FF I00:AMT
+18 -- --- -- --▸--
+19 -- --- -- --▸--
+1A -- --- -- --▸--
+1B -- --- -- --▸--
+1C -- --- -- --▸--
+1D -- --- -- --▸--
+1E -- --- -- --▸--
+1F -- --- -- --▸--
+`)
+          })
+        })
+
+        test('MACROSYNTH', () => {
+          const emptySong = new Song()
+
+          emptySong.instruments[0x01] = new Macrosynth()
+
+          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x01, Macrosynth.getMIDIDestLabels())
+
+          runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+00 13 004 -- 00▸FF I01:TIMBRE
+01 12 005 -- 00▸FF I01:COLOR
+02 11 006 -- 00▸FF I01:DEGRADE
+03 10 007 -- 00▸FF I01:REDUX
+04 08 009 -- 00▸FF I01:CUTOFF
+05 07 010 -- 00▸FF I01:RES
+06 06 011 -- 00▸FF I01:AMP
+07 04 013 -- 00▸FF I01:PAN
+08 03 014 -- 00▸FF I01:DRY
+09 02 015 -- 00▸FF I01:CHO
+0A 01 016 -- 00▸FF I01:DEL
+0B AL 017 -- 00▸FF I01:REV
+0C 15 019 -- 00▸FF I01:AMOUNT
+0D 14 020 -- 00▸FF I01:ATTACK
+0E 13 021 -- 00▸FF I01:HOLD
+0F 12 022 -- 00▸FF I01:DECAY
+`)
+
+          runM8(['project', 'midi-mapping', tmpFilePath, '-s', '16'], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+10 09 025 -- 00▸FF I01:AMOUNT
+11 08 026 -- 00▸FF I01:ATTACK
+12 07 027 -- 00▸FF I01:HOLD
+13 06 028 -- 00▸FF I01:DECAY
+14 01 033 -- 00▸FF I01:FRQ
+15 AL 034 -- 00▸FF I01:AMT
+16 12 039 -- 00▸FF I01:FRQ
+17 11 040 -- 00▸FF I01:AMT
+18 -- --- -- --▸--
+19 -- --- -- --▸--
+1A -- --- -- --▸--
+1B -- --- -- --▸--
+1C -- --- -- --▸--
+1D -- --- -- --▸--
+1E -- --- -- --▸--
+1F -- --- -- --▸--
+`)
+        })
+
+        test('SAMPLER', () => {
+          const emptySong = new Song()
+
+          emptySong.instruments[0x02] = new Sampler()
+
+          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x02, Sampler.getMIDIDestLabels())
+
+          runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+00 15 002 -- 00▸FF I02:DETUNE
+01 12 005 -- 00▸FF I02:START
+02 11 006 -- 00▸FF I02:LOOP ST
+03 10 007 -- 00▸FF I02:LENGTH
+04 09 008 -- 00▸FF I02:DEGRADE
+05 07 010 -- 00▸FF I02:CUTOFF
+06 06 011 -- 00▸FF I02:RES
+07 05 012 -- 00▸FF I02:AMP
+08 03 014 -- 00▸FF I02:PAN
+09 02 015 -- 00▸FF I02:DRY
+0A 01 016 -- 00▸FF I02:CHO
+0B AL 017 -- 00▸FF I02:DEL
+0C 16 018 -- 00▸FF I02:REV
+0D 14 020 -- 00▸FF I02:AMOUNT
+0E 13 021 -- 00▸FF I02:ATTACK
+0F 12 022 -- 00▸FF I02:HOLD
+`)
+
+          runM8(['project', 'midi-mapping', tmpFilePath, '-s', '16'], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+10 11 023 -- 00▸FF I02:DECAY
+11 08 026 -- 00▸FF I02:AMOUNT
+12 07 027 -- 00▸FF I02:ATTACK
+13 06 028 -- 00▸FF I02:HOLD
+14 05 029 -- 00▸FF I02:DECAY
+15 AL 034 -- 00▸FF I02:FRQ
+16 16 035 -- 00▸FF I02:AMT
+17 11 040 -- 00▸FF I02:FRQ
+18 10 041 -- 00▸FF I02:AMT
+19 -- --- -- --▸--
+1A -- --- -- --▸--
+1B -- --- -- --▸--
+1C -- --- -- --▸--
+1D -- --- -- --▸--
+1E -- --- -- --▸--
+1F -- --- -- --▸--
+`)
+        })
+
+        test('MIDIOUT', () => {
+          const emptySong = new Song()
+
+          emptySong.instruments[0x03] = new MIDIOut()
+
+          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x03, MIDIOut.getMIDIDestLabels())
+
+          runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+00 09 008 -- 00▸FF I03:CCA VAL
+01 07 010 -- 00▸FF I03:CCB VAL
+02 05 012 -- 00▸FF I03:CCC VAL
+03 03 014 -- 00▸FF I03:CCD VAL
+04 01 016 -- 00▸FF I03:CCE VAL
+05 16 018 -- 00▸FF I03:CCF VAL
+06 14 020 -- 00▸FF I03:CCG VAL
+07 12 022 -- 00▸FF I03:CCH VAL
+08 10 024 -- 00▸FF I03:CCI VAL
+09 08 026 -- 00▸FF I03:CCJ VAL
+0A -- --- -- --▸--
+0B -- --- -- --▸--
+0C -- --- -- --▸--
+0D -- --- -- --▸--
+0E -- --- -- --▸--
+0F -- --- -- --▸--
+`)
+        })
+
+        test('FMSYNTH', () => {
+          const emptySong = new Song()
+
+          emptySong.instruments[0x04] = new FMSynth()
+
+          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x04, FMSynth.getMIDIDestLabels())
+
+          runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+00 02 032 -- 00▸FF I04:MOD1
+01 01 033 -- 00▸FF I04:MOD2
+02 AL 034 -- 00▸FF I04:MOD3
+03 16 035 -- 00▸FF I04:MOD4
+04 14 037 -- 00▸FF I04:CUTOFF
+05 13 038 -- 00▸FF I04:RES
+06 12 039 -- 00▸FF I04:AMP
+07 10 041 -- 00▸FF I04:PAN
+08 09 042 -- 00▸FF I04:DRY
+09 08 043 -- 00▸FF I04:CHO
+0A 07 044 -- 00▸FF I04:DEL
+0B 06 045 -- 00▸FF I04:REV
+0C 04 047 -- 00▸FF I04:AMOUNT
+0D 03 048 -- 00▸FF I04:ATTACK
+0E 02 049 -- 00▸FF I04:HOLD
+0F 01 050 -- 00▸FF I04:DECAY
+`)
+
+          runM8(['project', 'midi-mapping', tmpFilePath, '-s', '16'], `MIDI MAPPING
+
+   CH CTL V  RANGE DEST
+10 15 053 -- 00▸FF I04:AMOUNT
+11 14 054 -- 00▸FF I04:ATTACK
+12 13 055 -- 00▸FF I04:HOLD
+13 12 056 -- 00▸FF I04:DECAY
+14 07 061 -- 00▸FF I04:FRQ
+15 06 062 -- 00▸FF I04:AMT
+16 01 067 -- 00▸FF I04:FRQ
+17 AL 068 -- 00▸FF I04:AMT
+18 -- --- -- --▸--
+19 -- --- -- --▸--
+1A -- --- -- --▸--
+1B -- --- -- --▸--
+1C -- --- -- --▸--
+1D -- --- -- --▸--
+1E -- --- -- --▸--
+1F -- --- -- --▸--
+`)
+        })
+      })
+    })
 
     describe('midi-settings', () => {
       test('missing m8-file', () => {
