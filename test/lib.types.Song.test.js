@@ -243,22 +243,22 @@ describe('Song tests', () => {
     expect(songFiles['DEFAULT.m8s']).toEqual(expectedSong)
   })
 
-  test('#getBytes and #fromBytes', () => {
+  test('#asBytes and #fromBytes', () => {
     const filePath = path.join(__dirname, 'files/Songs/DEFAULT.m8s')
     const bytesFromDisk = Array.from(readFileSync(filePath))
     const songFromDisk = Song.fromBytes(bytesFromDisk)
 
     // Ensure the raw bytes read from disk match the dumped bytes
-    expect(bytesFromDisk).toEqual(songFromDisk.getBytes())
+    expect(bytesFromDisk).toEqual(songFromDisk.asBytes())
 
-    let alteredSong = Song.fromBytes(songFromDisk.getBytes())
+    let alteredSong = Song.fromBytes(songFromDisk.asBytes())
 
     alteredSong.name = 'TEST'
     alteredSong.directory = '/A/B/'
     alteredSong.key = 0x05
 
     // Omitting the M8FileReader so as to default to empty values for skipped bytes
-    alteredSong = Song.fromBytes(alteredSong.getBytes())
+    alteredSong = Song.fromBytes(alteredSong.asBytes())
 
     expect(alteredSong.name).toEqual('TEST')
     expect(alteredSong.directory).toEqual('/A/B/')

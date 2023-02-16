@@ -21,12 +21,22 @@ describe('M8File tests', () => {
     expect(() => {
       // eslint-disable-next-line no-new
       new M8File()
-    }).toThrow(/^m8FileType is required$/)
+    }).toThrow(/^m8FileReaderOrType is required$/)
+
+    expect(() => {
+      // eslint-disable-next-line no-new
+      new M8File('testing')
+    }).toThrow(/^m8FileReaderOrType must be an M8FileReader or a Number$/)
 
     expect(() => {
       // eslint-disable-next-line no-new
       new M8File(M8FileTypes.Instrument)
     }).toThrow(/^m8FileVersion is required$/)
+
+    expect(() => {
+      // eslint-disable-next-line no-new
+      new M8File(M8FileTypes.Instrument, '2.7.0')
+    }).toThrow(/^m8FileVersion must be an M8Version$/)
   })
 
   test('#typeToStr', () => {

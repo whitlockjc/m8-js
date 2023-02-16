@@ -273,7 +273,7 @@ Module for `m8-js` types.
         * [.getBytes()](#module_m8-js/lib/types.WavsynthParameters+getBytes) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.shapeToStr()](#module_m8-js/lib/types.WavsynthParameters+shapeToStr) ⇒ <code>String</code>
     * [.Instrument](#module_m8-js/lib/types.Instrument) ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
-        * [new Instrument(m8ReaderOrVersion, kind, kindStr, [instrParams])](#new_module_m8-js/lib/types.Instrument_new)
+        * [new Instrument([m8FileReaderOrVersion], kind, kindStr, [instrParams])](#new_module_m8-js/lib/types.Instrument_new)
         * _instance_
             * [.ampParams](#module_m8-js/lib/types.Instrument+ampParams) : [<code>AmplifierParameters</code>](#module_m8-js/lib/types.AmplifierParameters)
             * [.author](#module_m8-js/lib/types.Instrument+author) : <code>String</code>
@@ -290,13 +290,11 @@ Module for `m8-js` types.
             * [.tableTick](#module_m8-js/lib/types.Instrument+tableTick) : <code>Number</code>
             * [.transpose](#module_m8-js/lib/types.Instrument+transpose) : <code>Boolean</code>
             * [.volume](#module_m8-js/lib/types.Instrument+volume) : <code>Number</code>
-            * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-            * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
             * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
             * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
             * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
             * [.getBytes()](#module_m8-js/lib/types.Instrument+getBytes)
-            * [.getEmbeddedBytes(offset, [fileReader])](#module_m8-js/lib/types.Instrument+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
+            * [.getEmbeddedBytes(offset, includeTable, [fileReader])](#module_m8-js/lib/types.Instrument+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
             * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
             * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
         * _static_
@@ -304,44 +302,47 @@ Module for `m8-js` types.
             * [.fromFileReader(fileReader)](#module_m8-js/lib/types.Instrument.fromFileReader) ⇒ [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)
     * [.FMSynth](#module_m8-js/lib/types.FMSynth) ⇐ [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)
         * [new FMSynth(m8ReaderOrVersion)](#new_module_m8-js/lib/types.FMSynth_new)
-        * [.ampParams](#module_m8-js/lib/types.Instrument+ampParams) : [<code>AmplifierParameters</code>](#module_m8-js/lib/types.AmplifierParameters)
-        * [.author](#module_m8-js/lib/types.Instrument+author) : <code>String</code>
-        * [.env](#module_m8-js/lib/types.Instrument+env) : [<code>Array.&lt;EnvelopeParameters&gt;</code>](#module_m8-js/lib/types.EnvelopeParameters)
-        * [.filterParams](#module_m8-js/lib/types.Instrument+filterParams) : [<code>FilterParameters</code>](#module_m8-js/lib/types.FilterParameters)
-        * [.fineTune](#module_m8-js/lib/types.Instrument+fineTune) : <code>Number</code>
-        * [.instrParams](#module_m8-js/lib/types.Instrument+instrParams) : [<code>FMSynthParameters</code>](#module_m8-js/lib/types.FMSynthParameters) \| [<code>MacrosynthParameters</code>](#module_m8-js/lib/types.MacrosynthParameters) \| [<code>MIDIOutParameters</code>](#module_m8-js/lib/types.MIDIOutParameters) \| [<code>SamplerParameters</code>](#module_m8-js/lib/types.SamplerParameters) \| [<code>WavsynthParameters</code>](#module_m8-js/lib/types.WavsynthParameters)
-        * [.kind](#module_m8-js/lib/types.Instrument+kind) : <code>Number</code>
-        * [.lfo](#module_m8-js/lib/types.Instrument+lfo) : [<code>Array.&lt;LFOParameters&gt;</code>](#module_m8-js/lib/types.LFOParameters)
-        * [.mixerParams](#module_m8-js/lib/types.Instrument+mixerParams) : [<code>MixerParameters</code>](#module_m8-js/lib/types.MixerParameters)
-        * [.name](#module_m8-js/lib/types.Instrument+name) : <code>String</code>
-        * [.pitch](#module_m8-js/lib/types.Instrument+pitch) : <code>Number</code>
-        * [.tableData](#module_m8-js/lib/types.Instrument+tableData) : [<code>Table</code>](#module_m8-js/lib/types.Table)
-        * [.tableTick](#module_m8-js/lib/types.Instrument+tableTick) : <code>Number</code>
-        * [.transpose](#module_m8-js/lib/types.Instrument+transpose) : <code>Boolean</code>
-        * [.volume](#module_m8-js/lib/types.Instrument+volume) : <code>Number</code>
-        * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-        * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-        * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
-        * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
-        * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
-        * [.getEmbeddedBytes(offset, [fileReader])](#module_m8-js/lib/types.Instrument+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
-        * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
-        * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
-        * [.getBytes()](#module_m8-js/lib/types.Instrument+getBytes)
+        * _instance_
+            * [.ampParams](#module_m8-js/lib/types.Instrument+ampParams) : [<code>AmplifierParameters</code>](#module_m8-js/lib/types.AmplifierParameters)
+            * [.author](#module_m8-js/lib/types.Instrument+author) : <code>String</code>
+            * [.env](#module_m8-js/lib/types.Instrument+env) : [<code>Array.&lt;EnvelopeParameters&gt;</code>](#module_m8-js/lib/types.EnvelopeParameters)
+            * [.filterParams](#module_m8-js/lib/types.Instrument+filterParams) : [<code>FilterParameters</code>](#module_m8-js/lib/types.FilterParameters)
+            * [.fineTune](#module_m8-js/lib/types.Instrument+fineTune) : <code>Number</code>
+            * [.instrParams](#module_m8-js/lib/types.Instrument+instrParams) : [<code>FMSynthParameters</code>](#module_m8-js/lib/types.FMSynthParameters) \| [<code>MacrosynthParameters</code>](#module_m8-js/lib/types.MacrosynthParameters) \| [<code>MIDIOutParameters</code>](#module_m8-js/lib/types.MIDIOutParameters) \| [<code>SamplerParameters</code>](#module_m8-js/lib/types.SamplerParameters) \| [<code>WavsynthParameters</code>](#module_m8-js/lib/types.WavsynthParameters)
+            * [.kind](#module_m8-js/lib/types.Instrument+kind) : <code>Number</code>
+            * [.lfo](#module_m8-js/lib/types.Instrument+lfo) : [<code>Array.&lt;LFOParameters&gt;</code>](#module_m8-js/lib/types.LFOParameters)
+            * [.mixerParams](#module_m8-js/lib/types.Instrument+mixerParams) : [<code>MixerParameters</code>](#module_m8-js/lib/types.MixerParameters)
+            * [.name](#module_m8-js/lib/types.Instrument+name) : <code>String</code>
+            * [.pitch](#module_m8-js/lib/types.Instrument+pitch) : <code>Number</code>
+            * [.tableData](#module_m8-js/lib/types.Instrument+tableData) : [<code>Table</code>](#module_m8-js/lib/types.Table)
+            * [.tableTick](#module_m8-js/lib/types.Instrument+tableTick) : <code>Number</code>
+            * [.transpose](#module_m8-js/lib/types.Instrument+transpose) : <code>Boolean</code>
+            * [.volume](#module_m8-js/lib/types.Instrument+volume) : <code>Number</code>
+            * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
+            * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
+            * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
+            * [.getEmbeddedBytes(offset, includeTable, [fileReader])](#module_m8-js/lib/types.Instrument+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
+            * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
+            * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
+            * [.getBytes()](#module_m8-js/lib/types.Instrument+getBytes)
+        * _static_
+            * [.getMIDIDestLabels()](#module_m8-js/lib/types.FMSynth.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.Macrosynth](#module_m8-js/lib/types.Macrosynth)
         * [new Macrosynth(m8ReaderOrVersion)](#new_module_m8-js/lib/types.Macrosynth_new)
+        * [.getMIDIDestLabels()](#module_m8-js/lib/types.Macrosynth.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.MIDIOut](#module_m8-js/lib/types.MIDIOut)
         * [new MIDIOut(m8ReaderOrVersion)](#new_module_m8-js/lib/types.MIDIOut_new)
+        * [.getMIDIDestLabels()](#module_m8-js/lib/types.MIDIOut.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.None](#module_m8-js/lib/types.None)
         * [new None(m8ReaderOrVersion)](#new_module_m8-js/lib/types.None_new)
     * [.Sampler](#module_m8-js/lib/types.Sampler)
         * [new Sampler(m8ReaderOrVersion)](#new_module_m8-js/lib/types.Sampler_new)
+        * [.getMIDIDestLabels()](#module_m8-js/lib/types.Sampler.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.Wavsynth](#module_m8-js/lib/types.Wavsynth)
         * [new Wavsynth(m8ReaderOrVersion)](#new_module_m8-js/lib/types.Wavsynth_new)
-    * [.M8File](#module_m8-js/lib/types.M8File)
-        * [new M8File(m8FileType, m8Version)](#new_module_m8-js/lib/types.M8File_new)
-        * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-        * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+        * [.getMIDIDestLabels()](#module_m8-js/lib/types.Wavsynth.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
+    * [.M8File](#module_m8-js/lib/types.M8File) ⇐ [<code>Serializable</code>](#module_m8-js/lib/types.Serializable)
+        * [new M8File(m8FileReaderOrType, [m8FileVersion])](#new_module_m8-js/lib/types.M8File_new)
         * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
     * [.M8FileReader](#module_m8-js/lib/types.M8FileReader)
@@ -382,13 +383,10 @@ Module for `m8-js` types.
         * [.offsetB](#module_m8-js/lib/types.NoteInterval+offsetB) : <code>Number</code>
         * [.offsetToStr()](#module_m8-js/lib/types.NoteInterval+offsetToStr) ⇒ <code>String</code>
     * [.Scale](#module_m8-js/lib/types.Scale) ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
-        * [new Scale([m8Version])](#new_module_m8-js/lib/types.Scale_new)
+        * [new Scale([m8FileReaderOrVersion])](#new_module_m8-js/lib/types.Scale_new)
         * _instance_
-            * [.m8Version](#module_m8-js/lib/types.Scale+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
             * [.name](#module_m8-js/lib/types.Scale+name) : <code>String</code>
             * [.intervals](#module_m8-js/lib/types.Scale+intervals) : [<code>Array.&lt;NoteInterval&gt;</code>](#module_m8-js/lib/types.NoteInterval)
-            * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-            * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
             * [.getBytes()](#module_m8-js/lib/types.Scale+getBytes)
             * [.getEmbeddedBytes([emptyByte])](#module_m8-js/lib/types.Scale+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
             * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
@@ -396,34 +394,37 @@ Module for `m8-js` types.
         * _static_
             * [.fromBytes(bytes)](#module_m8-js/lib/types.Scale.fromBytes) ⇒ [<code>Scale</code>](#module_m8-js/lib/types.Scale)
             * [.fromFileReader(fileReader)](#module_m8-js/lib/types.Scale.fromFileReader) ⇒ [<code>Scale</code>](#module_m8-js/lib/types.Scale)
+    * [.Serializable](#module_m8-js/lib/types.Serializable)
     * [.EffectsSettings](#module_m8-js/lib/types.EffectsSettings)
         * [new EffectsSettings()](#new_module_m8-js/lib/types.EffectsSettings_new)
-        * [.chorusModDepth](#module_m8-js/lib/types.EffectsSettings+chorusModDepth) : <code>Number</code>
-        * [.chorusModFreq](#module_m8-js/lib/types.EffectsSettings+chorusModFreq) : <code>Number</code>
-        * [.chorusReverbSend](#module_m8-js/lib/types.EffectsSettings+chorusReverbSend) : <code>Number</code>
-        * [.chorusWidth](#module_m8-js/lib/types.EffectsSettings+chorusWidth) : <code>Number</code>
-        * [.delayFeedback](#module_m8-js/lib/types.EffectsSettings+delayFeedback) : <code>Number</code>
-        * [.delayFilter](#module_m8-js/lib/types.EffectsSettings+delayFilter) : <code>Array.&lt;Number&gt;</code>
-        * [.delayReverbSend](#module_m8-js/lib/types.EffectsSettings+delayReverbSend) : <code>Number</code>
-        * [.delayTime](#module_m8-js/lib/types.EffectsSettings+delayTime) : <code>Array.&lt;Number&gt;</code>
-        * [.delayWidth](#module_m8-js/lib/types.EffectsSettings+delayWidth) : <code>Number</code>
-        * [.reverbDamping](#module_m8-js/lib/types.EffectsSettings+reverbDamping) : <code>Number</code>
-        * [.reverbFilter](#module_m8-js/lib/types.EffectsSettings+reverbFilter) : <code>Array.&lt;Number&gt;</code>
-        * [.reverbModDepth](#module_m8-js/lib/types.EffectsSettings+reverbModDepth) : <code>Number</code>
-        * [.reverbModFreq](#module_m8-js/lib/types.EffectsSettings+reverbModFreq) : <code>Number</code>
-        * [.reverbSize](#module_m8-js/lib/types.EffectsSettings+reverbSize) : <code>Number</code>
-        * [.reverbWidth](#module_m8-js/lib/types.EffectsSettings+reverbWidth) : <code>Number</code>
+        * _instance_
+            * [.chorusModDepth](#module_m8-js/lib/types.EffectsSettings+chorusModDepth) : <code>Number</code>
+            * [.chorusModFreq](#module_m8-js/lib/types.EffectsSettings+chorusModFreq) : <code>Number</code>
+            * [.chorusReverbSend](#module_m8-js/lib/types.EffectsSettings+chorusReverbSend) : <code>Number</code>
+            * [.chorusWidth](#module_m8-js/lib/types.EffectsSettings+chorusWidth) : <code>Number</code>
+            * [.delayFeedback](#module_m8-js/lib/types.EffectsSettings+delayFeedback) : <code>Number</code>
+            * [.delayFilter](#module_m8-js/lib/types.EffectsSettings+delayFilter) : <code>Array.&lt;Number&gt;</code>
+            * [.delayReverbSend](#module_m8-js/lib/types.EffectsSettings+delayReverbSend) : <code>Number</code>
+            * [.delayTime](#module_m8-js/lib/types.EffectsSettings+delayTime) : <code>Array.&lt;Number&gt;</code>
+            * [.delayWidth](#module_m8-js/lib/types.EffectsSettings+delayWidth) : <code>Number</code>
+            * [.reverbDamping](#module_m8-js/lib/types.EffectsSettings+reverbDamping) : <code>Number</code>
+            * [.reverbFilter](#module_m8-js/lib/types.EffectsSettings+reverbFilter) : <code>Array.&lt;Number&gt;</code>
+            * [.reverbModDepth](#module_m8-js/lib/types.EffectsSettings+reverbModDepth) : <code>Number</code>
+            * [.reverbModFreq](#module_m8-js/lib/types.EffectsSettings+reverbModFreq) : <code>Number</code>
+            * [.reverbSize](#module_m8-js/lib/types.EffectsSettings+reverbSize) : <code>Number</code>
+            * [.reverbWidth](#module_m8-js/lib/types.EffectsSettings+reverbWidth) : <code>Number</code>
+        * _static_
+            * [.getMIDIDestLabels()](#module_m8-js/lib/types.EffectsSettings.getMIDIDestLabels) ⇒ <code>Array.&lt;String&gt;</code>
     * [.MIDIMapping](#module_m8-js/lib/types.MIDIMapping)
         * [new MIDIMapping()](#new_module_m8-js/lib/types.MIDIMapping_new)
         * [.channel](#module_m8-js/lib/types.MIDIMapping+channel) : <code>Number</code>
         * [.controlNum](#module_m8-js/lib/types.MIDIMapping+controlNum) : <code>Number</code>
-        * [.empty](#module_m8-js/lib/types.MIDIMapping+empty) : <code>Boolean</code>
+        * [.instrIndex](#module_m8-js/lib/types.MIDIMapping+instrIndex) : <code>Number</code>
         * [.maxValue](#module_m8-js/lib/types.MIDIMapping+maxValue) : <code>Number</code>
         * [.minValue](#module_m8-js/lib/types.MIDIMapping+minValue) : <code>Number</code>
         * [.paramIndex](#module_m8-js/lib/types.MIDIMapping+paramIndex) : <code>Number</code>
         * [.type](#module_m8-js/lib/types.MIDIMapping+type) : <code>Number</code>
-        * [.value](#module_m8-js/lib/types.MIDIMapping+value) : <code>Number</code>
-        * [.destToStr()](#module_m8-js/lib/types.MIDIMapping+destToStr) ⇒ <code>String</code>
+        * [.empty](#module_m8-js/lib/types.MIDIMapping+empty) ⇒ <code>Boolean</code>
         * [.typeToChar()](#module_m8-js/lib/types.MIDIMapping+typeToChar) ⇒ <code>String</code>
     * [.MIDISettings](#module_m8-js/lib/types.MIDISettings)
         * [new MIDISettings()](#new_module_m8-js/lib/types.MIDISettings_new)
@@ -455,24 +456,27 @@ Module for `m8-js` types.
         * [.track8](#module_m8-js/lib/types.SongStep+track8) : <code>Number</code>
     * [.MixerSettings](#module_m8-js/lib/types.MixerSettings)
         * [new MixerSettings()](#new_module_m8-js/lib/types.MixerSettings_new)
-        * [.analogInputChorus](#module_m8-js/lib/types.MixerSettings+analogInputChorus) : <code>Array.&lt;Number&gt;</code>
-        * [.analogInputDelay](#module_m8-js/lib/types.MixerSettings+analogInputDelay) : <code>Array.&lt;Number&gt;</code>
-        * [.analogInputReverb](#module_m8-js/lib/types.MixerSettings+analogInputReverb) : <code>Array.&lt;Number&gt;</code>
-        * [.analogInputVolume](#module_m8-js/lib/types.MixerSettings+analogInputVolume) : <code>Array.&lt;Number&gt;</code>
-        * [.chorusVolume](#module_m8-js/lib/types.MixerSettings+chorusVolume) : <code>Number</code>
-        * [.delayVolume](#module_m8-js/lib/types.MixerSettings+delayVolume) : <code>Number</code>
-        * [.djFilter](#module_m8-js/lib/types.MixerSettings+djFilter) : <code>Number</code>
-        * [.djFilterPeak](#module_m8-js/lib/types.MixerSettings+djFilterPeak) : <code>Number</code>
-        * [.masterLimit](#module_m8-js/lib/types.MixerSettings+masterLimit) : <code>Number</code>
-        * [.masterVolume](#module_m8-js/lib/types.MixerSettings+masterVolume) : <code>Number</code>
-        * [.reverbVolume](#module_m8-js/lib/types.MixerSettings+reverbVolume) : <code>Number</code>
-        * [.trackVolume](#module_m8-js/lib/types.MixerSettings+trackVolume) : <code>Array.&lt;Number&gt;</code>
-        * [.usbInputChorus](#module_m8-js/lib/types.MixerSettings+usbInputChorus) : <code>Number</code>
-        * [.usbInputDelay](#module_m8-js/lib/types.MixerSettings+usbInputDelay) : <code>Number</code>
-        * [.usbInputReverb](#module_m8-js/lib/types.MixerSettings+usbInputReverb) : <code>Number</code>
-        * [.usbInputVolume](#module_m8-js/lib/types.MixerSettings+usbInputVolume) : <code>Number</code>
+        * _instance_
+            * [.analogInputChorus](#module_m8-js/lib/types.MixerSettings+analogInputChorus) : <code>Array.&lt;Number&gt;</code>
+            * [.analogInputDelay](#module_m8-js/lib/types.MixerSettings+analogInputDelay) : <code>Array.&lt;Number&gt;</code>
+            * [.analogInputReverb](#module_m8-js/lib/types.MixerSettings+analogInputReverb) : <code>Array.&lt;Number&gt;</code>
+            * [.analogInputVolume](#module_m8-js/lib/types.MixerSettings+analogInputVolume) : <code>Array.&lt;Number&gt;</code>
+            * [.chorusVolume](#module_m8-js/lib/types.MixerSettings+chorusVolume) : <code>Number</code>
+            * [.delayVolume](#module_m8-js/lib/types.MixerSettings+delayVolume) : <code>Number</code>
+            * [.djFilter](#module_m8-js/lib/types.MixerSettings+djFilter) : <code>Number</code>
+            * [.djFilterPeak](#module_m8-js/lib/types.MixerSettings+djFilterPeak) : <code>Number</code>
+            * [.masterLimit](#module_m8-js/lib/types.MixerSettings+masterLimit) : <code>Number</code>
+            * [.masterVolume](#module_m8-js/lib/types.MixerSettings+masterVolume) : <code>Number</code>
+            * [.reverbVolume](#module_m8-js/lib/types.MixerSettings+reverbVolume) : <code>Number</code>
+            * [.trackVolume](#module_m8-js/lib/types.MixerSettings+trackVolume) : <code>Array.&lt;Number&gt;</code>
+            * [.usbInputChorus](#module_m8-js/lib/types.MixerSettings+usbInputChorus) : <code>Number</code>
+            * [.usbInputDelay](#module_m8-js/lib/types.MixerSettings+usbInputDelay) : <code>Number</code>
+            * [.usbInputReverb](#module_m8-js/lib/types.MixerSettings+usbInputReverb) : <code>Number</code>
+            * [.usbInputVolume](#module_m8-js/lib/types.MixerSettings+usbInputVolume) : <code>Number</code>
+        * _static_
+            * [.getMIDIDestLabels()](#module_m8-js/lib/types.MixerSettings.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.Song](#module_m8-js/lib/types.Song) ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
-        * [new Song(m8ReaderOrVersion)](#new_module_m8-js/lib/types.Song_new)
+        * [new Song([m8FileReaderOrVersion])](#new_module_m8-js/lib/types.Song_new)
         * _instance_
             * [.chains](#module_m8-js/lib/types.Song+chains) : [<code>Array.&lt;Chain&gt;</code>](#module_m8-js/lib/types.Chain)
             * [.directory](#module_m8-js/lib/types.Song+directory) : <code>String</code>
@@ -490,8 +494,6 @@ Module for `m8-js` types.
             * [.tables](#module_m8-js/lib/types.Song+tables) : [<code>Array.&lt;Table&gt;</code>](#module_m8-js/lib/types.Table)
             * [.tempo](#module_m8-js/lib/types.Song+tempo) : <code>Number</code>
             * [.transpose](#module_m8-js/lib/types.Song+transpose) : <code>Number</code>
-            * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-            * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
             * [.getBytes()](#module_m8-js/lib/types.Song+getBytes)
             * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
             * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
@@ -518,7 +520,7 @@ Module for `m8-js` types.
         * [.r](#module_m8-js/lib/types.RGB+r) : <code>Number</code>
         * [.getBytes()](#module_m8-js/lib/types.RGB+getBytes) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.Theme](#module_m8-js/lib/types.Theme) ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
-        * [new Theme([m8Version])](#new_module_m8-js/lib/types.Theme_new)
+        * [new Theme([m8FileReaderOrVersion])](#new_module_m8-js/lib/types.Theme_new)
         * _instance_
             * [.background](#module_m8-js/lib/types.Theme+background) : <code>Array.&lt;Number&gt;</code>
             * [.textEmpty](#module_m8-js/lib/types.Theme+textEmpty) : <code>Array.&lt;Number&gt;</code>
@@ -533,8 +535,6 @@ Module for `m8-js` types.
             * [.meterLow](#module_m8-js/lib/types.Theme+meterLow) : <code>Array.&lt;Number&gt;</code>
             * [.meterMid](#module_m8-js/lib/types.Theme+meterMid) : <code>Array.&lt;Number&gt;</code>
             * [.meterPeak](#module_m8-js/lib/types.Theme+meterPeak) : <code>Array.&lt;Number&gt;</code>
-            * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-            * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
             * [.getBytes()](#module_m8-js/lib/types.Theme+getBytes)
             * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
             * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
@@ -1257,7 +1257,7 @@ Represents an Instrument.
 **Extends**: [<code>M8File</code>](#module_m8-js/lib/types.M8File)  
 
 * [.Instrument](#module_m8-js/lib/types.Instrument) ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
-    * [new Instrument(m8ReaderOrVersion, kind, kindStr, [instrParams])](#new_module_m8-js/lib/types.Instrument_new)
+    * [new Instrument([m8FileReaderOrVersion], kind, kindStr, [instrParams])](#new_module_m8-js/lib/types.Instrument_new)
     * _instance_
         * [.ampParams](#module_m8-js/lib/types.Instrument+ampParams) : [<code>AmplifierParameters</code>](#module_m8-js/lib/types.AmplifierParameters)
         * [.author](#module_m8-js/lib/types.Instrument+author) : <code>String</code>
@@ -1274,13 +1274,11 @@ Represents an Instrument.
         * [.tableTick](#module_m8-js/lib/types.Instrument+tableTick) : <code>Number</code>
         * [.transpose](#module_m8-js/lib/types.Instrument+transpose) : <code>Boolean</code>
         * [.volume](#module_m8-js/lib/types.Instrument+volume) : <code>Number</code>
-        * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-        * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
         * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
         * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
         * [.getBytes()](#module_m8-js/lib/types.Instrument+getBytes)
-        * [.getEmbeddedBytes(offset, [fileReader])](#module_m8-js/lib/types.Instrument+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
+        * [.getEmbeddedBytes(offset, includeTable, [fileReader])](#module_m8-js/lib/types.Instrument+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
     * _static_
@@ -1289,13 +1287,13 @@ Represents an Instrument.
 
 <a name="new_module_m8-js/lib/types.Instrument_new"></a>
 
-#### new Instrument(m8ReaderOrVersion, kind, kindStr, [instrParams])
+#### new Instrument([m8FileReaderOrVersion], kind, kindStr, [instrParams])
 Create an Instrument.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| m8ReaderOrVersion | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 file reader or the M8 version of the Instrument |
+| [m8FileReaderOrVersion] | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the Instrument (or the M8FileReader used to read the M8 file) |
 | kind | <code>Number</code> | The M8 instrument kind |
 | kindStr | <code>String</code> | The M8 instrument kind as string |
 | [instrParams] | [<code>FMSynthParameters</code>](#module_m8-js/lib/types.FMSynthParameters) \| [<code>MacrosynthParameters</code>](#module_m8-js/lib/types.MacrosynthParameters) \| [<code>MIDIOutParameters</code>](#module_m8-js/lib/types.MIDIOutParameters) \| [<code>SamplerParameters</code>](#module_m8-js/lib/types.SamplerParameters) \| [<code>WavsynthParameters</code>](#module_m8-js/lib/types.WavsynthParameters) | The instrument parameters |
@@ -1360,16 +1358,6 @@ Create an Instrument.
 
 #### instrument.volume : <code>Number</code>
 **Kind**: instance property of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
-<a name="module_m8-js/lib/types.M8File+m8FileType"></a>
-
-#### instrument.m8FileType : <code>Number</code>
-**Kind**: instance property of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
-**Overrides**: [<code>m8FileType</code>](#module_m8-js/lib/types.M8File+m8FileType)  
-<a name="module_m8-js/lib/types.M8File+m8FileVersion"></a>
-
-#### instrument.m8FileVersion : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-**Kind**: instance property of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
-**Overrides**: [<code>m8FileVersion</code>](#module_m8-js/lib/types.M8File+m8FileVersion)  
 <a name="module_m8-js/lib/types.Instrument+destToStr"></a>
 
 #### instrument.destToStr(dest)
@@ -1399,7 +1387,7 @@ Returns a string representation of the Instrument kind.
 **Kind**: instance method of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
 <a name="module_m8-js/lib/types.Instrument+getEmbeddedBytes"></a>
 
-#### instrument.getEmbeddedBytes(offset, [fileReader]) ⇒ <code>Array.&lt;Number&gt;</code>
+#### instrument.getEmbeddedBytes(offset, includeTable, [fileReader]) ⇒ <code>Array.&lt;Number&gt;</code>
 Returns the M8 Instruments embedded (raw, no header or other information) bytes.
 
 **Kind**: instance method of [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)  
@@ -1407,6 +1395,7 @@ Returns the M8 Instruments embedded (raw, no header or other information) bytes.
 | Param | Type | Description |
 | --- | --- | --- |
 | offset | <code>Number</code> | The offset |
+| includeTable | <code>Boolean</code> | Whether or not to include the table bytes |
 | [fileReader] | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) | The M8 file reader (when present) |
 
 <a name="module_m8-js/lib/types.M8File+getHeaderBytes"></a>
@@ -1455,30 +1444,31 @@ Represents an FMSYNTH Instrument.
 
 * [.FMSynth](#module_m8-js/lib/types.FMSynth) ⇐ [<code>Instrument</code>](#module_m8-js/lib/types.Instrument)
     * [new FMSynth(m8ReaderOrVersion)](#new_module_m8-js/lib/types.FMSynth_new)
-    * [.ampParams](#module_m8-js/lib/types.Instrument+ampParams) : [<code>AmplifierParameters</code>](#module_m8-js/lib/types.AmplifierParameters)
-    * [.author](#module_m8-js/lib/types.Instrument+author) : <code>String</code>
-    * [.env](#module_m8-js/lib/types.Instrument+env) : [<code>Array.&lt;EnvelopeParameters&gt;</code>](#module_m8-js/lib/types.EnvelopeParameters)
-    * [.filterParams](#module_m8-js/lib/types.Instrument+filterParams) : [<code>FilterParameters</code>](#module_m8-js/lib/types.FilterParameters)
-    * [.fineTune](#module_m8-js/lib/types.Instrument+fineTune) : <code>Number</code>
-    * [.instrParams](#module_m8-js/lib/types.Instrument+instrParams) : [<code>FMSynthParameters</code>](#module_m8-js/lib/types.FMSynthParameters) \| [<code>MacrosynthParameters</code>](#module_m8-js/lib/types.MacrosynthParameters) \| [<code>MIDIOutParameters</code>](#module_m8-js/lib/types.MIDIOutParameters) \| [<code>SamplerParameters</code>](#module_m8-js/lib/types.SamplerParameters) \| [<code>WavsynthParameters</code>](#module_m8-js/lib/types.WavsynthParameters)
-    * [.kind](#module_m8-js/lib/types.Instrument+kind) : <code>Number</code>
-    * [.lfo](#module_m8-js/lib/types.Instrument+lfo) : [<code>Array.&lt;LFOParameters&gt;</code>](#module_m8-js/lib/types.LFOParameters)
-    * [.mixerParams](#module_m8-js/lib/types.Instrument+mixerParams) : [<code>MixerParameters</code>](#module_m8-js/lib/types.MixerParameters)
-    * [.name](#module_m8-js/lib/types.Instrument+name) : <code>String</code>
-    * [.pitch](#module_m8-js/lib/types.Instrument+pitch) : <code>Number</code>
-    * [.tableData](#module_m8-js/lib/types.Instrument+tableData) : [<code>Table</code>](#module_m8-js/lib/types.Table)
-    * [.tableTick](#module_m8-js/lib/types.Instrument+tableTick) : <code>Number</code>
-    * [.transpose](#module_m8-js/lib/types.Instrument+transpose) : <code>Boolean</code>
-    * [.volume](#module_m8-js/lib/types.Instrument+volume) : <code>Number</code>
-    * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-    * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-    * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
-    * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
-    * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
-    * [.getEmbeddedBytes(offset, [fileReader])](#module_m8-js/lib/types.Instrument+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
-    * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
-    * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
-    * [.getBytes()](#module_m8-js/lib/types.Instrument+getBytes)
+    * _instance_
+        * [.ampParams](#module_m8-js/lib/types.Instrument+ampParams) : [<code>AmplifierParameters</code>](#module_m8-js/lib/types.AmplifierParameters)
+        * [.author](#module_m8-js/lib/types.Instrument+author) : <code>String</code>
+        * [.env](#module_m8-js/lib/types.Instrument+env) : [<code>Array.&lt;EnvelopeParameters&gt;</code>](#module_m8-js/lib/types.EnvelopeParameters)
+        * [.filterParams](#module_m8-js/lib/types.Instrument+filterParams) : [<code>FilterParameters</code>](#module_m8-js/lib/types.FilterParameters)
+        * [.fineTune](#module_m8-js/lib/types.Instrument+fineTune) : <code>Number</code>
+        * [.instrParams](#module_m8-js/lib/types.Instrument+instrParams) : [<code>FMSynthParameters</code>](#module_m8-js/lib/types.FMSynthParameters) \| [<code>MacrosynthParameters</code>](#module_m8-js/lib/types.MacrosynthParameters) \| [<code>MIDIOutParameters</code>](#module_m8-js/lib/types.MIDIOutParameters) \| [<code>SamplerParameters</code>](#module_m8-js/lib/types.SamplerParameters) \| [<code>WavsynthParameters</code>](#module_m8-js/lib/types.WavsynthParameters)
+        * [.kind](#module_m8-js/lib/types.Instrument+kind) : <code>Number</code>
+        * [.lfo](#module_m8-js/lib/types.Instrument+lfo) : [<code>Array.&lt;LFOParameters&gt;</code>](#module_m8-js/lib/types.LFOParameters)
+        * [.mixerParams](#module_m8-js/lib/types.Instrument+mixerParams) : [<code>MixerParameters</code>](#module_m8-js/lib/types.MixerParameters)
+        * [.name](#module_m8-js/lib/types.Instrument+name) : <code>String</code>
+        * [.pitch](#module_m8-js/lib/types.Instrument+pitch) : <code>Number</code>
+        * [.tableData](#module_m8-js/lib/types.Instrument+tableData) : [<code>Table</code>](#module_m8-js/lib/types.Table)
+        * [.tableTick](#module_m8-js/lib/types.Instrument+tableTick) : <code>Number</code>
+        * [.transpose](#module_m8-js/lib/types.Instrument+transpose) : <code>Boolean</code>
+        * [.volume](#module_m8-js/lib/types.Instrument+volume) : <code>Number</code>
+        * [.destToStr(dest)](#module_m8-js/lib/types.Instrument+destToStr)
+        * [.filterTypeToStr()](#module_m8-js/lib/types.Instrument+filterTypeToStr) ⇒ <code>String</code>
+        * [.kindToStr()](#module_m8-js/lib/types.Instrument+kindToStr) ⇒ <code>String</code>
+        * [.getEmbeddedBytes(offset, includeTable, [fileReader])](#module_m8-js/lib/types.Instrument+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
+        * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
+        * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
+        * [.getBytes()](#module_m8-js/lib/types.Instrument+getBytes)
+    * _static_
+        * [.getMIDIDestLabels()](#module_m8-js/lib/types.FMSynth.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
 
 <a name="new_module_m8-js/lib/types.FMSynth_new"></a>
 
@@ -1565,16 +1555,6 @@ Create an Instrument.
 #### fmSynth.volume : <code>Number</code>
 **Kind**: instance property of [<code>FMSynth</code>](#module_m8-js/lib/types.FMSynth)  
 **Overrides**: [<code>volume</code>](#module_m8-js/lib/types.Instrument+volume)  
-<a name="module_m8-js/lib/types.M8File+m8FileType"></a>
-
-#### fmSynth.m8FileType : <code>Number</code>
-**Kind**: instance property of [<code>FMSynth</code>](#module_m8-js/lib/types.FMSynth)  
-**Overrides**: [<code>m8FileType</code>](#module_m8-js/lib/types.M8File+m8FileType)  
-<a name="module_m8-js/lib/types.M8File+m8FileVersion"></a>
-
-#### fmSynth.m8FileVersion : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-**Kind**: instance property of [<code>FMSynth</code>](#module_m8-js/lib/types.FMSynth)  
-**Overrides**: [<code>m8FileVersion</code>](#module_m8-js/lib/types.M8File+m8FileVersion)  
 <a name="module_m8-js/lib/types.Instrument+destToStr"></a>
 
 #### fmSynth.destToStr(dest)
@@ -1603,7 +1583,7 @@ Returns a string representation of the Instrument kind.
 **Overrides**: [<code>kindToStr</code>](#module_m8-js/lib/types.Instrument+kindToStr)  
 <a name="module_m8-js/lib/types.Instrument+getEmbeddedBytes"></a>
 
-#### fmSynth.getEmbeddedBytes(offset, [fileReader]) ⇒ <code>Array.&lt;Number&gt;</code>
+#### fmSynth.getEmbeddedBytes(offset, includeTable, [fileReader]) ⇒ <code>Array.&lt;Number&gt;</code>
 Returns the M8 Instruments embedded (raw, no header or other information) bytes.
 
 **Kind**: instance method of [<code>FMSynth</code>](#module_m8-js/lib/types.FMSynth)  
@@ -1612,6 +1592,7 @@ Returns the M8 Instruments embedded (raw, no header or other information) bytes.
 | Param | Type | Description |
 | --- | --- | --- |
 | offset | <code>Number</code> | The offset |
+| includeTable | <code>Boolean</code> | Whether or not to include the table bytes |
 | [fileReader] | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) | The M8 file reader (when present) |
 
 <a name="module_m8-js/lib/types.M8File+getHeaderBytes"></a>
@@ -1632,12 +1613,23 @@ Returns the file type as string.
 
 #### fmSynth.getBytes()
 **Kind**: instance method of [<code>FMSynth</code>](#module_m8-js/lib/types.FMSynth)  
+<a name="module_m8-js/lib/types.FMSynth.getMIDIDestLabels"></a>
+
+#### FMSynth.getMIDIDestLabels() ⇒ <code>Array.&lt;Number&gt;</code>
+Returns an array of MIDI Mapping labels.
+
+**Kind**: static method of [<code>FMSynth</code>](#module_m8-js/lib/types.FMSynth)  
 <a name="module_m8-js/lib/types.Macrosynth"></a>
 
 ### m8-js/lib/types.Macrosynth
 Represents an Macrosynth Instrument.
 
 **Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
+
+* [.Macrosynth](#module_m8-js/lib/types.Macrosynth)
+    * [new Macrosynth(m8ReaderOrVersion)](#new_module_m8-js/lib/types.Macrosynth_new)
+    * [.getMIDIDestLabels()](#module_m8-js/lib/types.Macrosynth.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
+
 <a name="new_module_m8-js/lib/types.Macrosynth_new"></a>
 
 #### new Macrosynth(m8ReaderOrVersion)
@@ -1648,12 +1640,23 @@ Create an Instrument.
 | --- | --- | --- |
 | m8ReaderOrVersion | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 file reader or the M8 version of the Instrument |
 
+<a name="module_m8-js/lib/types.Macrosynth.getMIDIDestLabels"></a>
+
+#### Macrosynth.getMIDIDestLabels() ⇒ <code>Array.&lt;Number&gt;</code>
+Returns an array of MIDI Mapping labels.
+
+**Kind**: static method of [<code>Macrosynth</code>](#module_m8-js/lib/types.Macrosynth)  
 <a name="module_m8-js/lib/types.MIDIOut"></a>
 
 ### m8-js/lib/types.MIDIOut
 Represents an MIDI Out Instrument.
 
 **Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
+
+* [.MIDIOut](#module_m8-js/lib/types.MIDIOut)
+    * [new MIDIOut(m8ReaderOrVersion)](#new_module_m8-js/lib/types.MIDIOut_new)
+    * [.getMIDIDestLabels()](#module_m8-js/lib/types.MIDIOut.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
+
 <a name="new_module_m8-js/lib/types.MIDIOut_new"></a>
 
 #### new MIDIOut(m8ReaderOrVersion)
@@ -1664,6 +1667,12 @@ Create an Instrument.
 | --- | --- | --- |
 | m8ReaderOrVersion | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 file reader or the M8 version of the Instrument |
 
+<a name="module_m8-js/lib/types.MIDIOut.getMIDIDestLabels"></a>
+
+#### MIDIOut.getMIDIDestLabels() ⇒ <code>Array.&lt;Number&gt;</code>
+Returns an array of MIDI Mapping labels.
+
+**Kind**: static method of [<code>MIDIOut</code>](#module_m8-js/lib/types.MIDIOut)  
 <a name="module_m8-js/lib/types.None"></a>
 
 ### m8-js/lib/types.None
@@ -1686,6 +1695,11 @@ Create an Instrument.
 Represents an Sampler Instrument.
 
 **Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
+
+* [.Sampler](#module_m8-js/lib/types.Sampler)
+    * [new Sampler(m8ReaderOrVersion)](#new_module_m8-js/lib/types.Sampler_new)
+    * [.getMIDIDestLabels()](#module_m8-js/lib/types.Sampler.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
+
 <a name="new_module_m8-js/lib/types.Sampler_new"></a>
 
 #### new Sampler(m8ReaderOrVersion)
@@ -1696,12 +1710,23 @@ Create an Instrument.
 | --- | --- | --- |
 | m8ReaderOrVersion | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 file reader or the M8 version of the Instrument |
 
+<a name="module_m8-js/lib/types.Sampler.getMIDIDestLabels"></a>
+
+#### Sampler.getMIDIDestLabels() ⇒ <code>Array.&lt;Number&gt;</code>
+Returns an array of MIDI Mapping labels.
+
+**Kind**: static method of [<code>Sampler</code>](#module_m8-js/lib/types.Sampler)  
 <a name="module_m8-js/lib/types.Wavsynth"></a>
 
 ### m8-js/lib/types.Wavsynth
 Represents an Wavnsynth Instrument.
 
 **Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
+
+* [.Wavsynth](#module_m8-js/lib/types.Wavsynth)
+    * [new Wavsynth(m8ReaderOrVersion)](#new_module_m8-js/lib/types.Wavsynth_new)
+    * [.getMIDIDestLabels()](#module_m8-js/lib/types.Wavsynth.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
+
 <a name="new_module_m8-js/lib/types.Wavsynth_new"></a>
 
 #### new Wavsynth(m8ReaderOrVersion)
@@ -1712,39 +1737,36 @@ Create an Instrument.
 | --- | --- | --- |
 | m8ReaderOrVersion | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 file reader or the M8 version of the Instrument |
 
+<a name="module_m8-js/lib/types.Wavsynth.getMIDIDestLabels"></a>
+
+#### Wavsynth.getMIDIDestLabels() ⇒ <code>Array.&lt;Number&gt;</code>
+Returns an array of MIDI Mapping labels.
+
+**Kind**: static method of [<code>Wavsynth</code>](#module_m8-js/lib/types.Wavsynth)  
 <a name="module_m8-js/lib/types.M8File"></a>
 
-### m8-js/lib/types.M8File
+### m8-js/lib/types.M8File ⇐ [<code>Serializable</code>](#module_m8-js/lib/types.Serializable)
 Represents an M8 file.
 
 **Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
+**Extends**: [<code>Serializable</code>](#module_m8-js/lib/types.Serializable)  
 
-* [.M8File](#module_m8-js/lib/types.M8File)
-    * [new M8File(m8FileType, m8Version)](#new_module_m8-js/lib/types.M8File_new)
-    * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-    * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
+* [.M8File](#module_m8-js/lib/types.M8File) ⇐ [<code>Serializable</code>](#module_m8-js/lib/types.Serializable)
+    * [new M8File(m8FileReaderOrType, [m8FileVersion])](#new_module_m8-js/lib/types.M8File_new)
     * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
     * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
 
 <a name="new_module_m8-js/lib/types.M8File_new"></a>
 
-#### new M8File(m8FileType, m8Version)
+#### new M8File(m8FileReaderOrType, [m8FileVersion])
 Constructs an M8 file.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| m8FileType | <code>Number</code> | The raw M8 file type |
-| m8Version | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the M8 file |
+| m8FileReaderOrType | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| <code>Number</code> | The M8 file reader or M8 file type |
+| [m8FileVersion] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the M8 file (required when m8FileReaderOrType is not an M8FileReader) |
 
-<a name="module_m8-js/lib/types.M8File+m8FileType"></a>
-
-#### m8File.m8FileType : <code>Number</code>
-**Kind**: instance property of [<code>M8File</code>](#module_m8-js/lib/types.M8File)  
-<a name="module_m8-js/lib/types.M8File+m8FileVersion"></a>
-
-#### m8File.m8FileVersion : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-**Kind**: instance property of [<code>M8File</code>](#module_m8-js/lib/types.M8File)  
 <a name="module_m8-js/lib/types.M8File+getHeaderBytes"></a>
 
 #### m8File.getHeaderBytes() ⇒ <code>Array.&lt;Number&gt;</code>
@@ -2039,13 +2061,10 @@ Represents a Scale.
 **Extends**: [<code>M8File</code>](#module_m8-js/lib/types.M8File)  
 
 * [.Scale](#module_m8-js/lib/types.Scale) ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
-    * [new Scale([m8Version])](#new_module_m8-js/lib/types.Scale_new)
+    * [new Scale([m8FileReaderOrVersion])](#new_module_m8-js/lib/types.Scale_new)
     * _instance_
-        * [.m8Version](#module_m8-js/lib/types.Scale+m8Version) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.name](#module_m8-js/lib/types.Scale+name) : <code>String</code>
         * [.intervals](#module_m8-js/lib/types.Scale+intervals) : [<code>Array.&lt;NoteInterval&gt;</code>](#module_m8-js/lib/types.NoteInterval)
-        * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-        * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.getBytes()](#module_m8-js/lib/types.Scale+getBytes)
         * [.getEmbeddedBytes([emptyByte])](#module_m8-js/lib/types.Scale+getEmbeddedBytes) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
@@ -2056,18 +2075,14 @@ Represents a Scale.
 
 <a name="new_module_m8-js/lib/types.Scale_new"></a>
 
-#### new Scale([m8Version])
+#### new Scale([m8FileReaderOrVersion])
 Creates a Scale.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the instrument |
+| [m8FileReaderOrVersion] | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the Scale (or the M8FileReader used to read the M8 file) |
 
-<a name="module_m8-js/lib/types.Scale+m8Version"></a>
-
-#### scale.m8Version : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-**Kind**: instance property of [<code>Scale</code>](#module_m8-js/lib/types.Scale)  
 <a name="module_m8-js/lib/types.Scale+name"></a>
 
 #### scale.name : <code>String</code>
@@ -2076,16 +2091,6 @@ Creates a Scale.
 
 #### scale.intervals : [<code>Array.&lt;NoteInterval&gt;</code>](#module_m8-js/lib/types.NoteInterval)
 **Kind**: instance property of [<code>Scale</code>](#module_m8-js/lib/types.Scale)  
-<a name="module_m8-js/lib/types.M8File+m8FileType"></a>
-
-#### scale.m8FileType : <code>Number</code>
-**Kind**: instance property of [<code>Scale</code>](#module_m8-js/lib/types.Scale)  
-**Overrides**: [<code>m8FileType</code>](#module_m8-js/lib/types.M8File+m8FileType)  
-<a name="module_m8-js/lib/types.M8File+m8FileVersion"></a>
-
-#### scale.m8FileVersion : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-**Kind**: instance property of [<code>Scale</code>](#module_m8-js/lib/types.Scale)  
-**Overrides**: [<code>m8FileVersion</code>](#module_m8-js/lib/types.M8File+m8FileVersion)  
 <a name="module_m8-js/lib/types.Scale+getBytes"></a>
 
 #### scale.getBytes()
@@ -2137,6 +2142,12 @@ Returns an Scale from its bytes.
 | --- | --- | --- |
 | fileReader | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) | The M8 file reader for reading the Scale |
 
+<a name="module_m8-js/lib/types.Serializable"></a>
+
+### m8-js/lib/types.Serializable
+Represents an M8 file.
+
+**Kind**: static class of [<code>m8-js/lib/types</code>](#module_m8-js/lib/types)  
 <a name="module_m8-js/lib/types.EffectsSettings"></a>
 
 ### m8-js/lib/types.EffectsSettings
@@ -2146,21 +2157,24 @@ Represents the Effects Settings.
 
 * [.EffectsSettings](#module_m8-js/lib/types.EffectsSettings)
     * [new EffectsSettings()](#new_module_m8-js/lib/types.EffectsSettings_new)
-    * [.chorusModDepth](#module_m8-js/lib/types.EffectsSettings+chorusModDepth) : <code>Number</code>
-    * [.chorusModFreq](#module_m8-js/lib/types.EffectsSettings+chorusModFreq) : <code>Number</code>
-    * [.chorusReverbSend](#module_m8-js/lib/types.EffectsSettings+chorusReverbSend) : <code>Number</code>
-    * [.chorusWidth](#module_m8-js/lib/types.EffectsSettings+chorusWidth) : <code>Number</code>
-    * [.delayFeedback](#module_m8-js/lib/types.EffectsSettings+delayFeedback) : <code>Number</code>
-    * [.delayFilter](#module_m8-js/lib/types.EffectsSettings+delayFilter) : <code>Array.&lt;Number&gt;</code>
-    * [.delayReverbSend](#module_m8-js/lib/types.EffectsSettings+delayReverbSend) : <code>Number</code>
-    * [.delayTime](#module_m8-js/lib/types.EffectsSettings+delayTime) : <code>Array.&lt;Number&gt;</code>
-    * [.delayWidth](#module_m8-js/lib/types.EffectsSettings+delayWidth) : <code>Number</code>
-    * [.reverbDamping](#module_m8-js/lib/types.EffectsSettings+reverbDamping) : <code>Number</code>
-    * [.reverbFilter](#module_m8-js/lib/types.EffectsSettings+reverbFilter) : <code>Array.&lt;Number&gt;</code>
-    * [.reverbModDepth](#module_m8-js/lib/types.EffectsSettings+reverbModDepth) : <code>Number</code>
-    * [.reverbModFreq](#module_m8-js/lib/types.EffectsSettings+reverbModFreq) : <code>Number</code>
-    * [.reverbSize](#module_m8-js/lib/types.EffectsSettings+reverbSize) : <code>Number</code>
-    * [.reverbWidth](#module_m8-js/lib/types.EffectsSettings+reverbWidth) : <code>Number</code>
+    * _instance_
+        * [.chorusModDepth](#module_m8-js/lib/types.EffectsSettings+chorusModDepth) : <code>Number</code>
+        * [.chorusModFreq](#module_m8-js/lib/types.EffectsSettings+chorusModFreq) : <code>Number</code>
+        * [.chorusReverbSend](#module_m8-js/lib/types.EffectsSettings+chorusReverbSend) : <code>Number</code>
+        * [.chorusWidth](#module_m8-js/lib/types.EffectsSettings+chorusWidth) : <code>Number</code>
+        * [.delayFeedback](#module_m8-js/lib/types.EffectsSettings+delayFeedback) : <code>Number</code>
+        * [.delayFilter](#module_m8-js/lib/types.EffectsSettings+delayFilter) : <code>Array.&lt;Number&gt;</code>
+        * [.delayReverbSend](#module_m8-js/lib/types.EffectsSettings+delayReverbSend) : <code>Number</code>
+        * [.delayTime](#module_m8-js/lib/types.EffectsSettings+delayTime) : <code>Array.&lt;Number&gt;</code>
+        * [.delayWidth](#module_m8-js/lib/types.EffectsSettings+delayWidth) : <code>Number</code>
+        * [.reverbDamping](#module_m8-js/lib/types.EffectsSettings+reverbDamping) : <code>Number</code>
+        * [.reverbFilter](#module_m8-js/lib/types.EffectsSettings+reverbFilter) : <code>Array.&lt;Number&gt;</code>
+        * [.reverbModDepth](#module_m8-js/lib/types.EffectsSettings+reverbModDepth) : <code>Number</code>
+        * [.reverbModFreq](#module_m8-js/lib/types.EffectsSettings+reverbModFreq) : <code>Number</code>
+        * [.reverbSize](#module_m8-js/lib/types.EffectsSettings+reverbSize) : <code>Number</code>
+        * [.reverbWidth](#module_m8-js/lib/types.EffectsSettings+reverbWidth) : <code>Number</code>
+    * _static_
+        * [.getMIDIDestLabels()](#module_m8-js/lib/types.EffectsSettings.getMIDIDestLabels) ⇒ <code>Array.&lt;String&gt;</code>
 
 <a name="new_module_m8-js/lib/types.EffectsSettings_new"></a>
 
@@ -2227,6 +2241,12 @@ Create an Effects Settings.
 
 #### effectsSettings.reverbWidth : <code>Number</code>
 **Kind**: instance property of [<code>EffectsSettings</code>](#module_m8-js/lib/types.EffectsSettings)  
+<a name="module_m8-js/lib/types.EffectsSettings.getMIDIDestLabels"></a>
+
+#### EffectsSettings.getMIDIDestLabels() ⇒ <code>Array.&lt;String&gt;</code>
+Returns an array of MIDI Mapping labels.
+
+**Kind**: static method of [<code>EffectsSettings</code>](#module_m8-js/lib/types.EffectsSettings)  
 <a name="module_m8-js/lib/types.MIDIMapping"></a>
 
 ### m8-js/lib/types.MIDIMapping
@@ -2238,13 +2258,12 @@ Represents a MIDI Mapping.
     * [new MIDIMapping()](#new_module_m8-js/lib/types.MIDIMapping_new)
     * [.channel](#module_m8-js/lib/types.MIDIMapping+channel) : <code>Number</code>
     * [.controlNum](#module_m8-js/lib/types.MIDIMapping+controlNum) : <code>Number</code>
-    * [.empty](#module_m8-js/lib/types.MIDIMapping+empty) : <code>Boolean</code>
+    * [.instrIndex](#module_m8-js/lib/types.MIDIMapping+instrIndex) : <code>Number</code>
     * [.maxValue](#module_m8-js/lib/types.MIDIMapping+maxValue) : <code>Number</code>
     * [.minValue](#module_m8-js/lib/types.MIDIMapping+minValue) : <code>Number</code>
     * [.paramIndex](#module_m8-js/lib/types.MIDIMapping+paramIndex) : <code>Number</code>
     * [.type](#module_m8-js/lib/types.MIDIMapping+type) : <code>Number</code>
-    * [.value](#module_m8-js/lib/types.MIDIMapping+value) : <code>Number</code>
-    * [.destToStr()](#module_m8-js/lib/types.MIDIMapping+destToStr) ⇒ <code>String</code>
+    * [.empty](#module_m8-js/lib/types.MIDIMapping+empty) ⇒ <code>Boolean</code>
     * [.typeToChar()](#module_m8-js/lib/types.MIDIMapping+typeToChar) ⇒ <code>String</code>
 
 <a name="new_module_m8-js/lib/types.MIDIMapping_new"></a>
@@ -2260,9 +2279,9 @@ Create a MIDI Mapping.
 
 #### midiMapping.controlNum : <code>Number</code>
 **Kind**: instance property of [<code>MIDIMapping</code>](#module_m8-js/lib/types.MIDIMapping)  
-<a name="module_m8-js/lib/types.MIDIMapping+empty"></a>
+<a name="module_m8-js/lib/types.MIDIMapping+instrIndex"></a>
 
-#### midiMapping.empty : <code>Boolean</code>
+#### midiMapping.instrIndex : <code>Number</code>
 **Kind**: instance property of [<code>MIDIMapping</code>](#module_m8-js/lib/types.MIDIMapping)  
 <a name="module_m8-js/lib/types.MIDIMapping+maxValue"></a>
 
@@ -2280,16 +2299,12 @@ Create a MIDI Mapping.
 
 #### midiMapping.type : <code>Number</code>
 **Kind**: instance property of [<code>MIDIMapping</code>](#module_m8-js/lib/types.MIDIMapping)  
-<a name="module_m8-js/lib/types.MIDIMapping+value"></a>
+<a name="module_m8-js/lib/types.MIDIMapping+empty"></a>
 
-#### midiMapping.value : <code>Number</code>
+#### midiMapping.empty ⇒ <code>Boolean</code>
+Returns if the MIDI Mapping is empty.
+
 **Kind**: instance property of [<code>MIDIMapping</code>](#module_m8-js/lib/types.MIDIMapping)  
-<a name="module_m8-js/lib/types.MIDIMapping+destToStr"></a>
-
-#### midiMapping.destToStr() ⇒ <code>String</code>
-Returns the string representation of the mapping destination.
-
-**Kind**: instance method of [<code>MIDIMapping</code>](#module_m8-js/lib/types.MIDIMapping)  
 <a name="module_m8-js/lib/types.MIDIMapping+typeToChar"></a>
 
 #### midiMapping.typeToChar() ⇒ <code>String</code>
@@ -2466,22 +2481,25 @@ Represents the Mixer Settings.
 
 * [.MixerSettings](#module_m8-js/lib/types.MixerSettings)
     * [new MixerSettings()](#new_module_m8-js/lib/types.MixerSettings_new)
-    * [.analogInputChorus](#module_m8-js/lib/types.MixerSettings+analogInputChorus) : <code>Array.&lt;Number&gt;</code>
-    * [.analogInputDelay](#module_m8-js/lib/types.MixerSettings+analogInputDelay) : <code>Array.&lt;Number&gt;</code>
-    * [.analogInputReverb](#module_m8-js/lib/types.MixerSettings+analogInputReverb) : <code>Array.&lt;Number&gt;</code>
-    * [.analogInputVolume](#module_m8-js/lib/types.MixerSettings+analogInputVolume) : <code>Array.&lt;Number&gt;</code>
-    * [.chorusVolume](#module_m8-js/lib/types.MixerSettings+chorusVolume) : <code>Number</code>
-    * [.delayVolume](#module_m8-js/lib/types.MixerSettings+delayVolume) : <code>Number</code>
-    * [.djFilter](#module_m8-js/lib/types.MixerSettings+djFilter) : <code>Number</code>
-    * [.djFilterPeak](#module_m8-js/lib/types.MixerSettings+djFilterPeak) : <code>Number</code>
-    * [.masterLimit](#module_m8-js/lib/types.MixerSettings+masterLimit) : <code>Number</code>
-    * [.masterVolume](#module_m8-js/lib/types.MixerSettings+masterVolume) : <code>Number</code>
-    * [.reverbVolume](#module_m8-js/lib/types.MixerSettings+reverbVolume) : <code>Number</code>
-    * [.trackVolume](#module_m8-js/lib/types.MixerSettings+trackVolume) : <code>Array.&lt;Number&gt;</code>
-    * [.usbInputChorus](#module_m8-js/lib/types.MixerSettings+usbInputChorus) : <code>Number</code>
-    * [.usbInputDelay](#module_m8-js/lib/types.MixerSettings+usbInputDelay) : <code>Number</code>
-    * [.usbInputReverb](#module_m8-js/lib/types.MixerSettings+usbInputReverb) : <code>Number</code>
-    * [.usbInputVolume](#module_m8-js/lib/types.MixerSettings+usbInputVolume) : <code>Number</code>
+    * _instance_
+        * [.analogInputChorus](#module_m8-js/lib/types.MixerSettings+analogInputChorus) : <code>Array.&lt;Number&gt;</code>
+        * [.analogInputDelay](#module_m8-js/lib/types.MixerSettings+analogInputDelay) : <code>Array.&lt;Number&gt;</code>
+        * [.analogInputReverb](#module_m8-js/lib/types.MixerSettings+analogInputReverb) : <code>Array.&lt;Number&gt;</code>
+        * [.analogInputVolume](#module_m8-js/lib/types.MixerSettings+analogInputVolume) : <code>Array.&lt;Number&gt;</code>
+        * [.chorusVolume](#module_m8-js/lib/types.MixerSettings+chorusVolume) : <code>Number</code>
+        * [.delayVolume](#module_m8-js/lib/types.MixerSettings+delayVolume) : <code>Number</code>
+        * [.djFilter](#module_m8-js/lib/types.MixerSettings+djFilter) : <code>Number</code>
+        * [.djFilterPeak](#module_m8-js/lib/types.MixerSettings+djFilterPeak) : <code>Number</code>
+        * [.masterLimit](#module_m8-js/lib/types.MixerSettings+masterLimit) : <code>Number</code>
+        * [.masterVolume](#module_m8-js/lib/types.MixerSettings+masterVolume) : <code>Number</code>
+        * [.reverbVolume](#module_m8-js/lib/types.MixerSettings+reverbVolume) : <code>Number</code>
+        * [.trackVolume](#module_m8-js/lib/types.MixerSettings+trackVolume) : <code>Array.&lt;Number&gt;</code>
+        * [.usbInputChorus](#module_m8-js/lib/types.MixerSettings+usbInputChorus) : <code>Number</code>
+        * [.usbInputDelay](#module_m8-js/lib/types.MixerSettings+usbInputDelay) : <code>Number</code>
+        * [.usbInputReverb](#module_m8-js/lib/types.MixerSettings+usbInputReverb) : <code>Number</code>
+        * [.usbInputVolume](#module_m8-js/lib/types.MixerSettings+usbInputVolume) : <code>Number</code>
+    * _static_
+        * [.getMIDIDestLabels()](#module_m8-js/lib/types.MixerSettings.getMIDIDestLabels) ⇒ <code>Array.&lt;Number&gt;</code>
 
 <a name="new_module_m8-js/lib/types.MixerSettings_new"></a>
 
@@ -2552,6 +2570,12 @@ Create a MIDI Settings.
 
 #### mixerSettings.usbInputVolume : <code>Number</code>
 **Kind**: instance property of [<code>MixerSettings</code>](#module_m8-js/lib/types.MixerSettings)  
+<a name="module_m8-js/lib/types.MixerSettings.getMIDIDestLabels"></a>
+
+#### MixerSettings.getMIDIDestLabels() ⇒ <code>Array.&lt;Number&gt;</code>
+Returns an array of MIDI Mapping labels.
+
+**Kind**: static method of [<code>MixerSettings</code>](#module_m8-js/lib/types.MixerSettings)  
 <a name="module_m8-js/lib/types.Song"></a>
 
 ### m8-js/lib/types.Song ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
@@ -2561,7 +2585,7 @@ Represents a Song.
 **Extends**: [<code>M8File</code>](#module_m8-js/lib/types.M8File)  
 
 * [.Song](#module_m8-js/lib/types.Song) ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
-    * [new Song(m8ReaderOrVersion)](#new_module_m8-js/lib/types.Song_new)
+    * [new Song([m8FileReaderOrVersion])](#new_module_m8-js/lib/types.Song_new)
     * _instance_
         * [.chains](#module_m8-js/lib/types.Song+chains) : [<code>Array.&lt;Chain&gt;</code>](#module_m8-js/lib/types.Chain)
         * [.directory](#module_m8-js/lib/types.Song+directory) : <code>String</code>
@@ -2579,8 +2603,6 @@ Represents a Song.
         * [.tables](#module_m8-js/lib/types.Song+tables) : [<code>Array.&lt;Table&gt;</code>](#module_m8-js/lib/types.Table)
         * [.tempo](#module_m8-js/lib/types.Song+tempo) : <code>Number</code>
         * [.transpose](#module_m8-js/lib/types.Song+transpose) : <code>Number</code>
-        * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-        * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.getBytes()](#module_m8-js/lib/types.Song+getBytes)
         * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
@@ -2589,13 +2611,13 @@ Represents a Song.
 
 <a name="new_module_m8-js/lib/types.Song_new"></a>
 
-#### new Song(m8ReaderOrVersion)
+#### new Song([m8FileReaderOrVersion])
 Create a Song.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| m8ReaderOrVersion | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 file reader or the M8 version of the Song |
+| [m8FileReaderOrVersion] | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the Song (or the M8FileReader used to read the M8 file) |
 
 <a name="module_m8-js/lib/types.Song+chains"></a>
 
@@ -2661,16 +2683,6 @@ Create a Song.
 
 #### song.transpose : <code>Number</code>
 **Kind**: instance property of [<code>Song</code>](#module_m8-js/lib/types.Song)  
-<a name="module_m8-js/lib/types.M8File+m8FileType"></a>
-
-#### song.m8FileType : <code>Number</code>
-**Kind**: instance property of [<code>Song</code>](#module_m8-js/lib/types.Song)  
-**Overrides**: [<code>m8FileType</code>](#module_m8-js/lib/types.M8File+m8FileType)  
-<a name="module_m8-js/lib/types.M8File+m8FileVersion"></a>
-
-#### song.m8FileVersion : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-**Kind**: instance property of [<code>Song</code>](#module_m8-js/lib/types.Song)  
-**Overrides**: [<code>m8FileVersion</code>](#module_m8-js/lib/types.M8File+m8FileVersion)  
 <a name="module_m8-js/lib/types.Song+getBytes"></a>
 
 #### song.getBytes()
@@ -2834,7 +2846,7 @@ Represents a Theme.
 **Extends**: [<code>M8File</code>](#module_m8-js/lib/types.M8File)  
 
 * [.Theme](#module_m8-js/lib/types.Theme) ⇐ [<code>M8File</code>](#module_m8-js/lib/types.M8File)
-    * [new Theme([m8Version])](#new_module_m8-js/lib/types.Theme_new)
+    * [new Theme([m8FileReaderOrVersion])](#new_module_m8-js/lib/types.Theme_new)
     * _instance_
         * [.background](#module_m8-js/lib/types.Theme+background) : <code>Array.&lt;Number&gt;</code>
         * [.textEmpty](#module_m8-js/lib/types.Theme+textEmpty) : <code>Array.&lt;Number&gt;</code>
@@ -2849,8 +2861,6 @@ Represents a Theme.
         * [.meterLow](#module_m8-js/lib/types.Theme+meterLow) : <code>Array.&lt;Number&gt;</code>
         * [.meterMid](#module_m8-js/lib/types.Theme+meterMid) : <code>Array.&lt;Number&gt;</code>
         * [.meterPeak](#module_m8-js/lib/types.Theme+meterPeak) : <code>Array.&lt;Number&gt;</code>
-        * [.m8FileType](#module_m8-js/lib/types.M8File+m8FileType) : <code>Number</code>
-        * [.m8FileVersion](#module_m8-js/lib/types.M8File+m8FileVersion) : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
         * [.getBytes()](#module_m8-js/lib/types.Theme+getBytes)
         * [.getHeaderBytes()](#module_m8-js/lib/types.M8File+getHeaderBytes) ⇒ <code>Array.&lt;Number&gt;</code>
         * [.typeToStr()](#module_m8-js/lib/types.M8File+typeToStr) ⇒ <code>String</code>
@@ -2859,13 +2869,13 @@ Represents a Theme.
 
 <a name="new_module_m8-js/lib/types.Theme_new"></a>
 
-#### new Theme([m8Version])
+#### new Theme([m8FileReaderOrVersion])
 Creates a Theme.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| [m8Version] | [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the Theme |
+| [m8FileReaderOrVersion] | [<code>M8FileReader</code>](#module_m8-js/lib/types.M8FileReader) \| [<code>M8Version</code>](#module_m8-js/lib/types.M8Version) | The M8 version of the Theme (or the M8FileReader used to read the M8 file) |
 
 <a name="module_m8-js/lib/types.Theme+background"></a>
 
@@ -2919,16 +2929,6 @@ Creates a Theme.
 
 #### theme.meterPeak : <code>Array.&lt;Number&gt;</code>
 **Kind**: instance property of [<code>Theme</code>](#module_m8-js/lib/types.Theme)  
-<a name="module_m8-js/lib/types.M8File+m8FileType"></a>
-
-#### theme.m8FileType : <code>Number</code>
-**Kind**: instance property of [<code>Theme</code>](#module_m8-js/lib/types.Theme)  
-**Overrides**: [<code>m8FileType</code>](#module_m8-js/lib/types.M8File+m8FileType)  
-<a name="module_m8-js/lib/types.M8File+m8FileVersion"></a>
-
-#### theme.m8FileVersion : [<code>M8Version</code>](#module_m8-js/lib/types.M8Version)
-**Kind**: instance property of [<code>Theme</code>](#module_m8-js/lib/types.Theme)  
-**Overrides**: [<code>m8FileVersion</code>](#module_m8-js/lib/types.M8File+m8FileVersion)  
 <a name="module_m8-js/lib/types.Theme+getBytes"></a>
 
 #### theme.getBytes()

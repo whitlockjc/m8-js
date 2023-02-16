@@ -130,15 +130,15 @@ describe('Scale tests', () => {
     }, [])).toEqual(expectedOffsetStrs)
   })
 
-  test('#fromBytes and #getBytes', () => {
+  test('#fromBytes and #asBytes', () => {
     const filePath = path.join(__dirname, 'files/Scales/TESTING.m8n')
     const bytesFromDisk = Array.from(readFileSync(filePath))
     const scaleFromDisk = Scale.fromBytes(bytesFromDisk)
 
     // Ensure the raw bytes read from disk match the dumped bytes
-    expect(bytesFromDisk).toEqual(scaleFromDisk.getBytes())
+    expect(bytesFromDisk).toEqual(scaleFromDisk.asBytes())
 
-    let alteredScale = Scale.fromBytes(scaleFromDisk.getBytes())
+    let alteredScale = Scale.fromBytes(scaleFromDisk.asBytes())
 
     // Change the name
     alteredScale.name = 'MY SCALE'
@@ -158,7 +158,7 @@ describe('Scale tests', () => {
     }
 
     // Dump altered theme (with latest version number due to not providing one)
-    alteredScale = Scale.fromBytes(alteredScale.getBytes())
+    alteredScale = Scale.fromBytes(alteredScale.asBytes())
 
     // Ensure the files are the same
     expect(alteredScale.name).toEqual('MY SCALE')

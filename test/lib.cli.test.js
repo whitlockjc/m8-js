@@ -864,7 +864,7 @@ WIDTH         12
             song.midiMappings[midiMappingIndex].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(song.getBytes()))
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(song.asBytes()))
         }
 
         beforeEach(() => {
@@ -890,7 +890,7 @@ WIDTH         12
             emptySong.midiMappings[i].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(emptySong.getBytes()))
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(emptySong.asBytes()))
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -950,7 +950,7 @@ WIDTH         12
             emptySong.midiMappings[i].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(emptySong.getBytes()))
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(emptySong.asBytes()))
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 

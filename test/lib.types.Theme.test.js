@@ -25,22 +25,22 @@ describe('Theme tests', () => {
     expect(new Theme()).toEqual(DefaultTheme)
   })
 
-  test('#fromBytes and #getBytes', () => {
+  test('#fromBytes and #asBytes', () => {
     const filePath = path.join(__dirname, 'files/Themes/DEFAULT.m8t')
     const bytesFromDisk = Array.from(readFileSync(filePath))
     const themeFromDisk = Theme.fromBytes(bytesFromDisk)
     const alteredSelection = new RGB(0x0F, 0x1F, 0x2F)
 
     // Ensure the raw bytes read from disk match the dumped bytes
-    expect(bytesFromDisk).toEqual(themeFromDisk.getBytes())
+    expect(bytesFromDisk).toEqual(themeFromDisk.asBytes())
 
-    let alteredTheme = Theme.fromBytes(themeFromDisk.getBytes())
+    let alteredTheme = Theme.fromBytes(themeFromDisk.asBytes())
 
     // Change the theme
     alteredTheme.selection = alteredSelection
 
     // Dump altered theme (with latest version number due to not providing one)
-    alteredTheme = Theme.fromBytes(alteredTheme.getBytes())
+    alteredTheme = Theme.fromBytes(alteredTheme.asBytes())
 
     // Ensure the files are the same
     expect(alteredTheme.background).toEqual(themeFromDisk.background)
