@@ -13,50 +13,63 @@
  * limitations under the License.
  */
 
-const { readFileSync } = require('fs')
-const path = require('path')
-
-const { DefaultTheme, RGB, Theme } = require('../lib/types/Theme')
-const { M8FileTypes } = require('../lib/constants')
-const M8Version = require('../lib/types/M8Version')
+const { DefaultTheme, Theme } = require('../lib/types/Theme')
+const { LATEST_M8_VERSION } = require('../lib/constants')
+const RGB = require('../lib/types/internal/RGB')
 
 describe('Theme tests', () => {
-  test('constructor', () => {
-    expect(new Theme()).toEqual(DefaultTheme)
+  describe('constructor', () => {
+    test('empty', () => {
+      expect(new Theme()).toEqual(DefaultTheme)
+    })
+
+    describe('arguments', () => {
+      // M8FileReader is tested by the index.js tests
+
+      test('M8Version', () => {
+        expect(new Theme(LATEST_M8_VERSION)).toEqual(DefaultTheme)
+      })
+    })
   })
 
-  test('#fromBytes and #asBytes', () => {
-    const filePath = path.join(__dirname, 'files/Themes/DEFAULT.m8t')
-    const bytesFromDisk = Array.from(readFileSync(filePath))
-    const themeFromDisk = Theme.fromBytes(bytesFromDisk)
-    const alteredSelection = new RGB(0x0F, 0x1F, 0x2F)
+  test('#asObject', () => {
+    expect(new Theme().asObject()).toEqual({
+      fileMetadata: {
+        type: 'Theme',
+        version: LATEST_M8_VERSION.asObject()
+      },
+      background: new RGB(0x00, 0x00, 0x00).asObject(),
+      cursor: new RGB(0x32, 0xEC, 0xFF).asObject(),
+      meterLow: new RGB(0x00, 0xFF, 0x50).asObject(),
+      meterMid: new RGB(0xFF, 0xE0, 0x00).asObject(),
+      meterPeak: new RGB(0xFF, 0x30, 0x70).asObject(),
+      playMarker: new RGB(0x00, 0xFF, 0x70).asObject(),
+      scopeSlider: new RGB(0x32, 0xEC, 0xFF).asObject(),
+      selection: new RGB(0xFF, 0x00, 0xD2).asObject(),
+      textDefault: new RGB(0x8C, 0x8C, 0xBA).asObject(),
+      textEmpty: new RGB(0x1E, 0x1E, 0x28).asObject(),
+      textInfo: new RGB(0x60, 0x60, 0x8E).asObject(),
+      textTitle: new RGB(0x32, 0xEC, 0xFF).asObject(),
+      textValue: new RGB(0xFA, 0xFA, 0xFA).asObject()
+    })
+  })
 
-    // Ensure the raw bytes read from disk match the dumped bytes
-    expect(bytesFromDisk).toEqual(themeFromDisk.asBytes())
+  test('.fromObject', () => {
+    const theme = new Theme()
 
-    let alteredTheme = Theme.fromBytes(themeFromDisk.asBytes())
+    Theme.getObjectProperties().forEach((prop, i) => {
+      // Skip the file metadata as it's not required
+      if (prop === 'fileMetadata') {
+        return
+      }
 
-    // Change the theme
-    alteredTheme.selection = alteredSelection
+      theme[prop] = new RGB(i, i, i)
+    })
 
-    // Dump altered theme (with latest version number due to not providing one)
-    alteredTheme = Theme.fromBytes(alteredTheme.asBytes())
+    expect(Theme.fromObject(theme.asObject())).toEqual(theme)
+  })
 
-    // Ensure the files are the same
-    expect(alteredTheme.background).toEqual(themeFromDisk.background)
-    expect(alteredTheme.textEmpty).toEqual(themeFromDisk.textEmpty)
-    expect(alteredTheme.textInfo).toEqual(themeFromDisk.textInfo)
-    expect(alteredTheme.textDefault).toEqual(themeFromDisk.textDefault)
-    expect(alteredTheme.textValue).toEqual(themeFromDisk.textValue)
-    expect(alteredTheme.textTitle).toEqual(themeFromDisk.textTitle)
-    expect(alteredTheme.playMarker).toEqual(themeFromDisk.playMarker)
-    expect(alteredTheme.cursor).toEqual(themeFromDisk.cursor)
-    expect(alteredTheme.selection).toEqual(alteredSelection)
-    expect(alteredTheme.scopeSlider).toEqual(themeFromDisk.scopeSlider)
-    expect(alteredTheme.meterLow).toEqual(themeFromDisk.meterLow)
-    expect(alteredTheme.meterMid).toEqual(themeFromDisk.meterMid)
-    expect(alteredTheme.meterPeak).toEqual(themeFromDisk.meterPeak)
-    expect(alteredTheme.m8FileVersion).toEqual(new M8Version(1, 0, 2))
-    expect(alteredTheme.m8FileType).toEqual(M8FileTypes.Theme)
+  test('.getObjectProperties', () => {
+    expect(Theme.getObjectProperties()).toEqual(Object.keys(new Theme().asObject()))
   })
 })

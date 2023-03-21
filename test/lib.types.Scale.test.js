@@ -13,168 +13,66 @@
  * limitations under the License.
  */
 
-const { readFileSync } = require('fs')
-const path = require('path')
+const { LATEST_M8_VERSION } = require('../lib/constants')
+const { DefaultScales, Scale } = require('../lib/types/Scale')
 
-const { Scale } = require('../lib/types/Scale')
-const M8Version = require('../lib/types/M8Version')
+function testEmptyScale (scale) {
+  expect(scale.name).toEqual('')
+  expect(scale.intervals.length).toEqual(12)
 
-const scaleFiles = {
-  'TESTING.m8n': undefined
+  scale.intervals.forEach((interval) => {
+    expect(interval.enabled).toEqual(true)
+    expect(interval.offsetA).toEqual(0x00)
+    expect(interval.offsetB).toEqual(0x00)
+    expect(interval.offsetToStr()).toEqual('00.00')
+  })
 }
 
-beforeAll(() => {
-  Object.keys(scaleFiles).forEach((name) => {
-    const filePath = path.join(__dirname, `files/Scales/${name}`)
-
-    scaleFiles[name] = Scale.fromBytes(Array.from(readFileSync(filePath)))
+function testScaleAsObject (scale, skipHeader = false) {
+  expect(scale.asObject(skipHeader)).toEqual({
+    ...(skipHeader ? {} : { fileMetadata: { type: 'Scale', version: LATEST_M8_VERSION.asObject() } }),
+    name: scale.name,
+    intervals: scale.intervals.map((interval) => interval.asObject())
   })
-})
+}
 
-describe('NodeInterval tests', () => {
-  test('#offsetToStr negative', () => {
-    const emptyScale = new Scale()
-    const interval = emptyScale.intervals[0]
-
-    interval.offsetA = 160
-    interval.offsetB = 246
-
-    expect(interval.offsetToStr()).toEqual('-24.00')
-  })
-})
 describe('Scale tests', () => {
-  test('constructor', () => {
-    const emptyScale = new Scale()
+  describe('constructor', () => {
+    test('empty', () => {
+      testEmptyScale(new Scale())
+    })
 
-    expect(emptyScale.name).toEqual('')
-    expect(emptyScale.intervals.length).toEqual(12)
+    describe('arguments', () => {
+      // M8FileReder is tested by index.js tests
 
-    emptyScale.intervals.forEach((interval) => {
-      expect(interval.enabled).toEqual(true)
-      expect(interval.offsetA).toEqual(0x00)
-      expect(interval.offsetB).toEqual(0x00)
-      expect(interval.offsetToStr()).toEqual('00.00')
+      test('M8Version', () => {
+        testEmptyScale(new Scale(LATEST_M8_VERSION))
+      })
     })
   })
 
-  test('#fromBytes TESTING.m8n', () => {
-    const expectedScale = new Scale(new M8Version(2, 5, 0))
-    const expectedOffsetStrs = [
-      '-24.00',
-      '00.00',
-      '01.02',
-      '00.00',
-      '03.04',
-      '00.00',
-      '05.06',
-      '-04.03',
-      '00.00',
-      '-02.01',
-      '00.00',
-      '24.00'
-    ]
+  describe('#asObject', () => {
+    test('empty', () => {
+      testScaleAsObject(DefaultScales[0])
+    })
 
-    expectedScale.name = 'TESTING'
-
-    expectedScale.intervals[0].enabled = true
-    expectedScale.intervals[0].offsetA = 0xA0
-    expectedScale.intervals[0].offsetB = 0xF6
-
-    expectedScale.intervals[1].enabled = false
-    expectedScale.intervals[1].offsetA = 0x00
-    expectedScale.intervals[1].offsetB = 0x00
-
-    expectedScale.intervals[2].enabled = true
-    expectedScale.intervals[2].offsetA = 0x66
-    expectedScale.intervals[2].offsetB = 0x00
-
-    expectedScale.intervals[3].enabled = false
-    expectedScale.intervals[3].offsetA = 0x00
-    expectedScale.intervals[3].offsetB = 0x00
-
-    expectedScale.intervals[4].enabled = true
-    expectedScale.intervals[4].offsetA = 0x30
-    expectedScale.intervals[4].offsetB = 0x01
-
-    expectedScale.intervals[5].enabled = false
-    expectedScale.intervals[5].offsetA = 0x00
-    expectedScale.intervals[5].offsetB = 0x00
-
-    expectedScale.intervals[6].enabled = true
-    expectedScale.intervals[6].offsetA = 0xFA
-    expectedScale.intervals[6].offsetB = 0x01
-
-    expectedScale.intervals[7].enabled = true
-    expectedScale.intervals[7].offsetA = 0x6D
-    expectedScale.intervals[7].offsetB = 0xFE
-
-    expectedScale.intervals[8].enabled = false
-    expectedScale.intervals[8].offsetA = 0x00
-    expectedScale.intervals[8].offsetB = 0x00
-
-    expectedScale.intervals[9].enabled = true
-    expectedScale.intervals[9].offsetA = 0x37
-    expectedScale.intervals[9].offsetB = 0xFF
-
-    expectedScale.intervals[10].enabled = false
-    expectedScale.intervals[10].offsetA = 0x00
-    expectedScale.intervals[10].offsetB = 0x00
-
-    expectedScale.intervals[11].enabled = true
-    expectedScale.intervals[11].offsetA = 0x60
-    expectedScale.intervals[11].offsetB = 0x09
-
-    expect(scaleFiles['TESTING.m8n']).toEqual(expectedScale)
-    expect(scaleFiles['TESTING.m8n'].intervals.reduce((actualOffsetStrs, interval) => {
-      return actualOffsetStrs.concat(interval.offsetToStr())
-    }, [])).toEqual(expectedOffsetStrs)
+    test('skipHeader', () => {
+      testScaleAsObject(DefaultScales[0], true)
+    })
   })
 
-  test('#fromBytes and #asBytes', () => {
-    const filePath = path.join(__dirname, 'files/Scales/TESTING.m8n')
-    const bytesFromDisk = Array.from(readFileSync(filePath))
-    const scaleFromDisk = Scale.fromBytes(bytesFromDisk)
+  test('.fromObject', () => {
+    const scale = new Scale()
 
-    // Ensure the raw bytes read from disk match the dumped bytes
-    expect(bytesFromDisk).toEqual(scaleFromDisk.asBytes())
+    scale.name = 'TESTING'
+    scale.intervals[0].enabled = false
+    scale.intervals[0].offsetA = 0x01
+    scale.intervals[0].offsetB = 0x01
 
-    let alteredScale = Scale.fromBytes(scaleFromDisk.asBytes())
+    expect(Scale.fromObject(scale.asObject())).toEqual(scale)
+  })
 
-    // Change the name
-    alteredScale.name = 'MY SCALE'
-
-    for (let i = 0; i < alteredScale.intervals.length; i++) {
-      const interval = alteredScale.intervals[i]
-
-      if (i % 2 === 0) {
-        interval.enabled = false
-        interval.offsetA = 0x00
-        interval.offsetB = 0x00
-      } else {
-        interval.enabled = true
-        interval.offsetA = 0x01
-        interval.offsetB = 0x01
-      }
-    }
-
-    // Dump altered theme (with latest version number due to not providing one)
-    alteredScale = Scale.fromBytes(alteredScale.asBytes())
-
-    // Ensure the files are the same
-    expect(alteredScale.name).toEqual('MY SCALE')
-
-    for (let i = 0; i < alteredScale.intervals.length; i++) {
-      const interval = alteredScale.intervals[i]
-
-      if (i % 2 === 0) {
-        expect(interval.enabled).toEqual(false)
-        expect(interval.offsetA).toEqual(0x00)
-        expect(interval.offsetB).toEqual(0x00)
-      } else {
-        expect(interval.enabled).toEqual(true)
-        expect(interval.offsetA).toEqual(0x01)
-        expect(interval.offsetB).toEqual(0x01)
-      }
-    }
+  test('.getObjectProperties', () => {
+    expect(Scale.getObjectProperties()).toEqual(Object.keys(new Scale().asObject()))
   })
 })

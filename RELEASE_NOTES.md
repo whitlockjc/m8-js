@@ -3,23 +3,31 @@
 ## TBD
 
 * API
-  * Added `lib/types/Serializable` for all M8 types that should support importing/exporting to disk _(and other formats)_
-  * Converted the RGB values for each `Theme` color to be an actual type _(`RGB`)_
-  * Refactored all `lib/types/*` that corresdpond to an M8 file to extend the new `lib/types/M8File` class
-    * All classes now have their logic for importing/exporting to bytes within their class instead of in `index.js`
+  * Added `lib/types/M8File` for all M8 types that correspond to an M8 file
+  * Added `lib/types/Serializable` for all M8 types that should support importing/exporting to supported non-byte formats _(and other formats)_
+  * All classes now have their own file
+    * All internal types, _(not associated with an M8 file type)_ have been put into `lib/types/internal`
+    * All instrument types have been moved to `lib/types/instruments`
+  * Cleaned up code for consistency
+  * Converted the RGB values for each `Theme` color to be an actual type _(`lib/types/internal/RGB`)_
+  * Refactored all instrument types:
+    * `env` has been renamed to `envelopes`
+    * `lfo` has been renamed to `lfos`
+    * `tableData` has been renamed to `table`
+  * Refactored `SongStep.tracks{1-8}` to be `SongStep.tracks[8]`
+  * Refactored `TableStep.fx{1-3}` to be `TableStep.fx[3]`
+  * Refactored instruments:
+    * Removed `lib/types/Instrument` and moved each `Instrument` type into its own file in `lib/types/instruments`
+    * Renamed `env` to `envelopes`
+    * Renamed `lfo` to `lfos`
+    * Renamed `tableData` to `table`
+  * Refactored `lib/types/internal/FX`:
+    * `commandToStr` now takes an instrument instead of its kind
+  * Refactored `lib/types/internal/MIDIMapping`:
+    * `typeToChar` is now `typeToStr`
   * Removed dependence upon `Buffer` and all APIs taking/returning a `Buffer` now take/return an `Array<Number>`
-  * Removed helper methods from `index.js` for reading M8 types/types
-    * `loadInstrument`
-    * `loadScale`
-    * `loadSong`
-    * `loadTable`
-    * `loadTheme`
-  * Removed helper methods from `index.js` for writing M8 files/types
-    * `dumpInstrument`
-    * `dumpScale`
-    * `dumpSong`
-    * `dumpTheme`
   * Removed `lib/types/M8FileWriter.js` _(no longer provided value)_
+  * Updated all types to support JSON import/export _(`asObject` and `fromObject`)_
 * CLI
   * Updated `project midi-mapping` to print the actual `DEST` values
 

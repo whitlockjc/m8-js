@@ -19,8 +19,13 @@ const path = require('path')
 
 const { createProgram } = require('../lib/cli')
 const { toM8HexStr } = require('../lib/helpers')
-const { FMSynth, Macrosynth, MIDIOut, Sampler, Wavsynth } = require('../lib/types/Instrument')
-const { EffectsSettings, MixerSettings, Song } = require('../lib/types/Song')
+const FMSynth = require('../lib/types/instruments/FMSynth')
+const Macrosynth = require('../lib/types/instruments/Macrosynth')
+const M8 = require('..')
+const MIDIOut = require('../lib/types/instruments/MIDIOut')
+const Sampler = require('../lib/types/instruments/Sampler')
+const Song = require('../lib/types/Song')
+const Wavsynth = require('../lib/types/instruments/Wavsynth')
 
 // File paths
 const defaultFMSynthPath = path.join(__dirname, 'files/Instruments/DEF_FM.m8i')
@@ -843,7 +848,8 @@ WIDTH         12
       describe('with m8-file', () => {
         let tmpFilePath
 
-        function createInstrMIDIMappingsAndSaveM8File (song, instrIndex, midiLabels) {
+        function createInstrMIDIMappingsAndSaveM8File (song, instrIndex) {
+          const midiLabels = song.instruments[instrIndex].getMIDIDestLabels()
           let midiMappingCount = 0
 
           // eslint-disable-next-line no-unused-vars
@@ -864,7 +870,7 @@ WIDTH         12
             song.midiMappings[midiMappingIndex].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(song.asBytes()))
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(M8.dumpM8File(song)))
         }
 
         beforeEach(() => {
@@ -877,7 +883,7 @@ WIDTH         12
 
         test('effects mappings', () => {
           const emptySong = new Song()
-          const midiLabels = EffectsSettings.getMIDIDestLabels()
+          const midiLabels = emptySong.effectsSettings.getMIDIDestLabels()
 
           // eslint-disable-next-line no-unused-vars
           midiLabels.forEach((label, i) => {
@@ -890,7 +896,7 @@ WIDTH         12
             emptySong.midiMappings[i].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(emptySong.asBytes()))
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(M8.dumpM8File(emptySong)))
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -937,7 +943,7 @@ WIDTH         12
 
         test('mixer mappings', () => {
           const emptySong = new Song()
-          const midiLabels = MixerSettings.getMIDIDestLabels()
+          const midiLabels = emptySong.mixerSettings.getMIDIDestLabels()
 
           // eslint-disable-next-line no-unused-vars
           midiLabels.forEach((label, i) => {
@@ -950,7 +956,7 @@ WIDTH         12
             emptySong.midiMappings[i].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(emptySong.asBytes()))
+          fs.writeFileSync(tmpFilePath, Uint8Array.from(M8.dumpM8File(emptySong)))
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -1001,7 +1007,7 @@ WIDTH         12
 
             emptySong.instruments[0x00] = new Wavsynth()
 
-            createInstrMIDIMappingsAndSaveM8File(emptySong, 0x00, Wavsynth.getMIDIDestLabels())
+            createInstrMIDIMappingsAndSaveM8File(emptySong, 0x00)
 
             runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -1052,7 +1058,7 @@ WIDTH         12
 
           emptySong.instruments[0x01] = new Macrosynth()
 
-          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x01, Macrosynth.getMIDIDestLabels())
+          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x01)
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -1102,7 +1108,7 @@ WIDTH         12
 
           emptySong.instruments[0x02] = new Sampler()
 
-          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x02, Sampler.getMIDIDestLabels())
+          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x02)
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -1147,12 +1153,12 @@ WIDTH         12
 `)
         })
 
-        test('MIDIOUT', () => {
+        test('MIDI OUT', () => {
           const emptySong = new Song()
 
           emptySong.instruments[0x03] = new MIDIOut()
 
-          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x03, MIDIOut.getMIDIDestLabels())
+          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x03)
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -1181,7 +1187,7 @@ WIDTH         12
 
           emptySong.instruments[0x04] = new FMSynth()
 
-          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x04, FMSynth.getMIDIDestLabels())
+          createInstrMIDIMappingsAndSaveM8File(emptySong, 0x04)
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 

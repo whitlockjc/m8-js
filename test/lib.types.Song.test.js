@@ -13,149 +13,93 @@
  * limitations under the License.
  */
 
-const { readFileSync } = require('fs')
-const path = require('path')
+const { DefaultScales, Scale } = require('../lib/types/Scale')
+const { LATEST_M8_VERSION, VERSION_1_4_0 } = require('../lib/constants')
+const Song = require('../lib/types/Song')
+const Chain = require('../lib/types/internal/Chain')
+const FMSynth = require('../lib/types/instruments/FMSynth')
+const Groove = require('../lib/types/internal/Groove')
+const M8Version = require('../lib/types/internal/M8Version')
+const MIDIMapping = require('../lib/types/internal/MIDIMapping')
+const None = require('../lib/types/instruments/None')
+const Phrase = require('../lib/types/internal/Phrase')
+const Table = require('../lib/types/internal/Table')
+const MIDISettings = require('../lib/types/internal/MIDISettings')
+const MixerSettings = require('../lib/types/internal/MixerSettings')
+const SongStep = require('../lib/types/internal/SongStep')
+const ChainStep = require('../lib/types/internal/ChainStep')
+const Macrosynth = require('../lib/types/instruments/Macrosynth')
+const MIDIOut = require('../lib/types/instruments/MIDIOut')
+const Sampler = require('../lib/types/instruments/Sampler')
+const Wavsynth = require('../lib/types/instruments/Wavsynth')
+const TableStep = require('../lib/types/internal/TableStep')
+const FX = require('../lib/types/internal/FX')
+const PhraseStep = require('../lib/types/internal/PhraseStep')
 
-const { LATEST_M8_VERSION, VERSION_2_7_0 } = require('../lib/constants')
-const Chain = require('../lib/types/Chain')
-const { DefaultScales } = require('../lib/types/Scale')
-const Groove = require('../lib/types/Groove')
-const { None, FMSynth } = require('../lib/types/Instrument')
-const M8Version = require('../lib/types/M8Version')
-const Phrase = require('../lib/types/Phrase')
-const { Song } = require('../lib/types/Song')
-const Table = require('../lib/types/Table')
-
-const songFiles = {
-  'DEFAULT.m8s': undefined
+function testEmptySong (song) {
+  expect(song.chains).toEqual(Array.from({ length: 255 }, () => new Chain()))
+  expect(song.directory).toEqual('')
+  expect(song.grooves).toEqual(Array.from({ length: 32 }, () => new Groove()))
+  expect(song.instruments).toEqual(Array.from({ length: 128 }, () => new None(song.m8FileReader)))
+  expect(song.key).toEqual(0x00)
+  expect(song.midiMappings).toEqual(Array.from({ length: 128 }, () => new MIDIMapping()))
+  expect(song.midiSettings).toEqual(new MIDISettings())
+  expect(song.mixerSettings).toEqual(new MixerSettings())
+  expect(song.name).toEqual('')
+  expect(song.phrases).toEqual(Array.from({ length: 255 }, () => new Phrase()))
+  expect(song.quantize).toEqual(0x00)
+  expect(song.scales).toEqual(DefaultScales)
+  expect(song.steps).toEqual(Array.from({ length: 256 }, () => new SongStep()))
+  expect(song.tables).toEqual(Array.from({ length: 256 }, () => new Table()))
+  expect(song.tempo).toEqual(0x78)
+  expect(song.transpose).toEqual(0x00)
+  expect(song.m8FileVersion).toEqual(LATEST_M8_VERSION)
 }
 
-beforeAll(() => {
-  Object.keys(songFiles).forEach((name) => {
-    const filePath = path.join(__dirname, `files/Songs/${name}`)
-
-    songFiles[name] = Song.fromBytes(Array.from(readFileSync(filePath)))
-  })
-})
-
 describe('Song tests', () => {
-  test('constructor', () => {
-    const emptySong = new Song()
-
-    expect(emptySong.chains.length).toEqual(255)
-    expect(emptySong.directory).toEqual('')
-    expect(emptySong.grooves.length).toEqual(32)
-    expect(emptySong.instruments.length).toEqual(128)
-    expect(emptySong.key).toEqual(0x00)
-    expect(emptySong.midiMappings.length).toEqual(128)
-    expect(emptySong.name).toEqual('')
-    expect(emptySong.phrases.length).toEqual(255)
-    expect(emptySong.quantize).toEqual(0x00)
-    expect(emptySong.scales.length).toEqual(16)
-    expect(emptySong.steps.length).toEqual(256)
-    expect(emptySong.tables.length).toEqual(256)
-    expect(emptySong.tempo).toEqual(0x78)
-    expect(emptySong.transpose).toEqual(0x00)
-    expect(emptySong.m8FileVersion).toEqual(LATEST_M8_VERSION)
-
-    emptySong.chains.forEach((chain) => {
-      expect(chain).toEqual(new Chain())
+  describe('constructor', () => {
+    test('empty', () => {
+      testEmptySong(new Song())
     })
 
-    expect(emptySong.effectsSettings.chorusModDepth).toEqual(0x40)
-    expect(emptySong.effectsSettings.chorusModFreq).toEqual(0x80)
-    expect(emptySong.effectsSettings.chorusReverbSend).toEqual(0x00)
-    expect(emptySong.effectsSettings.chorusWidth).toEqual(0xFF)
-    expect(emptySong.effectsSettings.delayFeedback).toEqual(0x80)
-    expect(emptySong.effectsSettings.delayFilter).toEqual([0x40, 0xFF])
-    expect(emptySong.effectsSettings.delayReverbSend).toEqual(0x00)
-    expect(emptySong.effectsSettings.delayTime).toEqual([0x30, 0x30])
-    expect(emptySong.effectsSettings.delayWidth).toEqual(0xFF)
-    expect(emptySong.effectsSettings.reverbDamping).toEqual(0xC0)
-    expect(emptySong.effectsSettings.reverbFilter).toEqual([0x10, 0xE0])
-    expect(emptySong.effectsSettings.reverbModDepth).toEqual(0x10)
-    expect(emptySong.effectsSettings.reverbModFreq).toEqual(0xFF)
-    expect(emptySong.effectsSettings.reverbSize).toEqual(0xFF)
-    expect(emptySong.effectsSettings.reverbWidth).toEqual(0xFF)
+    describe('arguments', () => {
+      // M8FileReder is tested by index.js tests
 
-    emptySong.grooves.forEach((groove) => {
-      expect(groove).toEqual(new Groove())
+      test('>= 2.5.0', () => {
+        testEmptySong(new Song(LATEST_M8_VERSION))
+      })
+
+      test('< 2.5.0', () => {
+        expect(new Song(new M8Version(2, 4, 0)).scales).toEqual(undefined)
+      })
     })
+  })
 
-    emptySong.instruments.forEach((instr) => {
-      expect(instr).toEqual(new None())
+  test('#asObject', () => {
+    const song = new Song()
+    const songObject = song.asObject()
+
+    expect(songObject.fileMetadata).toEqual({
+      type: 'Song',
+      version: LATEST_M8_VERSION.asObject()
     })
-
-    emptySong.midiMappings.forEach((midiMapping) => {
-      expect(midiMapping.channel).toEqual(0x00)
-      expect(midiMapping.controlNum).toEqual(0x00)
-      expect(midiMapping.empty).toEqual(true)
-      expect(midiMapping.instrIndex).toEqual(0x00)
-      expect(midiMapping.maxValue).toEqual(0x00)
-      expect(midiMapping.minValue).toEqual(0x00)
-      expect(midiMapping.paramIndex).toEqual(0x00)
-      expect(midiMapping.type).toEqual(0x00)
-    })
-
-    expect(emptySong.midiSettings.controlMapChannel).toEqual(0x11)
-    expect(emptySong.midiSettings.receiveSync).toEqual(false)
-    expect(emptySong.midiSettings.receiveTransport).toEqual(0x00)
-    expect(emptySong.midiSettings.recordNoteChannel).toEqual(0x09)
-    expect(emptySong.midiSettings.recordNoteDelayKillCommands).toEqual(0x00)
-    expect(emptySong.midiSettings.recordNoteVelocity).toEqual(true)
-    expect(emptySong.midiSettings.sendSync).toEqual(false)
-    expect(emptySong.midiSettings.sendTransport).toEqual(0x00)
-    expect(emptySong.midiSettings.songRowCueChannel).toEqual(0x0B)
-    expect(emptySong.midiSettings.trackInputChannel.length).toEqual(8)
-    expect(emptySong.midiSettings.trackInputInstrument.length).toEqual(8)
-    expect(emptySong.midiSettings.trackInputMode).toEqual(0x01)
-    expect(emptySong.midiSettings.trackInputProgramChange).toEqual(true)
-    expect(emptySong.midiSettings.trackInputModeToStr()).toEqual('LEGATO')
-
-    for (let i = 0; i < 8; i++) {
-      expect(emptySong.midiSettings.trackInputChannel[i]).toEqual(i + 1)
-    }
-
-    for (let i = 0; i < 8; i++) {
-      expect(emptySong.midiSettings.trackInputInstrument[i]).toEqual(0x00)
-    }
-
-    expect(emptySong.mixerSettings.analogInputChorus).toEqual([0x00, 0x00])
-    expect(emptySong.mixerSettings.analogInputDelay).toEqual([0x00, 0x00])
-    expect(emptySong.mixerSettings.analogInputReverb).toEqual([0x00, 0x00])
-    expect(emptySong.mixerSettings.analogInputVolume).toEqual([0x00, 0xFF])
-    expect(emptySong.mixerSettings.chorusVolume).toEqual(0xE0)
-    expect(emptySong.mixerSettings.delayVolume).toEqual(0xE0)
-    expect(emptySong.mixerSettings.djFilter).toEqual(0x80)
-    expect(emptySong.mixerSettings.djFilterPeak).toEqual(0x80)
-    expect(emptySong.mixerSettings.masterLimit).toEqual(0x00)
-    expect(emptySong.mixerSettings.masterVolume).toEqual(0xE0)
-    expect(emptySong.mixerSettings.reverbVolume).toEqual(0xE0)
-    expect(emptySong.mixerSettings.trackVolume.length).toEqual(8)
-    expect(emptySong.mixerSettings.usbInputChorus).toEqual(0x00)
-    expect(emptySong.mixerSettings.usbInputDelay).toEqual(0x00)
-    expect(emptySong.mixerSettings.usbInputReverb).toEqual(0x00)
-    expect(emptySong.mixerSettings.usbInputVolume).toEqual(0x00)
-
-    for (let i = 0; i < 8; i++) {
-      expect(emptySong.mixerSettings.trackVolume[i]).toEqual(0xE0)
-    }
-
-    emptySong.phrases.forEach((phrase) => {
-      expect(phrase).toEqual(new Phrase())
-    })
-
-    expect(emptySong.scales).toEqual(DefaultScales)
-
-    emptySong.steps.forEach((step) => {
-      for (let i = 0; i < 8; i++) {
-        expect(step['track' + (i + 1)]).toEqual(0xFF)
-      }
-    })
-
-    emptySong.tables.forEach((table) => {
-      expect(table).toEqual(new Table())
-    })
+    expect(songObject.chains).toEqual(song.chains.map((chain) => chain.asObject()))
+    expect(songObject.directory).toEqual(song.directory)
+    expect(songObject.effectsSettings).toEqual(song.effectsSettings.asObject())
+    expect(songObject.grooves).toEqual(song.grooves.map((groove) => groove.asObject()))
+    expect(songObject.instruments).toEqual(song.instruments.map((instrument) => instrument.asObject()))
+    expect(songObject.key).toEqual(song.key)
+    expect(songObject.midiMappings).toEqual(song.midiMappings.map((mapping) => mapping.asObject()))
+    expect(songObject.midiSettings).toEqual(song.midiSettings.asObject())
+    expect(songObject.mixerSettings).toEqual(song.mixerSettings.asObject())
+    expect(songObject.name).toEqual(song.name)
+    expect(songObject.phrases).toEqual(song.phrases.map((phrase) => phrase.asObject()))
+    expect(songObject.quantize).toEqual(song.quantize)
+    expect(songObject.scales).toEqual(song.scales?.map((scale) => scale.asObject()))
+    expect(songObject.steps).toEqual(song.steps.map((step) => step.asObject()))
+    expect(songObject.tables).toEqual(song.tables.map((table) => table.asObject()))
+    expect(songObject.tempo).toEqual(song.tempo)
+    expect(songObject.transpose).toEqual(song.transpose)
   })
 
   describe('#findPhraseStepInstrument', () => {
@@ -170,7 +114,7 @@ describe('Song tests', () => {
       emptySong.instruments[0x00] = emptyFMSynth
 
       // Set chain for track
-      emptySong.steps[0x00].track1 = 0x00
+      emptySong.steps[0x00].tracks[0] = 0x00
     })
 
     test('Same phrase step', () => {
@@ -180,7 +124,7 @@ describe('Song tests', () => {
       // Set instrument for phrase step
       emptySong.phrases[0x00].steps[0x05].instrument = 0x00
 
-      expect(emptySong.findPhraseStepInstrument(0x01, 0x00, 0x08, 0x05)).toEqual(emptyFMSynth)
+      expect(emptySong.findPhraseStepInstrument(0x00, 0x00, 0x08, 0x05)).toEqual(emptyFMSynth)
     })
 
     test('Same phrase but earlier step', () => {
@@ -190,7 +134,7 @@ describe('Song tests', () => {
       // Set instrument for phrase step
       emptySong.phrases[0x00].steps[0x00].instrument = 0x00
 
-      expect(emptySong.findPhraseStepInstrument(0x01, 0x00, 0x00, 0x05)).toEqual(emptyFMSynth)
+      expect(emptySong.findPhraseStepInstrument(0x00, 0x00, 0x00, 0x05)).toEqual(emptyFMSynth)
     })
 
     test('Different phrase but same chain', () => {
@@ -201,13 +145,13 @@ describe('Song tests', () => {
       // Set instrument for phrase step
       emptySong.phrases[0x00].steps[0x00].instrument = 0x00
 
-      expect(emptySong.findPhraseStepInstrument(0x01, 0x00, 0x0A, 0x05)).toEqual(emptyFMSynth)
+      expect(emptySong.findPhraseStepInstrument(0x00, 0x00, 0x0A, 0x05)).toEqual(emptyFMSynth)
     })
 
     test('Different chain', () => {
       // Setup song steps
-      emptySong.steps[0x05].track1 = 0x01
-      emptySong.steps[0x0A].track1 = 0x02
+      emptySong.steps[0x05].tracks[0x00] = 0x01
+      emptySong.steps[0x0A].tracks[0x00] = 0x02
 
       // Setup chains
       emptySong.chains[0x00].steps[0x00].phrase = 0x00
@@ -217,52 +161,21 @@ describe('Song tests', () => {
       // Setup phrases
       emptySong.phrases[0x00].steps[0x00].instrument = 0x00
 
-      expect(emptySong.findPhraseStepInstrument(0x01, 0x0A, 0x00, 0x05)).toEqual(emptyFMSynth)
+      expect(emptySong.findPhraseStepInstrument(0x00, 0x0A, 0x00, 0x05)).toEqual(emptyFMSynth)
     })
 
     test('Not found', () => {
       // Setup song steps
-      emptySong.steps[0x05].track1 = 0x01
-      emptySong.steps[0x0A].track1 = 0x02
+      emptySong.steps[0x05].tracks[0x00] = 0x01
+      emptySong.steps[0x0A].tracks[0x00] = 0x02
 
       // Setup chains
       emptySong.chains[0x00].steps[0x00].phrase = 0x00
       emptySong.chains[0x01].steps[0x00].phrase = 0x01
       emptySong.chains[0x02].steps[0x00].phrase = 0x02
 
-      expect(emptySong.findPhraseStepInstrument(0x01, 0x0A, 0x00, 0x05)).toEqual(undefined)
+      expect(emptySong.findPhraseStepInstrument(0x00, 0x0A, 0x00, 0x05)).toEqual(undefined)
     })
-  })
-
-  test('#fromBytes', () => {
-    const expectedSong = new Song(VERSION_2_7_0)
-
-    expectedSong.directory = '/Songs/'
-    expectedSong.name = 'DEFAULT'
-
-    expect(songFiles['DEFAULT.m8s']).toEqual(expectedSong)
-  })
-
-  test('#asBytes and #fromBytes', () => {
-    const filePath = path.join(__dirname, 'files/Songs/DEFAULT.m8s')
-    const bytesFromDisk = Array.from(readFileSync(filePath))
-    const songFromDisk = Song.fromBytes(bytesFromDisk)
-
-    // Ensure the raw bytes read from disk match the dumped bytes
-    expect(bytesFromDisk).toEqual(songFromDisk.asBytes())
-
-    let alteredSong = Song.fromBytes(songFromDisk.asBytes())
-
-    alteredSong.name = 'TEST'
-    alteredSong.directory = '/A/B/'
-    alteredSong.key = 0x05
-
-    // Omitting the M8FileReader so as to default to empty values for skipped bytes
-    alteredSong = Song.fromBytes(alteredSong.asBytes())
-
-    expect(alteredSong.name).toEqual('TEST')
-    expect(alteredSong.directory).toEqual('/A/B/')
-    expect(alteredSong.key).toEqual(0x05)
   })
 
   test('#isChainEmpty', () => {
@@ -293,82 +206,64 @@ describe('Song tests', () => {
 
     expect(emptySong.isPhraseEmpty(0)).toEqual(true)
 
-    emptySong.phrases[0].steps[0].fx1.command = 0x05
+    emptySong.phrases[0].steps[0].fx[0].command = 0x05
 
     expect(emptySong.isPhraseEmpty(0)).toEqual(true)
   })
 
-  describe('< 2.5.0', () => {
-    test('constructor (scales should be undefined)', () => {
-      const emptySong = new Song(new M8Version(2, 4, 0))
+  describe('.fromObject', () => {
+    test('M8 version >= 2.5.0', () => {
+      const chainStep = new ChainStep(0x01, 0x02)
+      const scale = new Scale()
+      const song = new Song()
+      const wavSynth = new Wavsynth()
 
-      expect(emptySong.scales).toEqual(undefined)
+      scale.name = 'TESTING'
+      wavSynth.table = new Table([new TableStep([new FX(0x01, 0x02)], 0x02, 0x03)])
+
+      song.chains[0] = new Chain([chainStep])
+      song.directory = '/Songs/'
+      song.grooves[0] = new Groove([0x01, 0x02, 0x03])
+      song.instruments[0] = new FMSynth()
+      song.instruments[1] = new Macrosynth()
+      song.instruments[2] = new MIDIOut()
+      song.instruments[3] = new Sampler()
+      song.instruments[4] = wavSynth
+      song.key = 0x02
+      song.midiMappings[0] = new MIDIMapping(0x01)
+      song.midiSettings = new MIDISettings(0x01)
+      song.mixerSettings = new MixerSettings(0x01)
+      song.name = 'TESTING'
+      song.phrases[0] = new Phrase([new PhraseStep(new FX(0x01, 0x02, 0x03), 0x02, 0x03, 0x04)])
+      song.scales[0] = scale
+      song.steps[0] = new SongStep([0x01])
+      song.tables[4] = wavSynth.table
+      song.tempo = 0x03
+      song.transpose = 0x04
+
+      const songObject = song.asObject()
+
+      songObject.chains.splice(1)
+      songObject.grooves.splice(1)
+      songObject.instruments.splice(5)
+      songObject.phrases.splice(1)
+      songObject.scales.splice(1)
+      songObject.steps.splice(1)
+
+      expect(Song.fromObject(songObject)).toEqual(song)
+    })
+
+    test('M8 version < 2.5.0', () => {
+      const song = new Song(VERSION_1_4_0)
+      const songObject = song.asObject()
+
+      songObject.scales = DefaultScales.map((scale) => scale.asObject())
+
+      expect(Song.fromObject(songObject)).toEqual(song)
     })
   })
 
-  describe('MIDIMapping', () => {
-    test('#typeToChar', () => {
-      const emptySong = new Song()
-
-      expect(emptySong.midiMappings[0].typeToChar()).toEqual('U (00)')
-
-      // Mixer
-      emptySong.midiMappings[0].type = 0x0D
-      expect(emptySong.midiMappings[0].typeToChar()).toEqual('M')
-
-      // Effects
-      emptySong.midiMappings[0].type = 0x0B
-      expect(emptySong.midiMappings[0].typeToChar()).toEqual('X')
-
-      // Instrument
-      emptySong.midiMappings[0].type = 0x05
-      expect(emptySong.midiMappings[0].typeToChar()).toEqual('I')
-    })
-  })
-
-  describe('MIDISettings', () => {
-    test('#recordNoteDelayKillCommandsToStr', () => {
-      const emptySong = new Song()
-
-      ;[
-        'OFF',
-        'KILL',
-        'DELAY',
-        'BOTH',
-        'UNKNOWN (04)'
-      ].forEach((str, i) => {
-        emptySong.midiSettings.recordNoteDelayKillCommands = i
-
-        expect(emptySong.midiSettings.recordNoteDelayKillCommandsToStr()).toEqual(str)
-      })
-    })
-
-    test('#trackInputModeToStr', () => {
-      const emptySong = new Song()
-
-      ;[
-        'MONO',
-        'LEGATO',
-        'POLY',
-        'UNKNOWN (03)'
-      ].forEach((str, i) => {
-        emptySong.midiSettings.trackInputMode = i
-
-        expect(emptySong.midiSettings.trackInputModeToStr()).toEqual(str)
-      })
-    })
-
-    test('#transportToStr', () => {
-      const emptySong = new Song()
-
-      ;[
-        'OFF',
-        'PATTERN',
-        'SONG',
-        'UNKNOWN (03)'
-      ].forEach((str, i) => {
-        expect(emptySong.midiSettings.transportToStr(i)).toEqual(str)
-      })
-    })
+  test('.getObjectProperties', () => {
+    expect(Song.getObjectProperties().sort()).toEqual(Object.keys(new Song().asObject()).sort())
   })
 })
