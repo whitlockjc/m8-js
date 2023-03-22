@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "docs": "jsdoc2md index.js lib/*.js lib/types/*.js > docs/API.md",
-    "test": "eslint bin/m8 index.js lib/*.js && jest"
+    "test": "eslint bin/m8 index.js lib/*.js lib/cli/*.js lib/types/*.js lib/types/instruments/*.js lib/types/internal/*.js test/*.js && jest"
   },
   "bin": {
     "m8": "./bin/m8"

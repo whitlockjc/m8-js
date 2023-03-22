@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
-
 const { createProgram } = require('../lib/cli')
 const { toM8HexStr } = require('../lib/helpers')
 const FMSynth = require('../lib/types/instruments/FMSynth')
-const Macrosynth = require('../lib/types/instruments/Macrosynth')
+const fs = require('fs')
 const M8 = require('..')
+const Macrosynth = require('../lib/types/instruments/Macrosynth')
 const MIDIOut = require('../lib/types/instruments/MIDIOut')
+const os = require('os')
+const path = require('path')
 const Sampler = require('../lib/types/instruments/Sampler')
 const Song = require('../lib/types/Song')
 const Wavsynth = require('../lib/types/instruments/Wavsynth')

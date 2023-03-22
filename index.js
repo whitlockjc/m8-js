@@ -34,7 +34,6 @@ const Wavsynth = require('./lib/types/instruments/Wavsynth')
 // TODO: Add support for all constructors to take arguments
 // TODO: Consider @typedefs for JavaScript Object representation
 // TODO: Consider options objects for constructor arguments ()
-// TODO: Refactor CLI into smaller files
 
 /**
  * Dumps an M8 Instrument to its bytes representation.

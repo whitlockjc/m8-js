@@ -30,6 +30,7 @@
   * Updated all types to support JSON import/export _(`asObject` and `fromObject`)_
 * CLI
   * Fix alignment for `project mixer`
+  * Refactored the CLI into smaller, per-command files instead of one guargantuan file
   * Updated `project midi-mapping` to print the actual `DEST` values
 
 ## v0.1.0 _(2022-10-04)_
