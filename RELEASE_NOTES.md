@@ -29,6 +29,7 @@
   * Removed `lib/types/M8FileWriter.js` _(no longer provided value)_
   * Updated all types to support JSON import/export _(`asObject` and `fromObject`)_
 * CLI
+  * Fix alignment for `project mixer`
   * Updated `project midi-mapping` to print the actual `DEST` values
 
 ## v0.1.0 _(2022-10-04)_

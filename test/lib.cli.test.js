@@ -1285,11 +1285,12 @@ DJFILT:PEAK   03:04
 08 07 06 05 04 03 02 01
 
 
-CHO DEL REV    INPUT USB
-01  02  03     04 05 06
-           CHO 07 08 09
-           DEL 0A 0B 0C
-           REV 0D 0E 0F
+CHO DEL REV INPUT USB
+01  02  03  04 05 06
+
+        CHO 07 08 09
+        DEL 0A 0B 0C
+        REV 0D 0E 0F
 `)
       })
     })
