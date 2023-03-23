@@ -14,6 +14,7 @@
  */
 
 const { createProgram } = require('../lib/cli')
+const { DefaultTheme } = require('../lib/types/Theme')
 const { toM8HexStr } = require('../lib/helpers')
 const FMSynth = require('../lib/types/instruments/FMSynth')
 const fs = require('fs')
@@ -32,21 +33,45 @@ const defaultSongPath = path.join(__dirname, 'files/Songs/DEFAULT.m8s')
 const defaultThemePath = path.join(__dirname, 'files/Themes/DEFAULT.m8t')
 
 // Help outputs
+const exportHelp = `Usage: m8 export [options] <m8-file>
+
+exports an M8 file to JSON
+
+Arguments:
+  m8-file              the m8file
+
+Options:
+  -o, --output <path>  the path to save the M8 file
+  -h, --help           display help for command
+`
 const globalHelp = `Usage: m8 [options] [command]
 
 Various utilities for interacting with M8 files
 
 Options:
-  -V, --version   output the version number
-  -h, --help      display help for command
+  -V, --version               output the version number
+  -h, --help                  display help for command
 
 Commands:
-  instrument      instrument specific commands
-  project         project specific commands
-  scale           scale specific commands
-  song            song specific commands
-  theme           theme specific commands
-  help [command]  display help for command
+  export [options] <m8-file>  exports an M8 file to JSON
+  import [options] <m8-file>  imports an M8 file from JSON
+  instrument                  instrument specific commands
+  project                     project specific commands
+  scale                       scale specific commands
+  song                        song specific commands
+  theme                       theme specific commands
+  help [command]              display help for command
+`
+const importHelp = `Usage: m8 import [options] <m8-file>
+
+imports an M8 file from JSON
+
+Arguments:
+  m8-file              the m8file
+
+Options:
+  -o, --output <path>  the path to save the M8 file
+  -h, --help           display help for command
 `
 const instrumentHelp = `Usage: m8 instrument [options] [command]
 
@@ -504,10 +529,16 @@ const runM8 = (args, expectedOutput) => {
     thrownErr = err
   }
 
-  if (typeof thrownErr === 'undefined') {
-    expect(console.log).toBeCalledWith(expectedOutput)
+  if (typeof expectedOutput !== 'undefined') {
+    if (typeof thrownErr === 'undefined') {
+      expect(console.log).toBeCalledWith(expectedOutput)
+    } else {
+      expect(thrownErr.message).toEqual(expectedOutput)
+    }
   } else {
-    expect(thrownErr.message).toEqual(expectedOutput)
+    if (thrownErr) {
+      throw thrownErr
+    }
   }
 }
 const testHelp = (args, expectedOutput) => {
@@ -1535,6 +1566,165 @@ D 02
 E 01
 F 00
 `)
+      })
+    })
+
+    describe('export', () => {
+      test('missing m8-file', () => {
+        runM8(['export'], "error: missing required argument 'm8-file'")
+      })
+
+      test('--help', () => {
+        testHelp(['export', '--help'], exportHelp)
+      })
+
+      describe('with m8-file', () => {
+        test('Instrument', () => {
+          const bytesFromDisk = Array.from(fs.readFileSync(defaultFMSynthPath))
+          const instr = M8.loadM8File(bytesFromDisk)
+
+          runM8(['export', defaultFMSynthPath], JSON.stringify(instr.asObject(), null, 2))
+        })
+
+        test('Scale', () => {
+          const bytesFromDisk = Array.from(fs.readFileSync(testingScalePath))
+          const scale = M8.loadM8File(bytesFromDisk)
+
+          runM8(['export', testingScalePath], JSON.stringify(scale.asObject(), null, 2))
+        })
+
+        test('Song', () => {
+          const bytesFromDisk = Array.from(fs.readFileSync(defaultSongPath))
+          const song = M8.loadM8File(bytesFromDisk)
+
+          runM8(['export', defaultSongPath], JSON.stringify(song.asObject(), null, 2))
+        })
+
+        test('Theme', () => {
+          const bytesFromDisk = Array.from(fs.readFileSync(defaultThemePath))
+          const theme = M8.loadM8File(bytesFromDisk)
+
+          runM8(['export', defaultThemePath], JSON.stringify(theme.asObject(), null, 2))
+        })
+
+        describe('--output', () => {
+          test('exists', () => {
+            const outputPath = path.join(os.tmpdir(), 'm8-export.m8t')
+
+            fs.writeFileSync(outputPath, 'TESTING')
+
+            runM8(['export', defaultThemePath, '-o', outputPath], `Cannot write to file at ${outputPath}: File exists`)
+
+            fs.unlinkSync(outputPath)
+          })
+
+          test('can export', () => {
+            const bytesFromDisk = Array.from(fs.readFileSync(defaultThemePath))
+            const theme = M8.loadM8File(bytesFromDisk)
+            const outputPath = path.join(os.tmpdir(), 'm8-export.m8t')
+
+            runM8(['export', defaultThemePath, '-o', outputPath],
+                  `M8 Theme file (${defaultThemePath}) exported to ${outputPath}`)
+
+            expect(fs.readFileSync(outputPath, 'utf8')).toEqual(JSON.stringify(theme.asObject(), null, 2))
+
+            fs.unlinkSync(outputPath)
+          })
+        })
+      })
+    })
+
+    describe('import', () => {
+      test('missing m8-file', () => {
+        const outputPath = path.join(os.tmpdir(), 'm8-export.m8t')
+
+        runM8(['import', '-o', outputPath], "error: missing required argument 'm8-file'")
+      })
+
+      test('--help', () => {
+        testHelp(['import', '--help'], importHelp)
+      })
+
+      describe('--output', () => {
+        test('missing', () => {
+          runM8(['import', testingSongPath], "error: required option '-o, --output <path>' not specified")
+        })
+
+        test('points to existing file', () => {
+          const importPath = path.join(os.tmpdir(), 'm8-export.json')
+
+          fs.writeFileSync(importPath, JSON.stringify(DefaultTheme.asObject()))
+
+          runM8(['import', importPath, '-o', importPath], `Cannot write to file at ${importPath}: File exists`)
+
+          fs.unlinkSync(importPath)
+        })
+      })
+
+      describe('with m8-file', () => {
+        const importPath = path.join(os.tmpdir(), 'm8-import.json')
+        const outputPath = path.join(os.tmpdir(), 'm8-import.m8_')
+
+        afterEach(() => {
+          fs.unlinkSync(importPath)
+          fs.unlinkSync(outputPath)
+        })
+
+        test('Instrument', () => {
+          const bytesFromDisk = Array.from(fs.readFileSync(defaultFMSynthPath))
+          const instr = M8.loadM8File(bytesFromDisk)
+
+          fs.writeFileSync(importPath, JSON.stringify(instr.asObject()))
+
+          runM8(['import', importPath, '-o', outputPath],
+                `M8 Instrument file (${outputPath}) imported from ${importPath}`)
+
+          const importedBytes = Array.from(fs.readFileSync(outputPath))
+
+          expect(M8.loadM8File(importedBytes)).toEqual(instr)
+        })
+
+        test('Scale', () => {
+          const bytesFromDisk = Array.from(fs.readFileSync(testingScalePath))
+          const scale = M8.loadM8File(bytesFromDisk)
+
+          fs.writeFileSync(importPath, JSON.stringify(scale.asObject()))
+
+          runM8(['import', importPath, '-o', outputPath],
+                `M8 Scale file (${outputPath}) imported from ${importPath}`)
+
+          const importedBytes = Array.from(fs.readFileSync(outputPath))
+
+          expect(M8.loadM8File(importedBytes)).toEqual(scale)
+        })
+
+        test('Song', () => {
+          const bytesFromDisk = Array.from(fs.readFileSync(testingSongPath))
+          const song = M8.loadM8File(bytesFromDisk)
+
+          fs.writeFileSync(importPath, JSON.stringify(song.asObject()))
+
+          runM8(['import', importPath, '-o', outputPath],
+                `M8 Song file (${outputPath}) imported from ${importPath}`)
+
+          const importedBytes = Array.from(fs.readFileSync(outputPath))
+
+          expect(M8.loadM8File(importedBytes)).toEqual(song)
+        })
+
+        test('Theme', () => {
+          const bytesFromDisk = Array.from(fs.readFileSync(defaultThemePath))
+          const theme = M8.loadM8File(bytesFromDisk)
+
+          fs.writeFileSync(importPath, JSON.stringify(theme.asObject()))
+
+          runM8(['import', importPath, '-o', outputPath],
+                `M8 Theme file (${outputPath}) imported from ${importPath}`)
+
+          const importedBytes = Array.from(fs.readFileSync(outputPath))
+
+          expect(M8.loadM8File(importedBytes)).toEqual(theme)
+        })
       })
     })
 

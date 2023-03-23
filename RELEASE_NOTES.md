@@ -29,6 +29,7 @@
   * Removed `lib/types/M8FileWriter.js` _(no longer provided value)_
   * Updated all types to support JSON import/export _(`asObject` and `fromObject`)_
 * CLI
+  * Added `export` and `import` commands to export to JSON and import from JSON _(Issue #4)_
   * Fix alignment for `project mixer`
   * Refactored the CLI into smaller, per-command files instead of one guargantuan file
   * Updated `project midi-mapping` to print the actual `DEST` values
