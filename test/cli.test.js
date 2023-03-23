@@ -60,6 +60,7 @@ Commands:
   scale                       scale specific commands
   song                        song specific commands
   theme                       theme specific commands
+  view [options] <m8-file>    view an M8 file of any type
   help [command]              display help for command
 `
 const importHelp = `Usage: m8 import [options] <m8-file>
@@ -133,7 +134,63 @@ Commands:
   view [options] <m8-file>        print the m8 song view
   help [command]                  display help for command
 `
+const defaultThemeOutput = `THEME SETTINGS
+
+BACKGROUND   00 00 00 ■■■
+TEXT:EMPTY   1E 1E 28 ■■■
+TEXT:INFO    60 60 8E ■■■
+TEXT:DEFAULT 8C 8C BA ■■■
+TEXT:VALUE   FA FA FA ■■■
+TEXT:TITLES  32 EC FF ■■■
+PLAY MARKERS 00 FF 70 ■■■
+CURSOR       32 EC FF ■■■
+SELECTION    FF 00 D2 ■■■
+SCOPE/SLIDER 32 EC FF ■■■
+METER LOW    00 FF 50 ■■■
+METER MID    FF E0 00 ■■■
+METER PEAK   FF 30 70 ■■■
+`
+const testingScaleOutput = `SCALE
+
+KEY   C
+
+I  EN OFFSET
+C  ON-24.00
+C# -- -- --
+D  ON 01.02
+D# -- -- --
+E  ON 03.04
+F  -- -- --
+F# ON 05.06
+G  ON-04.03
+G# -- -- --
+A  ON-02.01
+A# -- -- --
+B  ON 24.00
+
+NAME  TESTING---------
+`
 const testingScalePath = path.join(__dirname, 'files/Scales/TESTING.m8n')
+const testingSongOutput = `SONG
+
+   1  2  3  4  5  6  7  8
+00 00 01 02 03 04 05 06 07
+01 -- -- -- -- -- -- -- --
+02 -- -- -- -- -- -- -- --
+03 -- -- -- -- -- -- -- --
+04 -- -- -- -- -- -- -- --
+05 -- -- -- -- -- -- -- --
+06 -- -- -- -- -- -- -- --
+07 -- -- -- -- -- -- -- --
+08 -- -- -- -- -- -- -- --
+09 -- -- -- -- -- -- -- --
+0A -- -- -- -- -- -- -- --
+0B -- -- -- -- -- -- -- --
+0C -- -- -- -- -- -- -- --
+0D -- -- -- -- -- -- -- --
+0E -- -- -- -- -- -- -- --
+0F -- -- -- -- -- -- -- --
+`
 const testingSongPath = path.join(__dirname, 'files/Songs/TESTING.m8s')
 const themeHelp = `Usage: m8 theme [options] [command]
 
@@ -531,7 +588,11 @@ const runM8 = (args, expectedOutput) => {
 
   if (typeof expectedOutput !== 'undefined') {
     if (typeof thrownErr === 'undefined') {
-      expect(console.log).toBeCalledWith(expectedOutput)
+      if (Array.isArray(expectedOutput)) {
+        expect(console.log.mock.calls).toEqual(expectedOutput.map((item) => [item]))
+      } else {
+        expect(console.log).toBeCalledWith(expectedOutput)
+      }
     } else {
       expect(thrownErr.message).toEqual(expectedOutput)
     }
@@ -571,12 +632,38 @@ describe('m8 tests', () => {
     console.log = log // restore original console.log after all tests
   })
 
-  test('empty args prints help', () => {
-    testHelp([], globalHelp)
-  })
-
   test('--help', () => {
     testHelp(['--help'], globalHelp)
+  })
+
+  describe('default/view', () => {
+    test('missing m8-file', () => {
+      runM8([], "error: missing required argument 'm8-file'")
+    })
+
+    describe('with m8-file', () => {
+      test('Instrument', () => {
+        runM8([defaultFMSynthPath], `INST.${defaultInstrumentOutputs.DEF_FM.view}`)
+      })
+
+      test('Scale', () => {
+        runM8([testingScalePath], [
+          testingScaleOutput,
+          "To view the Scale for a different key, use the 'scale view' command directly"
+        ])
+      })
+
+      test('Song', () => {
+        runM8([testingSongPath], [
+          testingSongOutput,
+          "To view different Song rows, use the 'song view' command directly"
+        ])
+      })
+
+      test('Theme', () => {
+        runM8([defaultThemePath], defaultThemeOutput)
+      })
+    })
   })
 
   describe('instrument', () => {
@@ -1395,26 +1482,7 @@ NAME          DEFAULT
       })
 
       test('with m8-file', () => {
-        runM8(['scale', 'view', testingScalePath], `SCALE
-
-KEY   C
-
-I  EN OFFSET
-C  ON-24.00
-C# -- -- --
-D  ON 01.02
-D# -- -- --
-E  ON 03.04
-F  -- -- --
-F# ON 05.06
-G  ON-04.03
-G# -- -- --
-A  ON-02.01
-A# -- -- --
-B  ON 24.00
-
-NAME  TESTING---------
-`)
+        runM8(['scale', 'view', testingScalePath], testingScaleOutput)
       })
     })
 
@@ -2287,26 +2355,7 @@ FF -- -- -- -- -- -- -- --
         })
 
         test('without --starting-row', () => {
-          runM8(['song', 'view', testingSongPath], `SONG
-
-   1  2  3  4  5  6  7  8
-00 00 01 02 03 04 05 06 07
-01 -- -- -- -- -- -- -- --
-02 -- -- -- -- -- -- -- --
-03 -- -- -- -- -- -- -- --
-04 -- -- -- -- -- -- -- --
-05 -- -- -- -- -- -- -- --
-06 -- -- -- -- -- -- -- --
-07 -- -- -- -- -- -- -- --
-08 -- -- -- -- -- -- -- --
-09 -- -- -- -- -- -- -- --
-0A -- -- -- -- -- -- -- --
-0B -- -- -- -- -- -- -- --
-0C -- -- -- -- -- -- -- --
-0D -- -- -- -- -- -- -- --
-0E -- -- -- -- -- -- -- --
-0F -- -- -- -- -- -- -- --
-`)
+          runM8(['song', 'view', testingSongPath], testingSongOutput)
         })
       })
     })
@@ -2335,22 +2384,7 @@ FF -- -- -- -- -- -- -- --
       })
 
       test('with m8-file', () => {
-        runM8(['theme', 'view', defaultThemePath], `THEME SETTINGS
-
-BACKGROUND   00 00 00 ■■■
-TEXT:EMPTY   1E 1E 28 ■■■
-TEXT:INFO    60 60 8E ■■■
-TEXT:DEFAULT 8C 8C BA ■■■
-TEXT:VALUE   FA FA FA ■■■
-TEXT:TITLES  32 EC FF ■■■
-PLAY MARKERS 00 FF 70 ■■■
-CURSOR       32 EC FF ■■■
-SELECTION    FF 00 D2 ■■■
-SCOPE/SLIDER 32 EC FF ■■■
-METER LOW    00 FF 50 ■■■
-METER MID    FF E0 00 ■■■
-METER PEAK   FF 30 70 ■■■
-`)
+        runM8(['theme', 'view', defaultThemePath], defaultThemeOutput)
       })
     })
 

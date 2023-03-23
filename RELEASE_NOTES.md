@@ -1,5 +1,10 @@
 # Release Notes
 
+## TBD
+
+* CLI
+  * Updated the default command _(`m8`)_ to now print an M8 file _(also shows up as the 'view' command)_ _(Issue #5)_
+
 ## 0.2.0 _(2023-03-23)_
 
 * API

@@ -28,6 +28,10 @@ Once you do this, `m8` should be available.
 `m8 --help` or `m8 help` should give you enough of a starting point for now.  Just know that all commands support the
 `--help` flag for command-specific help.
 
+In `0.2.1`, the `m8` command itself is now equivalent to the newly added `view` command which will let you print an M8
+file without specifying the M8 file type. _(For example, if you have an M8 song file, you can run `m8 PATH` instead of
+`m8 song view PATH`.)_
+
 ## API
 
 `m8-js` provides an API for both reading/writing M8 files, but it also provides an object model for programmatically
