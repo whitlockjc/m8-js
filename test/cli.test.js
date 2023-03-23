@@ -900,7 +900,7 @@ WIDTH         12
             song.midiMappings[midiMappingIndex].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(M8.dumpM8File(song)))
+          fs.writeFileSync(tmpFilePath, M8.dumpM8File(song))
         }
 
         beforeEach(() => {
@@ -926,7 +926,7 @@ WIDTH         12
             emptySong.midiMappings[i].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(M8.dumpM8File(emptySong)))
+          fs.writeFileSync(tmpFilePath, M8.dumpM8File(emptySong))
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -986,7 +986,7 @@ WIDTH         12
             emptySong.midiMappings[i].maxValue = 0xFF
           })
 
-          fs.writeFileSync(tmpFilePath, Uint8Array.from(M8.dumpM8File(emptySong)))
+          fs.writeFileSync(tmpFilePath, M8.dumpM8File(emptySong))
 
           runM8(['project', 'midi-mapping', tmpFilePath], `MIDI MAPPING
 
@@ -1580,28 +1580,28 @@ F 00
 
       describe('with m8-file', () => {
         test('Instrument', () => {
-          const bytesFromDisk = Array.from(fs.readFileSync(defaultFMSynthPath))
+          const bytesFromDisk = Uint8Array.from(fs.readFileSync(defaultFMSynthPath))
           const instr = M8.loadM8File(bytesFromDisk)
 
           runM8(['export', defaultFMSynthPath], JSON.stringify(instr.asObject(), null, 2))
         })
 
         test('Scale', () => {
-          const bytesFromDisk = Array.from(fs.readFileSync(testingScalePath))
+          const bytesFromDisk = Uint8Array.from(fs.readFileSync(testingScalePath))
           const scale = M8.loadM8File(bytesFromDisk)
 
           runM8(['export', testingScalePath], JSON.stringify(scale.asObject(), null, 2))
         })
 
         test('Song', () => {
-          const bytesFromDisk = Array.from(fs.readFileSync(defaultSongPath))
+          const bytesFromDisk = Uint8Array.from(fs.readFileSync(defaultSongPath))
           const song = M8.loadM8File(bytesFromDisk)
 
           runM8(['export', defaultSongPath], JSON.stringify(song.asObject(), null, 2))
         })
 
         test('Theme', () => {
-          const bytesFromDisk = Array.from(fs.readFileSync(defaultThemePath))
+          const bytesFromDisk = Uint8Array.from(fs.readFileSync(defaultThemePath))
           const theme = M8.loadM8File(bytesFromDisk)
 
           runM8(['export', defaultThemePath], JSON.stringify(theme.asObject(), null, 2))
@@ -1619,7 +1619,7 @@ F 00
           })
 
           test('can export', () => {
-            const bytesFromDisk = Array.from(fs.readFileSync(defaultThemePath))
+            const bytesFromDisk = Uint8Array.from(fs.readFileSync(defaultThemePath))
             const theme = M8.loadM8File(bytesFromDisk)
             const outputPath = path.join(os.tmpdir(), 'm8-export.m8t')
 
@@ -1671,7 +1671,7 @@ F 00
         })
 
         test('Instrument', () => {
-          const bytesFromDisk = Array.from(fs.readFileSync(defaultFMSynthPath))
+          const bytesFromDisk = Uint8Array.from(fs.readFileSync(defaultFMSynthPath))
           const instr = M8.loadM8File(bytesFromDisk)
 
           fs.writeFileSync(importPath, JSON.stringify(instr.asObject()))
@@ -1679,13 +1679,13 @@ F 00
           runM8(['import', importPath, '-o', outputPath],
                 `M8 Instrument file (${outputPath}) imported from ${importPath}`)
 
-          const importedBytes = Array.from(fs.readFileSync(outputPath))
+          const importedBytes = Uint8Array.from(fs.readFileSync(outputPath))
 
           expect(M8.loadM8File(importedBytes)).toEqual(instr)
         })
 
         test('Scale', () => {
-          const bytesFromDisk = Array.from(fs.readFileSync(testingScalePath))
+          const bytesFromDisk = Uint8Array.from(fs.readFileSync(testingScalePath))
           const scale = M8.loadM8File(bytesFromDisk)
 
           fs.writeFileSync(importPath, JSON.stringify(scale.asObject()))
@@ -1693,13 +1693,13 @@ F 00
           runM8(['import', importPath, '-o', outputPath],
                 `M8 Scale file (${outputPath}) imported from ${importPath}`)
 
-          const importedBytes = Array.from(fs.readFileSync(outputPath))
+          const importedBytes = Uint8Array.from(fs.readFileSync(outputPath))
 
           expect(M8.loadM8File(importedBytes)).toEqual(scale)
         })
 
         test('Song', () => {
-          const bytesFromDisk = Array.from(fs.readFileSync(testingSongPath))
+          const bytesFromDisk = Uint8Array.from(fs.readFileSync(testingSongPath))
           const song = M8.loadM8File(bytesFromDisk)
 
           fs.writeFileSync(importPath, JSON.stringify(song.asObject()))
@@ -1707,13 +1707,13 @@ F 00
           runM8(['import', importPath, '-o', outputPath],
                 `M8 Song file (${outputPath}) imported from ${importPath}`)
 
-          const importedBytes = Array.from(fs.readFileSync(outputPath))
+          const importedBytes = Uint8Array.from(fs.readFileSync(outputPath))
 
           expect(M8.loadM8File(importedBytes)).toEqual(song)
         })
 
         test('Theme', () => {
-          const bytesFromDisk = Array.from(fs.readFileSync(defaultThemePath))
+          const bytesFromDisk = Uint8Array.from(fs.readFileSync(defaultThemePath))
           const theme = M8.loadM8File(bytesFromDisk)
 
           fs.writeFileSync(importPath, JSON.stringify(theme.asObject()))
@@ -1721,7 +1721,7 @@ F 00
           runM8(['import', importPath, '-o', outputPath],
                 `M8 Theme file (${outputPath}) imported from ${importPath}`)
 
-          const importedBytes = Array.from(fs.readFileSync(outputPath))
+          const importedBytes = Uint8Array.from(fs.readFileSync(outputPath))
 
           expect(M8.loadM8File(importedBytes)).toEqual(theme)
         })

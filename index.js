@@ -412,7 +412,8 @@ const dumpSong = (song) => {
 
   // Tables
   for (let i = 0; i < song.tables.length; i++) {
-    bytes.push(...dumpTable(song.tables[i]))
+    // We cannot assume that the tables are synced up for Instruments so use the Instrument table if possible
+    bytes.push(...dumpTable(song.instruments[i]?.table || song.tables[i]))
   }
 
   // Instruments
@@ -1032,23 +1033,38 @@ const loadTheme = (fileReader) => {
  *
  * @param {module:m8-js/lib/types.M8File} m8File - The M8File instance to dump
  *
- * @returns {Array<Number>}
+ * @returns {Uint8Array}
  */
 const dumpM8File = (m8File) => {
   const fileTypeStr = M8File.typeToStr(m8File.m8FileType)
+  let bytes
 
   switch (fileTypeStr) {
     case 'Instrument':
-      return dumpInstrument(m8File)
+      bytes = dumpInstrument(m8File)
+
+      break
+
     case 'Scale':
-      return dumpScale(m8File)
+      bytes = dumpScale(m8File)
+
+      break
+
     case 'Song':
-      return dumpSong(m8File)
+      bytes = dumpSong(m8File)
+
+      break
+
     case 'Theme':
-      return dumpTheme(m8File)
+      bytes = dumpTheme(m8File)
+
+      break
+
     default:
       throw new TypeError(`Unsupported file type: ${fileTypeStr}`)
   }
+
+  return Uint8Array.from(bytes)
 }
 
 /**

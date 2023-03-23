@@ -39,7 +39,7 @@
 <dt><a href="#loadTheme">loadTheme(fileReader)</a> ⇒ <code><a href="#module_m8-js/lib/types.Theme">Theme</a></code></dt>
 <dd><p>Loads an M8 Theme from its bytes.</p>
 </dd>
-<dt><a href="#dumpM8File">dumpM8File(m8File)</a> ⇒ <code>Array.&lt;Number&gt;</code></dt>
+<dt><a href="#dumpM8File">dumpM8File(m8File)</a> ⇒ <code>Uint8Array</code></dt>
 <dd><p>Dumps an M8 file and returns its bytes.</p>
 </dd>
 <dt><a href="#loadM8File">loadM8File(bytes)</a> ⇒ <code><a href="#module_m8-js/lib/types.Scale">Scale</a></code> | <code><a href="#module_m8-js/lib/types.Song">Song</a></code> | <code><a href="#module_m8-js/lib/types.Theme">Theme</a></code> | <code>module:m8-js/lib/types/instruments.FMSYNTH</code> | <code>module:m8-js/lib/types/instruments.MACROSYNTH</code> | <code>module:m8-js/lib/types/instruments.MIDIOUT</code> | <code>module:m8-js/lib/types/instruments.NONE</code> | <code>module:m8-js/lib/types/instruments.SAMPLER</code> | <code>module:m8-js/lib/types/instruments.WAVSYNTH</code></dt>
@@ -296,7 +296,7 @@ Loads an M8 Theme from its bytes.
 
 <a name="dumpM8File"></a>
 
-## dumpM8File(m8File) ⇒ <code>Array.&lt;Number&gt;</code>
+## dumpM8File(m8File) ⇒ <code>Uint8Array</code>
 Dumps an M8 file and returns its bytes.
 
 **Kind**: global function  

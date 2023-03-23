@@ -1,6 +1,6 @@
 # Release Notes
 
-## TBD
+## 0.2.0 _(2023-03-23)_
 
 * API
   * Added `lib/types/M8File` for all M8 types that correspond to an M8 file

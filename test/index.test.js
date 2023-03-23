@@ -55,7 +55,7 @@ describe('index tests', () => {
   describe('#loadM8File', () => {
     test('invalid file type', () => {
       const filePath = path.join(__dirname, 'files/Songs/Default.m8s')
-      const bytes = Array.from(readFileSync(filePath))
+      const bytes = Uint8Array.from(readFileSync(filePath))
 
       bytes[13] = 0xFF
 
@@ -87,7 +87,7 @@ describe('index tests', () => {
 
       test('tables', () => {
         const instrPath = path.join(__dirname, 'files/Instruments/FM_W_TABLE.m8i')
-        const bytesFromDisk = Array.from(readFileSync(instrPath))
+        const bytesFromDisk = Uint8Array.from(readFileSync(instrPath))
         const instrWithTable = M8.loadM8File(bytesFromDisk)
 
         instrWithTable.table.steps.forEach((step) => {
@@ -111,7 +111,7 @@ describe('index tests', () => {
 
     test('Scale', () => {
       const filePath = path.join(__dirname, 'files/Scales/TESTING.m8n')
-      const bytesFromDisk = Array.from(readFileSync(filePath))
+      const bytesFromDisk = Uint8Array.from(readFileSync(filePath))
       const scaleFromDisk = M8.loadM8File(bytesFromDisk)
 
       // Ensure the raw bytes read from disk match the dumped bytes
@@ -200,7 +200,7 @@ describe('index tests', () => {
 
     test('Song', () => {
       const filePath = path.join(__dirname, 'files/Songs/DEFAULT.m8s')
-      const bytesFromDisk = Array.from(readFileSync(filePath))
+      const bytesFromDisk = Uint8Array.from(readFileSync(filePath))
       const songFromDisk = M8.loadM8File(bytesFromDisk)
 
       // Ensure the raw bytes read from disk match the dumped bytes
@@ -239,7 +239,7 @@ describe('index tests', () => {
 
     test('Theme', () => {
       const filePath = path.join(__dirname, 'files/Themes/DEFAULT.m8t')
-      const bytesFromDisk = Array.from(readFileSync(filePath))
+      const bytesFromDisk = Uint8Array.from(readFileSync(filePath))
       const themeFromDisk = M8.loadM8File(bytesFromDisk)
       const alteredSelection = new RGB(0x0F, 0x1F, 0x2F)
 
